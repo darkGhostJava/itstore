@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,16 +27,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { PlusCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { mockItems, mockPersons, mockArticles } from "@/lib/data";
+import { mockPersons, mockArticles, mockStructures } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  itemIds: z.array(z.number()).min(1, "Please select at least one item."),
+  articleId: z.string().min(1, "Please select an article."),
+  quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
+  structureId: z.string().min(1, "Please select a structure."),
   beneficiaryId: z.string().min(1, "Please select a beneficiary."),
   remarks: z.string().optional(),
 });
@@ -44,20 +46,38 @@ const formSchema = z.object({
 export function AddDistribution() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      itemIds: [],
+      articleId: "",
+      quantity: 1,
+      structureId: "",
       beneficiaryId: "",
       remarks: "",
     },
   });
 
-  const availableItems = mockItems.filter((item) => item.status === "IN_STOCK");
+  const selectedStructureId = form.watch("structureId");
+
+  const filteredPersons = useMemo(() => {
+    if (!selectedStructureId) return [];
+    return mockPersons.filter(
+      (p) => p.structureId === parseInt(selectedStructureId)
+    );
+  }, [selectedStructureId]);
+  
+  // Reset beneficiary when structure changes
+  React.useEffect(() => {
+    form.resetField("beneficiaryId");
+  }, [selectedStructureId, form]);
+
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("New Distribution:", {
         ...values,
+        articleId: parseInt(values.articleId),
+        structureId: parseInt(values.structureId),
         beneficiaryId: parseInt(values.beneficiaryId),
         date: new Date().toISOString(),
         userId: 1, // Mock user ID
@@ -79,7 +99,7 @@ export function AddDistribution() {
           Add Distribution
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add New Distribution</DialogTitle>
           <DialogDescription>
@@ -88,47 +108,66 @@ export function AddDistribution() {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="articleId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Article</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an article" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {mockArticles.map((article) => (
+                          <SelectItem key={article.id} value={article.id.toString()}>
+                            {article.model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
             <FormField
               control={form.control}
-              name="itemIds"
-              render={() => (
+              name="structureId"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Items</FormLabel>
-                  <div className="max-h-48 overflow-y-auto rounded-md border p-2">
-                    {availableItems.map((item) => (
-                      <FormField
-                        key={item.id}
-                        control={form.control}
-                        name="itemIds"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={item.id}
-                              className="flex flex-row items-start space-x-3 space-y-0 p-2"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(item.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...field.value, item.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== item.id
-                                          )
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {mockArticles.find(a => a.id === item.articleId)?.model} - {item.serialNumber}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
-                  </div>
+                  <FormLabel>Structure</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a structure" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {mockStructures.map((structure) => (
+                        <SelectItem key={structure.id} value={structure.id.toString()}>
+                          {structure.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -142,7 +181,8 @@ export function AddDistribution() {
                   <FormLabel>Beneficiary</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
+                    disabled={!selectedStructureId || filteredPersons.length === 0}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -150,7 +190,7 @@ export function AddDistribution() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {mockPersons.map((person) => (
+                      {filteredPersons.map((person) => (
                         <SelectItem
                           key={person.id}
                           value={person.id.toString()}
