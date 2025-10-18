@@ -17,7 +17,7 @@ export default function PersonsPage() {
           </Button>
         }
       />
-      <DataTable data={mockPersons} columns={columns} />
+      <DataTable data={mockPersons} columns={columns} filterKey="lastName" filterPlaceholder="Filter by name..."/>
     </div>
   );
 }

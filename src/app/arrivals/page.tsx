@@ -19,7 +19,7 @@ export default function ArrivalsPage() {
           </Button>
         }
       />
-      <DataTable data={arrivalData} columns={columns} />
+      <DataTable data={arrivalData} columns={columns} filterKey="remarks" filterPlaceholder="Filter by remarks..."/>
     </div>
   );
 }

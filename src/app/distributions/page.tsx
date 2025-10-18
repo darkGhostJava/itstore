@@ -19,7 +19,7 @@ export default function DistributionsPage() {
           </Button>
         }
       />
-      <DataTable data={distributionData} columns={columns} />
+      <DataTable data={distributionData} columns={columns} filterKey="remarks" filterPlaceholder="Filter by remarks..."/>
     </div>
   );
 }
