@@ -31,7 +31,7 @@ import { PlusCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { mockItems, mockPersons } from "@/lib/data";
+import { mockItems, mockPersons, mockArticles } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
