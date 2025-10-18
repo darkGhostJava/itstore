@@ -19,7 +19,7 @@ export default function ReparationsPage() {
           </Button>
         }
       />
-      <DataTable data={reparationData} columns={columns} />
+      <DataTable data={reparationData} columns={columns} filterKey="remarks" filterPlaceholder="Filter by remarks..."/>
     </div>
   );
 }

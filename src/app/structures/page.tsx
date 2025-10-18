@@ -17,7 +17,7 @@ export default function StructuresPage() {
           </Button>
         }
       />
-      <DataTable data={mockStructures} columns={columns} />
+      <DataTable data={mockStructures} columns={columns} filterKey="name" filterPlaceholder="Filter by name..." />
     </div>
   );
 }

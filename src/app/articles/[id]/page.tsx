@@ -71,7 +71,7 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
               <CardDescription>Serial numbers and statuses for {article.model}.</CardDescription>
             </CardHeader>
             <CardContent>
-              <DataTable data={items} columns={itemColumns} />
+              <DataTable data={items} columns={itemColumns} filterKey="serialNumber" filterPlaceholder="Filter by serial number..." />
             </CardContent>
           </Card>
         </div>

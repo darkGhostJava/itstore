@@ -9,7 +9,7 @@ export default function OperationsPage() {
       <PageHeader
         title="Operations Log"
       />
-      <DataTable data={mockOperations} columns={columns} />
+      <DataTable data={mockOperations} columns={columns} filterKey="remarks" filterPlaceholder="Filter by remarks..." />
     </div>
   );
 }

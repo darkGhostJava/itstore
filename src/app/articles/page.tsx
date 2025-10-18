@@ -17,7 +17,7 @@ export default function ArticlesPage() {
           </Button>
         }
       />
-      <DataTable data={mockArticles} columns={columns} />
+      <DataTable data={mockArticles} columns={columns} filterKey="designation" filterPlaceholder="Filter by designation..." />
     </div>
   );
 }
