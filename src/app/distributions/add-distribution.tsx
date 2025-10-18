@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -68,7 +68,7 @@ export function AddDistribution() {
   }, [selectedStructureId]);
   
   // Reset beneficiary when structure changes
-  React.useEffect(() => {
+  useEffect(() => {
     form.resetField("beneficiaryId");
   }, [selectedStructureId, form]);
 
