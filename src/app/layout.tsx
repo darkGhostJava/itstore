@@ -42,11 +42,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-            <div className="flex min-h-screen w-full">
+            <div className="relative flex min-h-screen w-full">
               <Sidebar />
-              <div className="flex flex-1 flex-col sm:pl-14">
+              <div className="flex-1 sm:pl-14">
                 <Header />
-                <main className="flex-1 p-4 sm:p-6 md:p-8">
+                <main className="p-4 sm:p-6 md:p-8">
                   {children}
                 </main>
               </div>
