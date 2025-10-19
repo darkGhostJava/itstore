@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { mockOperations } from "@/lib/data";
 import { useTheme } from "next-themes";
+import { Skeleton } from "../ui/skeleton";
 
 export function OperationsChart() {
   const { theme } = useTheme();
@@ -75,4 +76,17 @@ export function OperationsChart() {
       </CardContent>
     </Card>
   );
+}
+
+export function OperationsChartSkeleton() {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Operations Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-[350px] w-full" />
+            </CardContent>
+        </Card>
+    );
 }

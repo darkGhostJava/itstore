@@ -7,6 +7,7 @@ import {
   Building,
 } from "lucide-react";
 import { mockArticles, mockItems, mockStructures } from "@/lib/data";
+import { Skeleton } from "../ui/skeleton";
 
 type StatCard = {
   title: string;
@@ -50,4 +51,22 @@ export function StatsCards() {
       ))}
     </div>
   );
+}
+
+export function StatsCardsSkeleton() {
+    return (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-8 w-12" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
 }
