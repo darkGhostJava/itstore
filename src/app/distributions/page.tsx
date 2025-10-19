@@ -17,8 +17,8 @@ export default function DistributionsPage() {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 500));
     const result = fetchDistributions({ pageIndex, pageSize });
-    setData(result.data);
-    setPageCount(result.pageCount);
+    setData(result.content);
+    setPageCount(result.totalPages);
     setIsLoading(false);
   }, []);
 
