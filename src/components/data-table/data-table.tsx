@@ -41,11 +41,11 @@ interface DataTableProps<TData, TValue> {
 }
 
 export function DataTable<TData, TValue>({
-  columns,
-  data,
-  pageCount,
+  columns = [],
+  data = [],
+  pageCount = 0,
   fetchData,
-  isLoading,
+  isLoading = false,
   filterKey,
   filterPlaceholder,
 }: DataTableProps<TData, TValue>) {
@@ -56,7 +56,7 @@ export function DataTable<TData, TValue>({
     []
   )
   const [sorting, setSorting] = React.useState<SortingState>([])
-  
+
   const [{ pageIndex, pageSize }, setPagination] =
     React.useState<PaginationState>({
       pageIndex: 0,
@@ -66,7 +66,7 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     fetchData({ pageIndex, pageSize })
   }, [fetchData, pageIndex, pageSize])
-  
+
   const pagination = React.useMemo(
     () => ({
       pageIndex,
@@ -100,7 +100,6 @@ export function DataTable<TData, TValue>({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
-
   return (
     <div className="space-y-4">
       <DataTableToolbar
@@ -119,9 +118,9 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
@@ -130,16 +129,17 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-                Array.from({ length: pageSize }).map((_, i) => (
-                    <TableRow key={i}>
-                        {columns.map((column, j) => (
-                            <TableCell key={j}>
-                                <Skeleton className="h-6" />
-                            </TableCell>
-                        ))}
-                    </TableRow>
-                ))
+              Array.from({ length: pageSize || 10 }).map((_, i) => (
+                <TableRow key={i}>
+                  {columns.map((column, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="h-6" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             ) : table.getRowModel().rows?.length ? (
+
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

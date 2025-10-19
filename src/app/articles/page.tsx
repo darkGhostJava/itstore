@@ -17,13 +17,18 @@ export default function ArticlesPage() {
   const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setIsLoading(true);
     // Simulate a network request
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const result = fetchArticles({ pageIndex, pageSize });
-    setData(result.data);
-    setPageCount(result.pageCount);
-    setIsLoading(false);
+    // await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const result = await fetchArticles({ pageIndex, pageSize });
+      
+      setData(result.data);
+      setPageCount(result.pageCount);
+    }
+    finally {
+      setIsLoading(false);
+    }
   }, []);
-
+  
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
@@ -35,14 +40,14 @@ export default function ArticlesPage() {
           </Button>
         }
       />
-      <DataTable 
-        columns={columns} 
+      <DataTable
+        columns={columns}
         data={data}
         pageCount={pageCount}
         fetchData={fetchData}
         isLoading={isLoading}
-        filterKey="designation" 
-        filterPlaceholder="Filter by designation..." 
+        filterKey="designation"
+        filterPlaceholder="Filter by designation..."
       />
     </div>
   );

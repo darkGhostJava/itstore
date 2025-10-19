@@ -1,3 +1,5 @@
+import { date } from 'zod';
+import { api } from './api';
 import type { Article, Item, Person, Structure, Operation, User } from './definitions';
 
 export const mockUsers: User[] = [
@@ -29,16 +31,16 @@ export const mockPersons: Person[] = [
 ];
 
 export const mockArticles: Article[] = [
-  { id: 1, model: 'Dell Latitude 7490', designation: 'Laptop', type: 'HARDWARE' },
-  { id: 2, model: 'HP LaserJet Pro M404dn', designation: 'Printer', type: 'HARDWARE' },
-  { id: 3, model: 'Logitech MK270', designation: 'Keyboard/Mouse Combo', type: 'HARDWARE' },
-  { id: 4, model: 'HP 58A', designation: 'Toner Cartridge', type: 'CONSUMABLE' },
-  { id: 5, model: 'A4 Paper Ream', designation: 'Paper', type: 'CONSUMABLE' },
-  { id: 6, model: 'Dell UltraSharp U2721DE', designation: 'Monitor', type: 'HARDWARE' },
-  { id: 7, model: 'Jabra Evolve 65', designation: 'Headset', type: 'HARDWARE' },
-  { id: 8, model: 'Samsung T5 SSD', designation: 'External SSD', type: 'HARDWARE' },
-  { id: 9, model: 'Anker PowerCore', designation: 'Power Bank', type: 'HARDWARE' },
-  { id: 10, model: 'Canon EOS R5', designation: 'Camera', type: 'HARDWARE' },
+  { id: 1, model: 'Dell Latitude 7490', designation: 'Laptop', type: 'HARDWARE',quantity: 12 },
+  { id: 2, model: 'HP LaserJet Pro M404dn', designation: 'Printer', type: 'HARDWARE',quantity: 12  },
+  { id: 3, model: 'Logitech MK270', designation: 'Keyboard/Mouse Combo', type: 'HARDWARE',quantity: 12  },
+  { id: 4, model: 'HP 58A', designation: 'Toner Cartridge', type: 'CONSUMABLE',quantity: 12   },
+  { id: 5, model: 'A4 Paper Ream', designation: 'Paper', type: 'CONSUMABLE',quantity: 12   },
+  { id: 6, model: 'Dell UltraSharp U2721DE', designation: 'Monitor', type: 'HARDWARE',quantity: 12  },
+  { id: 7, model: 'Jabra Evolve 65', designation: 'Headset', type: 'HARDWARE',quantity: 12 },
+  { id: 8, model: 'Samsung T5 SSD', designation: 'External SSD', type: 'HARDWARE',quantity: 12 },
+  { id: 9, model: 'Anker PowerCore', designation: 'Power Bank', type: 'HARDWARE',quantity: 12 },
+  { id: 10, model: 'Canon EOS R5', designation: 'Camera', type: 'HARDWARE',quantity: 12 }
 ];
 
 export const mockItems: Item[] = [
@@ -68,9 +70,9 @@ export const mockItems: Item[] = [
 ];
 
 // Add items to articles
-mockArticles.forEach(article => {
-  article.items = mockItems.filter(item => item.articleId === article.id);
-});
+// mockArticles.forEach(article => {
+//   article.items = mockItems.filter(item => item.articleId === article.id);
+// });
 
 
 export const mockOperations: Operation[] = [
@@ -93,8 +95,12 @@ export const mockOperations: Operation[] = [
 
 // Simulate API calls for paginated data
 type PaginatedResponse<T> = {
-  data: T[];
-  pageCount: number;
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+
 };
 
 const fetchData = <T>(
@@ -105,12 +111,32 @@ const fetchData = <T>(
   const end = start + pageSize;
   const slicedData = data.slice(start, end);
   return {
-    data: slicedData,
-    pageCount: Math.ceil(data.length / pageSize),
+    content: slicedData,
+    page: pageIndex ,
+    size: pageSize,
+    totalElements: data.length,
+    totalPages: Math.ceil(data.length / pageSize),
   };
 };
 
-export const fetchArticles = (options: { pageIndex: number; pageSize: number }) => fetchData(mockArticles, options);
+export const fetchArticles = async (options: { pageIndex: number; pageSize: number }) => {
+  const { pageIndex, pageSize } = options;
+
+  const response = await api.get<PaginatedResponse<Article>>("/articles", {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+    },
+  });
+  
+  return {
+    data: response.data.content as Article[],
+    pageCount: response.data.totalPages,
+    page: response.data.page,
+    size: response.data.size,
+    totalElements: response.data.totalElements,
+  };
+};
 export const fetchOperations = (options: { pageIndex: number; pageSize: number }) => fetchData(mockOperations, options);
 export const fetchPersons = (options: { pageIndex: number; pageSize: number }) => fetchData(mockPersons, options);
 export const fetchStructures = (options: { pageIndex: number; pageSize: number }) => fetchData(mockStructures, options);

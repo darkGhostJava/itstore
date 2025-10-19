@@ -3,7 +3,7 @@ export type Article = {
   model: string;
   designation: string;
   type: "HARDWARE" | "CONSUMABLE";
-  items?: Item[];
+  quantity: number;
 };
 
 export type Item = {

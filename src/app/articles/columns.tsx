@@ -38,7 +38,7 @@ export const columns: ColumnDef<Article>[] = [
   {
     header: "Items Count",
     cell: ({ row }) => {
-      return row.original.items?.length || 0;
+      return row.original.quantity;
     },
   },
   {
