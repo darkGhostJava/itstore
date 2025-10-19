@@ -1,4 +1,7 @@
-import { mockArticles, mockItems } from "@/lib/data";
+"use client";
+
+import * as React from "react";
+import { mockArticles } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +12,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { fetchItemsForArticle } from "@/lib/data";
 
 const itemColumns: ColumnDef<Item>[] = [
   {
@@ -23,7 +27,23 @@ const itemColumns: ColumnDef<Item>[] = [
 ];
 
 export default function ArticleDetailPage({ params }: { params: { id: string } }) {
-  const article = mockArticles.find(a => a.id === parseInt(params.id));
+  const articleId = parseInt(params.id);
+  const article = mockArticles.find(a => a.id === articleId);
+
+  const [data, setData] = React.useState<Item[]>([]);
+  const [pageCount, setPageCount] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+    if (!articleId) return;
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const result = fetchItemsForArticle(articleId, { pageIndex, pageSize });
+    setData(result.data);
+    setPageCount(result.pageCount);
+    setIsLoading(false);
+  }, [articleId]);
+
 
   if (!article) {
     notFound();
@@ -71,7 +91,15 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
               <CardDescription>Serial numbers and statuses for {article.model}.</CardDescription>
             </CardHeader>
             <CardContent>
-              <DataTable data={items} columns={itemColumns} filterKey="serialNumber" filterPlaceholder="Filter by serial number..." />
+              <DataTable 
+                columns={itemColumns} 
+                data={data}
+                pageCount={pageCount}
+                fetchData={fetchData}
+                isLoading={isLoading}
+                filterKey="serialNumber" 
+                filterPlaceholder="Filter by serial number..." 
+              />
             </CardContent>
           </Card>
         </div>
