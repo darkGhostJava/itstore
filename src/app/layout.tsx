@@ -42,16 +42,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative flex min-h-screen flex-col">
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <div className="flex flex-1 flex-col">
-                <Header />
-                <main className="flex-1 p-4 md:p-8 lg:p-10">{children}</main>
-              </div>
+          <div className="relative flex min-h-screen w-full">
+            <Sidebar />
+            <div className="flex flex-1 flex-col sm:pl-14">
+              <Header />
+              <main className="flex-1 p-4 sm:p-6 md:p-8">
+                {children}
+              </main>
             </div>
-            <Toaster />
           </div>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

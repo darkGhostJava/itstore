@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { mockOperations, mockUsers } from "@/lib/data";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { formatDistanceToNow } from "date-fns";
+import { Skeleton } from "../ui/skeleton";
 
 export function RecentOperations() {
   const recentOperations = mockOperations
@@ -56,4 +57,26 @@ export function RecentOperations() {
       </CardContent>
     </Card>
   );
+}
+
+export function RecentOperationsSkeleton() {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Recent Operations</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-8">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                        <div className="grid gap-1">
+                           <Skeleton className="h-4 w-48" />
+                           <Skeleton className="h-4 w-24" />
+                        </div>
+                        <Skeleton className="ml-auto h-4 w-20" />
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    );
 }

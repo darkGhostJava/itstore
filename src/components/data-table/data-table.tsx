@@ -27,12 +27,14 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
+import { Skeleton } from "../ui/skeleton"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   filterKey?: string
   filterPlaceholder?: string
+  isLoading?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -40,6 +42,7 @@ export function DataTable<TData, TValue>({
   data,
   filterKey,
   filterPlaceholder,
+  isLoading,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -99,7 +102,17 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                    <TableRow key={i}>
+                        {columns.map((column, j) => (
+                            <TableCell key={j}>
+                                <Skeleton className="h-6" />
+                            </TableCell>
+                        ))}
+                    </TableRow>
+                ))
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

@@ -64,7 +64,7 @@ export function Header() {
           </nav>
         </SheetContent>
       </Sheet>
-      <div className="hidden md:block">
+      <div className="block">
         <Breadcrumbs />
       </div>
       <div className="relative ml-auto flex-1 md:grow-0">
