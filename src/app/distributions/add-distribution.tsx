@@ -62,6 +62,34 @@ const distributionFormSchema = z.object({
 
 type DistributionFormValues = z.infer<typeof distributionFormSchema>;
 
+// Helper to parse multipart/mixed response
+async function parseMultipartResponse(response: any) {
+    const contentType = response.headers['content-type'];
+    const boundary = contentType.split('boundary=')[1];
+    const parts = response.data.split(`--${boundary}`);
+
+    const files: { filename: string, blob: Blob }[] = [];
+
+    for (const part of parts) {
+        if (part.includes('Content-Disposition')) {
+            const contentDisposition = part.match(/Content-Disposition: form-data; name="([^"]+)"/);
+            if (contentDisposition) {
+                const name = contentDisposition[1];
+                const fileData = part.split('\r\n\r\n')[1].trim();
+                const byteCharacters = atob(fileData);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                files.push({ filename: `${name}_decharge.docx`, blob });
+            }
+        }
+    }
+    return files;
+}
+
 export function AddDistribution() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -153,25 +181,24 @@ export function AddDistribution() {
       };
 
       const response = await api.post("/distributions", payload, {
-        responseType: "blob",
+        responseType: "text", // Expect a multipart response as text
+        headers: {
+            'Accept': 'multipart/mixed'
+        }
+      });
+      
+      const files = await parseMultipartResponse(response);
+
+      files.forEach(file => {
+          const url = window.URL.createObjectURL(file.blob);
+          window.open(url, '_blank');
+          // No need to revoke, as the new tab/window will hold the reference.
       });
 
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `decharge_${Date.now()}.docx`;
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Distribution Added",
-        description: "Distribution recorded and document downloaded successfully.",
+        description: "Distribution recorded and document(s) opened successfully.",
       });
 
       form.reset();
