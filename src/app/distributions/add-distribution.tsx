@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -75,19 +74,22 @@ async function parseMultipartResponse(response: any) {
 
     for (const part of parts) {
         if (part.includes('Content-Disposition')) {
-            const contentDisposition = part.match(/Content-Disposition: form-data; name="([^"]+)"/);
-            if (contentDisposition) {
-                const name = contentDisposition[1];
+            const contentDispositionMatch = part.match(/Content-Disposition: form-data; name="([^"]+)"/);
+            if (contentDispositionMatch) {
+                const name = contentDispositionMatch[1];
                 
                 // Find where the headers end and the content begins
                 const headerEndIndex = part.indexOf('\r\n\r\n');
                 if (headerEndIndex === -1) continue;
 
-                // Extract just the file data, trim whitespace and the trailing '--' from the last part
-                const fileData = part.substring(headerEndIndex).trim().replace(/--$/, '').trim();
+                // Extract the content after the headers, removing leading/trailing whitespace
+                const content = part.substring(headerEndIndex + 4).trim();
+                
+                if (!content) continue;
 
                 try {
-                    const byteCharacters = atob(fileData);
+                    // atob requires a pure base64 string.
+                    const byteCharacters = atob(content);
                     const byteNumbers = new Array(byteCharacters.length);
                     for (let i = 0; i < byteCharacters.length; i++) {
                         byteNumbers[i] = byteCharacters.charCodeAt(i);
