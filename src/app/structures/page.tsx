@@ -14,10 +14,12 @@ export default function StructuresPage() {
     const [pageCount, setPageCount] = React.useState(0);
     const [isLoading, setIsLoading] = React.useState(false);
 
-    const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+    const fetchData =  React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const result = fetchStructures({ pageIndex, pageSize });
+        // await new Promise(resolve => setTimeout(resolve, 500));
+        const result = await fetchStructures({ pageIndex, pageSize });
+
+        
         setData(result.data);
         setPageCount(result.pageCount);
         setIsLoading(false);

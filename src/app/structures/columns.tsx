@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
+import { api } from "@/lib/api";
+import React from "react";
 
 export const columns: ColumnDef<Structure>[] = [
   {
@@ -20,18 +22,24 @@ export const columns: ColumnDef<Structure>[] = [
   },
   {
     header: "Chef",
-    cell: ({ row }) => {
-      const chef = mockPersons.find(p => p.id === row.original.chefId);
-      return chef ? `${chef.firstName} ${chef.lastName}` : "Not Assigned";
-    },
+    accessorFn: (row) => `${row.chef?.firstName ?? ""} ${row.chef?.lastName ?? ""}`,
+
   },
   {
-    header: "Parent Structure",
+    header: "Items",
     cell: ({ row }) => {
-      const parent = mockStructures.find(s => s.id === row.original.parentId);
-      return parent?.name || "N/A";
-    },
+      const [count, setCount] = React.useState<number | null>(null);
+
+      React.useEffect(() => {
+        api.get<number>(`/structures/${row.original.id}/items/count`)
+          .then(res => setCount(res.data))
+          .catch(() => setCount(0));
+      }, [row.original.id]);
+
+      return <span>{count ?? "..."}</span>;
+    }
   },
+
   {
     id: "actions",
     cell: ({ row }) => {
