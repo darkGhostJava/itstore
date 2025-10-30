@@ -1,6 +1,6 @@
 import { date } from 'zod';
 import { api } from './api';
-import type { Article, Item, Person, Structure, Operation, User } from './definitions';
+import type { Article, Item, Person, Structure, Operation, User, Distribution } from './definitions';
 
 export const mockUsers: User[] = [
   { id: 1, username: 'jdoe', name: 'John Doe' },
@@ -22,25 +22,25 @@ export const mockPersons: Person[] = [
   { id: 4, firstName: 'Charlie', lastName: 'Bernard', grade: 'Technicien', matricule: 'T011', structureId: 4 },
   { id: 5, firstName: 'Diana', lastName: 'Petit', grade: 'Technicienne', matricule: 'T012', structureId: 5 },
   { id: 6, firstName: 'Eve', lastName: 'Robert', grade: 'Stagiaire', matricule: 'S020', structureId: 5 },
-  { id: 7, firstName: 'Frank', lastName: 'Moreau', grade: 'Analyste', matricule: 'A055', structureId: 2},
-  { id: 8, firstName: 'Grace', lastName: 'Girard', grade: 'Secrétaire', matricule: 'S021', structureId: 1},
-  { id: 9, firstName: 'Heidi', lastName: 'Leroy', grade: 'Développeur', matricule: 'D088', structureId: 2},
-  { id: 10, firstName: 'Ivan', lastName: 'Roux', grade: 'Comptable', matricule: 'C045', structureId: 3},
-  { id: 11, firstName: 'Judy', lastName: 'Blanc', grade: 'Admin Reseau', matricule: 'T013', structureId: 4},
-  { id: 12, firstName: 'Mallory', lastName: 'Garcia', grade: 'Support N1', matricule: 'T014', structureId: 5},
+  { id: 7, firstName: 'Frank', lastName: 'Moreau', grade: 'Analyste', matricule: 'A055', structureId: 2 },
+  { id: 8, firstName: 'Grace', lastName: 'Girard', grade: 'Secrétaire', matricule: 'S021', structureId: 1 },
+  { id: 9, firstName: 'Heidi', lastName: 'Leroy', grade: 'Développeur', matricule: 'D088', structureId: 2 },
+  { id: 10, firstName: 'Ivan', lastName: 'Roux', grade: 'Comptable', matricule: 'C045', structureId: 3 },
+  { id: 11, firstName: 'Judy', lastName: 'Blanc', grade: 'Admin Reseau', matricule: 'T013', structureId: 4 },
+  { id: 12, firstName: 'Mallory', lastName: 'Garcia', grade: 'Support N1', matricule: 'T014', structureId: 5 },
 ];
 
 export const mockArticles: Article[] = [
-  { id: 1, model: 'Dell Latitude 7490', designation: 'Laptop', type: 'HARDWARE',quantity: 12 },
-  { id: 2, model: 'HP LaserJet Pro M404dn', designation: 'Printer', type: 'HARDWARE',quantity: 12  },
-  { id: 3, model: 'Logitech MK270', designation: 'Keyboard/Mouse Combo', type: 'HARDWARE',quantity: 12  },
-  { id: 4, model: 'HP 58A', designation: 'Toner Cartridge', type: 'CONSUMABLE',quantity: 12   },
-  { id: 5, model: 'A4 Paper Ream', designation: 'Paper', type: 'CONSUMABLE',quantity: 12   },
-  { id: 6, model: 'Dell UltraSharp U2721DE', designation: 'Monitor', type: 'HARDWARE',quantity: 12  },
-  { id: 7, model: 'Jabra Evolve 65', designation: 'Headset', type: 'HARDWARE',quantity: 12 },
-  { id: 8, model: 'Samsung T5 SSD', designation: 'External SSD', type: 'HARDWARE',quantity: 12 },
-  { id: 9, model: 'Anker PowerCore', designation: 'Power Bank', type: 'HARDWARE',quantity: 12 },
-  { id: 10, model: 'Canon EOS R5', designation: 'Camera', type: 'HARDWARE',quantity: 12 }
+  { id: 1, model: 'Dell Latitude 7490', designation: 'Laptop', type: 'HARDWARE', quantity: 12 },
+  { id: 2, model: 'HP LaserJet Pro M404dn', designation: 'Printer', type: 'HARDWARE', quantity: 12 },
+  { id: 3, model: 'Logitech MK270', designation: 'Keyboard/Mouse Combo', type: 'HARDWARE', quantity: 12 },
+  { id: 4, model: 'HP 58A', designation: 'Toner Cartridge', type: 'CONSUMABLE', quantity: 12 },
+  { id: 5, model: 'A4 Paper Ream', designation: 'Paper', type: 'CONSUMABLE', quantity: 12 },
+  { id: 6, model: 'Dell UltraSharp U2721DE', designation: 'Monitor', type: 'HARDWARE', quantity: 12 },
+  { id: 7, model: 'Jabra Evolve 65', designation: 'Headset', type: 'HARDWARE', quantity: 12 },
+  { id: 8, model: 'Samsung T5 SSD', designation: 'External SSD', type: 'HARDWARE', quantity: 12 },
+  { id: 9, model: 'Anker PowerCore', designation: 'Power Bank', type: 'HARDWARE', quantity: 12 },
+  { id: 10, model: 'Canon EOS R5', designation: 'Camera', type: 'HARDWARE', quantity: 12 }
 ];
 
 export const mockItems: Item[] = [
@@ -112,13 +112,16 @@ const fetchData = <T>(
   const slicedData = data.slice(start, end);
   return {
     content: slicedData,
-    page: pageIndex ,
+    page: pageIndex,
     size: pageSize,
     totalElements: data.length,
     totalPages: Math.ceil(data.length / pageSize),
   };
 };
-
+export const getCountItemsForStructure = async (structureId: number): Promise<number> => {
+  const response = await api.get<number>(`/structures/${structureId}/items/count`);
+  return response.data;
+}
 export const fetchArticles = async (options: { pageIndex: number; pageSize: number }) => {
   const { pageIndex, pageSize } = options;
 
@@ -128,7 +131,7 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
       size: pageSize,
     },
   });
-  
+
   return {
     data: response.data.content as Article[],
     pageCount: response.data.totalPages,
@@ -137,22 +140,121 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
     totalElements: response.data.totalElements,
   };
 };
-export const fetchOperations = (options: { pageIndex: number; pageSize: number }) => fetchData(mockOperations, options);
-export const fetchPersons = (options: { pageIndex: number; pageSize: number }) => fetchData(mockPersons, options);
-export const fetchStructures = (options: { pageIndex: number; pageSize: number }) => fetchData(mockStructures, options);
+export const getAllArticles = async () => {
+
+
+  const response = await api.get<Article[]>("/articles/all");
+
+  return {
+    data: response.data as Article[],
+  };
+};
+export const getAllDirections = async () => {
+
+
+  const response = await api.get<Structure[]>("/structures/directions");
+
+
+  return {
+    data: response.data as Structure[],
+  };
+};
+export const getSubDirectionsOfDirection = async (directionId:number) => {
+
+
+  const response = await api.get<Structure[]>(`/structures/sub_directions/${directionId}`);
+
+  return {
+    data: response.data as Structure[],
+  };
+};
+export const getPersonsByIdStructure = async (idStructure: number) => {
+
+
+  const response = await api.get<Person[]>(`/persons/structure/${idStructure}/all`);
+
+  return {
+    data: response.data as Person[],
+  };
+};
+export async function searchArticles(query: string,type:string) {
+  
+  if (!query) return { data: [] };
+
+  const res = await api.get(`/articles/searchByName/${encodeURIComponent(type)}/${encodeURIComponent(query)}`);
+  
+  return res;
+}
+
+export async function searchItemsBySerialNumber(serialNumber: string, articleId: number) {
+  const res = await api.get(`/items/search/${articleId}/${serialNumber}`);
+  return res.data;
+}
+
+export const fetchOperations = (options: { pageIndex: number; pageSize: number }) => { fetchData(mockOperations, options); }
+export const fetchPersons = async (options: { pageIndex: number; pageSize: number }) => {
+  const { pageIndex, pageSize } = options;
+
+  const response = await api.get<PaginatedResponse<Person>>("/persons", {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+    },
+  });
+
+  return {
+    data: response.data.content as Person[],
+    pageCount: response.data.totalPages,
+    page: response.data.page,
+    size: response.data.size,
+    totalElements: response.data.totalElements,
+  };
+}
+export const fetchStructures = async (options: { pageIndex: number; pageSize: number }) => {
+  const { pageIndex, pageSize } = options;
+
+  const response = await api.get<PaginatedResponse<Structure>>("/structures", {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+    },
+  });
+
+  return {
+    data: response.data.content as Structure[],
+    pageCount: response.data.totalPages,
+    page: response.data.page,
+    size: response.data.size,
+    totalElements: response.data.totalElements,
+  };
+};
 export const fetchItemsForArticle = (articleId: number, options: { pageIndex: number; pageSize: number }) => {
-    const items = mockItems.filter(i => i.articleId === articleId);
-    return fetchData(items, options);
+  const items = mockItems.filter(i => i.articleId === articleId);
+  return fetchData(items, options);
 }
 export const fetchArrivals = (options: { pageIndex: number; pageSize: number }) => {
-    const arrivals = mockOperations.filter(op => op.type === "ARRIVAL");
-    return fetchData(arrivals, options);
+  const arrivals = mockOperations.filter(op => op.type === "ARRIVAL");
+  return fetchData(arrivals, options);
 }
-export const fetchDistributions = (options: { pageIndex: number; pageSize: number }) => {
-    const distributions = mockOperations.filter(op => op.type === "DISTRIBUTION");
-    return fetchData(distributions, options);
+export const fetchDistributions = async (options: { pageIndex: number; pageSize: number }) => {
+  const { pageIndex, pageSize } = options;
+
+  const response = await api.get<PaginatedResponse<Distribution>>("/distributions", {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+    },
+  });
+
+  return {
+    data: response.data.content as Distribution[],
+    pageCount: response.data.totalPages,
+    page: response.data.page,
+    size: response.data.size,
+    totalElements: response.data.totalElements,
+  };
 }
 export const fetchReparations = (options: { pageIndex: number; pageSize: number }) => {
-    const reparations = mockOperations.filter(op => op.type === "REPARATION");
-    return fetchData(reparations, options);
+  const reparations = mockOperations.filter(op => op.type === "REPARATION");
+  return fetchData(reparations, options);
 }

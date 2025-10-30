@@ -20,12 +20,13 @@ export type Person = {
   grade: string;
   matricule: string;
   structureId: number;
+  function: string;
 };
 
 export type Structure = {
   id: number;
   name: string;
-  chefId?: number;
+  chef?: Person;
   parentId?: number;
 };
 
@@ -38,6 +39,14 @@ export type Operation = {
   beneficiaryId?: number;
   userId: number;
 };
+export type Distribution = {
+  id: number;
+  date: string;
+  remarks: string;
+  item: Item;
+  beneficiary: Person;
+  user: User;
+}
 
 export type User = {
   id: number;
