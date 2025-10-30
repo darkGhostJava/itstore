@@ -18,17 +18,20 @@ export const columns: ColumnDef<Operation>[] = [
   {
     header: "Article",
     cell: ({ row }) => {
-      const firstItemId = row.original.itemIds[0];
-      const item = mockItems.find(i => i.id === firstItemId);
-      const article = item ? mockArticles.find(a => a.id === item.articleId) : null;
-      return article ? `${article.model} - ${article.designation}` : "N/A";
+      return row.original.item ? `${row.original.item.article.model} - ${row.original.item.article.designation}` : "N/A";
+    },
+  },
+    {
+    header: "Serial Number",
+    cell: ({ row }) => {
+      return row.original.item ? `${row.original.item.serialNumber}` : "N/A";
     },
   },
   {
     header: "Beneficiary",
     cell: ({ row }) => {
-      const person = mockPersons.find(p => p.id === row.original.beneficiaryId);
-      return person ? `${person.firstName} ${person.lastName}` : "N/A";
+      return row.original.person ? `${row.original.person.firstName} ${row.original.person.lastName}` : "N/A";
+
     },
   },
   {
@@ -36,15 +39,15 @@ export const columns: ColumnDef<Operation>[] = [
     header: "Date",
     cell: ({ row }) => format(new Date(row.original.date), "PPP"),
   },
-    {
+  {
     accessorKey: "remarks",
     header: "Remarks",
   },
   {
     header: "User",
     cell: ({ row }) => {
-      const user = mockUsers.find(u => u.id === row.original.userId);
-      return user?.name || "Unknown";
+      return row.original.user ? `${row.original.user.name}`: "N/A";
+
     },
   },
   {

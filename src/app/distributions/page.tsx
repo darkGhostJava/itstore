@@ -6,19 +6,21 @@ import { DataTable } from "@/components/data-table/data-table";
 import { columns } from "./columns";
 import { fetchDistributions } from "@/lib/data";
 import { AddDistribution } from "./add-distribution";
-import type { Operation } from "@/lib/definitions";
+import type { Distribution, Operation } from "@/lib/definitions";
 
 export default function DistributionsPage() {
-  const [data, setData] = React.useState<Operation[]>([]);
+  const [data, setData] = React.useState<Distribution[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
 
   const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    const result = fetchDistributions({ pageIndex, pageSize });
-    setData(result.content);
-    setPageCount(result.totalPages);
+    const result = await fetchDistributions({ pageIndex, pageSize });
+
+    
+    setData(result.data);
+    setPageCount(result.pageCount);
     setIsLoading(false);
   }, []);
 
