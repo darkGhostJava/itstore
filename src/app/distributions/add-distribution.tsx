@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,7 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Trash2 } from "lucide-react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -102,20 +102,27 @@ export function AddDistribution() {
     const fetchSubDirections = async () => {
       form.resetField("subDirectionId");
       form.resetField("beneficiaryId");
-      const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId));
-      setSubDirections(res.data || []);
+      setSubDirections([]);
+      setPersons([]);
+      if (selectedStructureId) {
+        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId));
+        setSubDirections(res.data || []);
+      }
     };
-    if (selectedStructureId) fetchSubDirections();
+    fetchSubDirections();
   }, [selectedStructureId, form]);
 
   // Fetch beneficiaries when sub-direction changes
   useEffect(() => {
     const fetchPersons = async () => {
       form.resetField("beneficiaryId");
-      const res = await getPersonsByIdStructure(parseInt(selectedSubDirectionId));
-      setPersons(res.data || []);
+      setPersons([]);
+      if (selectedSubDirectionId) {
+        const res = await getPersonsByIdStructure(parseInt(selectedSubDirectionId));
+        setPersons(res.data || []);
+      }
     };
-    if (selectedSubDirectionId) fetchPersons();
+    fetchPersons();
   }, [selectedSubDirectionId, form]);
 
   // Submit handler
@@ -125,7 +132,7 @@ export function AddDistribution() {
       const distributionItems = values.articles.map(dist => ({
         articleId: dist.article.id,
         quantity: dist.article.type === 'CONSUMABLE' ? dist.quantity : dist.serialNumbers?.length,
-        serialNumbers: dist.article.type === 'HARDWARE' ? dist.serialNumbers : [],
+        itemIds: dist.article.type === 'HARDWARE' ? dist.serialNumbers : [], // This needs backend adjustment
       }));
 
       const payload = {
@@ -147,7 +154,9 @@ export function AddDistribution() {
       link.href = url;
       link.download = `decharge_${Date.now()}.docx`;
       link.target = "_blank";
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
       toast({
@@ -179,9 +188,9 @@ export function AddDistribution() {
     }
   };
 
-  const handleSerialSearch = async (query: string, articleId: number, fieldIndex: number) => {
+  const handleSerialSearch = async (query: string, articleId: number) => {
      if (query.length > 0 && articleId) {
-        const res = await searchItemsBySerialNumber(query, articleId);
+        const res = await searchItemsBySerialNumber(serialNumber, articleId);
         setSerials(res || []);
       } else {
         setSerials([]);
@@ -194,6 +203,9 @@ export function AddDistribution() {
         form.setValue(`articles.${fieldIndex}.serialNumbers`, [...currentSerials, serial.serialNumber]);
     }
     setSerials([]);
+    // This is a workaround to clear the input. A better way would be to manage the input's state separately.
+    const serialInput = document.getElementById(`serial-search-${fieldIndex}`);
+    if (serialInput) (serialInput as HTMLInputElement).value = '';
   };
 
   return (
@@ -279,7 +291,7 @@ export function AddDistribution() {
                     <FormItem>
                       <FormLabel>Beneficiary</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValuechange={field.onChange}
                         value={field.value}
                         disabled={!selectedSubDirectionId || persons.length === 0}
                       >
@@ -303,101 +315,108 @@ export function AddDistribution() {
 
               <div className="space-y-4">
                 <FormLabel>Articles to Distribute</FormLabel>
-                {fields.map((field, index) => (
-                  <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
-                     <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                     </Button>
-                    
-                    <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
+                <div className="space-y-4">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
+                      <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                      
+                      <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
 
-                    {form.getValues(`articles.${index}.article.type`) === 'HARDWARE' && (
-                       <FormField
-                          control={form.control}
-                          name={`articles.${index}.serialNumbers`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Serial Numbers</FormLabel>
-                               <div className="relative">
-                                <Input
-                                placeholder="Search and add serial numbers..."
-                                onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
-                                />
-                                {serials.length > 0 && (
-                                <div className="absolute z-10 bg-white border rounded w-full max-h-48 overflow-y-auto shadow-md mt-1">
-                                    {serials.map((serial) => (
-                                    <div
-                                        key={serial.id}
-                                        className="p-2 cursor-pointer hover:bg-gray-100"
-                                        onClick={() => handleSelectSerial(serial, index)}
-                                    >
-                                        {serial.serialNumber}
-                                    </div>
-                                    ))}
-                                </div>
-                                )}
-                            </div>
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {field.value?.map((sn) => (
-                                  <span
-                                    key={sn}
-                                    className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1"
-                                  >
-                                    {sn}
-                                    <button
-                                      type="button"
-                                      className="text-destructive hover:text-red-500"
-                                      onClick={() => field.onChange(field.value?.filter((v) => v !== sn))}
-                                    >
-                                      &times;
-                                    </button>
-                                  </span>
-                                ))}
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                    )}
-
-                    {form.getValues(`articles.${index}.article.type`) === 'CONSUMABLE' && (
+                      {form.getValues(`articles.${index}.article.type`) === 'HARDWARE' && (
                         <FormField
                             control={form.control}
-                            name={`articles.${index}.quantity`}
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Quantity</FormLabel>
-                                <FormControl>
-                                    <Input
-                                    type="number"
-                                    min={1}
-                                    placeholder="Enter quantity"
-                                    {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                                    />
-                                </FormControl>
+                            name={`articles.${index}.serialNumbers`}
+                            render={({ field: serialField }) => (
+                              <FormItem>
+                                <FormLabel>Serial Numbers</FormLabel>
+                                <div className="relative">
+                                  <Input
+                                  id={`serial-search-${index}`}
+                                  placeholder="Search and add serial numbers..."
+                                  onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`))}
+                                  />
+                                  {serials.length > 0 && (
+                                  <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-48 overflow-y-auto">
+                                      {serials.map((serial) => (
+                                      <div
+                                          key={serial.id}
+                                          className="p-2 cursor-pointer hover:bg-muted"
+                                          onClick={() => handleSelectSerial(serial, index)}
+                                      >
+                                          {serial.serialNumber}
+                                      </div>
+                                      ))}
+                                  </div>
+                                  )}
+                              </div>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {serialField.value?.map((sn) => (
+                                    <span
+                                      key={sn}
+                                      className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1"
+                                    >
+                                      {sn}
+                                      <button
+                                        type="button"
+                                        className="text-destructive hover:text-red-500"
+                                        onClick={() => serialField.onChange(serialField.value?.filter((v) => v !== sn))}
+                                      >
+                                        &times;
+                                      </button>
+                                    </span>
+                                  ))}
+                                </div>
                                 <FormMessage />
-                                </FormItem>
+                              </FormItem>
                             )}
-                        />
-                    )}
-                  </div>
-                ))}
+                          />
+                      )}
+
+                      {form.getValues(`articles.${index}.article.type`) === 'CONSUMABLE' && (
+                          <FormField
+                              control={form.control}
+                              name={`articles.${index}.quantity`}
+                              render={({ field }) => (
+                                  <FormItem>
+                                  <FormLabel>Quantity</FormLabel>
+                                  <FormControl>
+                                      <Input
+                                      type="number"
+                                      min={1}
+                                      placeholder="Enter quantity"
+                                      {...field}
+                                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
+                                      />
+                                  </FormControl>
+                                  <FormMessage />
+                                  </FormItem>
+                              )}
+                          />
+                      )}
+                    </div>
+                  ))}
+                </div>
                 
                 <div className="relative">
                     <Input
+                        id="article-search"
                         placeholder="Search for an article to add..."
                         onChange={(e) => handleArticleSearch(e.target.value)}
+                        onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
                     />
                     {searchedArticles.length > 0 && (
-                        <div className="absolute z-10 bg-white border rounded w-full max-h-56 overflow-y-auto shadow-md mt-1">
+                        <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
                             {searchedArticles.map((article) => (
                                 <div
                                 key={article.id}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => {
+                                className="p-2 cursor-pointer hover:bg-muted"
+                                onMouseDown={() => { // use onMouseDown to fire before blur
                                     append({ article: article, serialNumbers: [], quantity: 1 });
                                     setSearchedArticles([]);
+                                    const articleInput = document.getElementById('article-search');
+                                    if(articleInput) (articleInput as HTMLInputElement).value = '';
                                 }}
                                 >
                                 {article.model} ({article.type})
@@ -438,3 +457,5 @@ export function AddDistribution() {
     </Dialog>
   );
 }
+
+    
