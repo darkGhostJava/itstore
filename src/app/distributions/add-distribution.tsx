@@ -43,6 +43,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Article, Item, Person, Structure } from "@/lib/definitions";
 import { api } from "@/lib/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 const articleDistributionSchema = z.object({
   article: z.any().refine(val => val, { message: "Please select an article." }),
@@ -132,7 +133,7 @@ export function AddDistribution() {
       const distributionItems = values.articles.map(dist => ({
         articleId: dist.article.id,
         quantity: dist.article.type === 'CONSUMABLE' ? dist.quantity : dist.serialNumbers?.length,
-        itemIds: dist.article.type === 'HARDWARE' ? dist.serialNumbers : [], // This needs backend adjustment
+        itemIds: dist.article.type === 'HARDWARE' ? dist.serialNumbers?.map(sn => serials.find(s => s.serialNumber === sn)?.id).filter(Boolean) : [],
       }));
 
       const payload = {
@@ -188,8 +189,8 @@ export function AddDistribution() {
     }
   };
 
-  const handleSerialSearch = async (query: string, articleId: number) => {
-     if (query.length > 0 && articleId) {
+  const handleSerialSearch = async (serialNumber: string, articleId: number) => {
+     if (serialNumber.length > 0 && articleId) {
         const res = await searchItemsBySerialNumber(serialNumber, articleId);
         setSerials(res || []);
       } else {
@@ -291,7 +292,7 @@ export function AddDistribution() {
                     <FormItem>
                       <FormLabel>Beneficiary</FormLabel>
                       <Select
-                        onValuechange={field.onChange}
+                        onValueChange={field.onChange}
                         value={field.value}
                         disabled={!selectedSubDirectionId || persons.length === 0}
                       >
@@ -316,15 +317,22 @@ export function AddDistribution() {
               <div className="space-y-4">
                 <FormLabel>Articles to Distribute</FormLabel>
                 <div className="space-y-4">
-                  {fields.map((field, index) => (
+                  {fields.map((field, index) => {
+                     const articleType = form.getValues(`articles.${index}.article.type`);
+                     return (
                     <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
                       <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                       
-                      <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
+                        <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
+                          {articleType}
+                        </Badge>
+                      </div>
 
-                      {form.getValues(`articles.${index}.article.type`) === 'HARDWARE' && (
+                      {articleType === 'HARDWARE' && (
                         <FormField
                             control={form.control}
                             name={`articles.${index}.serialNumbers`}
@@ -374,7 +382,7 @@ export function AddDistribution() {
                           />
                       )}
 
-                      {form.getValues(`articles.${index}.article.type`) === 'CONSUMABLE' && (
+                      {articleType === 'CONSUMABLE' && (
                           <FormField
                               control={form.control}
                               name={`articles.${index}.quantity`}
@@ -396,7 +404,8 @@ export function AddDistribution() {
                           />
                       )}
                     </div>
-                  ))}
+                     )
+                  })}
                 </div>
                 
                 <div className="relative">
@@ -457,5 +466,3 @@ export function AddDistribution() {
     </Dialog>
   );
 }
-
-    
