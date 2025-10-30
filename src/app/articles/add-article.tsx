@@ -32,6 +32,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 const formSchema = z.object({
   model: z.string().min(1, "Model is required."),
@@ -53,10 +54,7 @@ export function AddArticle() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("New Article:", {
-        ...values,
-        id: Math.random(), // Mock ID
-    });
+    api.post("/articles", values);
     toast({
       title: "Article Added",
       description: `${values.model} has been added to the articles list.`,
