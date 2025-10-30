@@ -65,6 +65,9 @@ type DistributionFormValues = z.infer<typeof distributionFormSchema>;
 // Helper to parse multipart/mixed response
 async function parseMultipartResponse(response: any) {
     const contentType = response.headers['content-type'];
+    if (!contentType || !contentType.includes('boundary=')) {
+        throw new Error('Invalid multipart response: boundary not found');
+    }
     const boundary = contentType.split('boundary=')[1];
     const parts = response.data.split(`--${boundary}`);
 
@@ -75,15 +78,27 @@ async function parseMultipartResponse(response: any) {
             const contentDisposition = part.match(/Content-Disposition: form-data; name="([^"]+)"/);
             if (contentDisposition) {
                 const name = contentDisposition[1];
-                const fileData = part.split('\r\n\r\n')[1].trim();
-                const byteCharacters = atob(fileData);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                
+                // Find where the headers end and the content begins
+                const headerEndIndex = part.indexOf('\r\n\r\n');
+                if (headerEndIndex === -1) continue;
+
+                // Extract just the file data, trim whitespace and the trailing '--' from the last part
+                const fileData = part.substring(headerEndIndex).trim().replace(/--$/, '').trim();
+
+                try {
+                    const byteCharacters = atob(fileData);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                    files.push({ filename: `${name}_decharge.docx`, blob });
+                } catch (e) {
+                    console.error("Failed to decode base64 string for part:", name, e);
+                    throw e; // re-throw the error to be caught by the onSubmit handler
                 }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-                files.push({ filename: `${name}_decharge.docx`, blob });
             }
         }
     }
@@ -191,14 +206,19 @@ export function AddDistribution() {
 
       files.forEach(file => {
           const url = window.URL.createObjectURL(file.blob);
-          window.open(url, '_blank');
-          // No need to revoke, as the new tab/window will hold the reference.
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file.filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
       });
 
 
       toast({
         title: "Distribution Added",
-        description: "Distribution recorded and document(s) opened successfully.",
+        description: "Distribution recorded and document(s) downloaded successfully.",
       });
 
       form.reset();
@@ -208,7 +228,7 @@ export function AddDistribution() {
       console.error("Error adding distribution:", error);
       toast({
         title: "Error",
-        description: "Failed to add distribution.",
+        description: "Failed to add distribution or download files.",
         variant: "destructive",
       });
     } finally {
