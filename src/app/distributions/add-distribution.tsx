@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -132,17 +133,23 @@ export function AddDistribution() {
   async function onSubmit(values: DistributionFormValues) {
     setLoading(true);
     try {
-      const distributionItems = values.articles.map(dist => ({
-        articleId: dist.article.id,
-        quantity: dist.article.type === 'CONSUMABLE' ? dist.quantity : dist.serialNumbers?.length,
-        itemIds: dist.article.type === 'HARDWARE' ? dist.serialNumbers?.map(sn => serials.find(s => s.serialNumber === sn)?.id).filter(Boolean) : [],
-      }));
+      const hardwares: { [key: number]: string[] } = {};
+      const consumables: { [key: number]: number } = {};
 
+      values.articles.forEach(dist => {
+        if (dist.article.type === 'HARDWARE' && dist.serialNumbers && dist.serialNumbers.length > 0) {
+          hardwares[dist.article.id] = dist.serialNumbers;
+        } else if (dist.article.type === 'CONSUMABLE' && dist.quantity && dist.quantity > 0) {
+          consumables[dist.article.id] = dist.quantity;
+        }
+      });
+      
       const payload = {
         personId: parseInt(values.beneficiaryId),
         remarks: values.remarks,
         userId: 1, // Assuming a logged-in user
-        distributionItems,
+        hardwares,
+        consumables,
       };
 
       const response = await api.post("/distributions", payload, {
