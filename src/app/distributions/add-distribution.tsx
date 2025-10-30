@@ -28,8 +28,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { PlusCircle, Trash2 } from "lucide-react";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -42,71 +42,51 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Article, Item, Person, Structure } from "@/lib/definitions";
 import { api } from "@/lib/api";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-// ✅ Base schema
-const baseSchema = {
-  articleType: z.string().min(1, "Please select an article type."),
-  articleId: z.string().min(1, "Please select an article."),
+const articleDistributionSchema = z.object({
+  article: z.any().refine(val => val, { message: "Please select an article." }),
+  serialNumbers: z.array(z.string()).optional(),
+  quantity: z.number().optional(),
+});
+
+const distributionFormSchema = z.object({
   structureId: z.string().min(1, "Please select a direction."),
   subDirectionId: z.string().min(1, "Please select a sub direction."),
   beneficiaryId: z.string().min(1, "Please select a beneficiary."),
   remarks: z.string().optional(),
-};
-
-// ✅ Hardware schema
-const hardwareSchema = z.object({
-  ...baseSchema,
-  serialNumbers: z.array(z.string()).min(1, "Select at least one serial number."),
-  quantity: z.number().optional(),
+  articles: z.array(articleDistributionSchema).min(1, "Please add at least one article."),
 });
 
-// ✅ Consumable schema
-const consumableSchema = z.object({
-  ...baseSchema,
-  quantity: z
-    .number({ required_error: "Enter quantity" })
-    .min(1, "Quantity must be at least 1"),
-  serialNumbers: z.array(z.string()).optional(),
-});
+type DistributionFormValues = z.infer<typeof distributionFormSchema>;
 
 export function AddDistribution() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [searchedArticles, setSearchedArticles] = useState<Article[]>([]);
   const [directions, setDirections] = useState<Structure[]>([]);
   const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
   const [serials, setSerials] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
-  const [articleType, setArticleType] = useState<string>("");
-
-  // ✅ Dynamic schema based on articleType
-  const schema = useMemo(
-    () => (articleType === "CONSUMABLE" ? consumableSchema : hardwareSchema),
-    [articleType]
-  );
-
-  // ✅ Initialize form with correct schema
-  const form = useForm<z.infer<typeof hardwareSchema>>({
-    resolver: zodResolver(schema),
+  
+  const form = useForm<DistributionFormValues>({
+    resolver: zodResolver(distributionFormSchema),
     defaultValues: {
-      articleType: "",
-      articleId: "",
       structureId: "",
       subDirectionId: "",
       beneficiaryId: "",
       remarks: "",
-      serialNumbers: [],
-      quantity: 1,
+      articles: [],
     },
   });
 
-  const articleTypes = [
-    { value: "HARDWARE", label: "Hardware" },
-    { value: "CONSUMABLE", label: "Consumable" },
-  ];
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "articles",
+  });
 
-  // ✅ Load directions
+  // Load directions
   useEffect(() => {
     (async () => {
       const res = await getAllDirections();
@@ -117,17 +97,18 @@ export function AddDistribution() {
   const selectedStructureId = form.watch("structureId");
   const selectedSubDirectionId = form.watch("subDirectionId");
 
-  // ✅ Sub directions
+  // Fetch sub-directions when structure changes
   useEffect(() => {
     const fetchSubDirections = async () => {
       form.resetField("subDirectionId");
+      form.resetField("beneficiaryId");
       const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId));
       setSubDirections(res.data || []);
     };
     if (selectedStructureId) fetchSubDirections();
-  }, [selectedStructureId]);
+  }, [selectedStructureId, form]);
 
-  // ✅ Beneficiaries
+  // Fetch beneficiaries when sub-direction changes
   useEffect(() => {
     const fetchPersons = async () => {
       form.resetField("beneficiaryId");
@@ -135,26 +116,23 @@ export function AddDistribution() {
       setPersons(res.data || []);
     };
     if (selectedSubDirectionId) fetchPersons();
-  }, [selectedSubDirectionId]);
+  }, [selectedSubDirectionId, form]);
 
-  // ✅ Reset serials when article changes
-  useEffect(() => {
-    setSerials([]);
-    form.setValue("serialNumbers", []);
-  }, [form.watch("articleId")]);
-
-  // ✅ Submit handler
-  async function onSubmit(values: any) {
+  // Submit handler
+  async function onSubmit(values: DistributionFormValues) {
     setLoading(true);
     try {
+      const distributionItems = values.articles.map(dist => ({
+        articleId: dist.article.id,
+        quantity: dist.article.type === 'CONSUMABLE' ? dist.quantity : dist.serialNumbers?.length,
+        serialNumbers: dist.article.type === 'HARDWARE' ? dist.serialNumbers : [],
+      }));
+
       const payload = {
-        ...values,
-        articleId: parseInt(values.articleId),
-        structureId: parseInt(values.structureId),
         personId: parseInt(values.beneficiaryId),
-        date: new Date().toISOString(),
-        userId: 1,
-        type: "DISTRIBUTION",
+        remarks: values.remarks,
+        userId: 1, // Assuming a logged-in user
+        distributionItems,
       };
 
       const response = await api.post("/distributions", payload, {
@@ -170,13 +148,15 @@ export function AddDistribution() {
       link.download = `decharge_${Date.now()}.docx`;
       link.target = "_blank";
       link.click();
+      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Distribution Added",
-        description: `Distribution recorded successfully.`,
+        description: "Distribution recorded and document downloaded successfully.",
       });
 
       form.reset();
+      remove(); // Clear all appended fields
       setOpen(false);
     } catch (error) {
       console.error("Error adding distribution:", error);
@@ -190,7 +170,32 @@ export function AddDistribution() {
     }
   }
 
-  // ✅ Render component
+  const handleArticleSearch = async (query: string) => {
+    if (query.length > 1) {
+      const res = await searchArticles(query, "ALL"); // Search all types
+      setSearchedArticles(res.data || []);
+    } else {
+      setSearchedArticles([]);
+    }
+  };
+
+  const handleSerialSearch = async (query: string, articleId: number, fieldIndex: number) => {
+     if (query.length > 0 && articleId) {
+        const res = await searchItemsBySerialNumber(query, articleId);
+        setSerials(res || []);
+      } else {
+        setSerials([]);
+      }
+  }
+
+  const handleSelectSerial = (serial: Item, fieldIndex: number) => {
+    const currentSerials = form.getValues(`articles.${fieldIndex}.serialNumbers`) || [];
+    if (!currentSerials.includes(serial.serialNumber)) {
+        form.setValue(`articles.${fieldIndex}.serialNumbers`, [...currentSerials, serial.serialNumber]);
+    }
+    setSerials([]);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -200,315 +205,235 @@ export function AddDistribution() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add New Distribution</DialogTitle>
           <DialogDescription>
-            Record a new distribution of items.
+            Record a new distribution of items. Select a beneficiary then add articles.
           </DialogDescription>
         </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              {/* Article Type */}
-              <FormField
-                control={form.control}
-                name="articleType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Article Type</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setArticleType(value);
-                      }}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select article type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {articleTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Article Search */}
-              <FormField
-                control={form.control}
-                name="articleId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Article</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Search article" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <div className="p-2">
-                          <Input
-                            placeholder="Type to search..."
-                            disabled={!articleType}
-                            onChange={async (e) => {
-                              const q = e.target.value;
-                              if (q.length > 1) {
-                                console.log(q);
-                                
-                                const res = await searchArticles(q, articleType);
-                                
-                                setArticles(res.data || []);
-                              } else {
-                                setArticles([]);
-                              }
-                            }}
-                          />
-                        </div>
-                        <div className="border-t my-1"></div>
-                        {articles.length > 0 ? (
-                          articles.map((article) => (
-                            <SelectItem key={article.id} value={article.id.toString()}>
-                              {article.model}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className="p-2 text-sm text-gray-500">No results</div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Conditional Fields */}
-              {articleType === "HARDWARE" ? (
-                <FormField
-                  control={form.control}
-                  name="serialNumbers"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Serial Numbers</FormLabel>
-                      <div className="relative">
-                        <Input
-                          placeholder="Search serial numbers..."
-                          disabled={!form.watch("articleId")}
-                          onChange={async (e) => {
-                            const query = e.target.value;
-                            const articleId = parseInt(form.watch("articleId"));
-                            if (query.length > 0 && articleId) {
-                              const res = await searchItemsBySerialNumber(query, articleId);
-                              setSerials(res || []);
-                            } else {
-                              setSerials([]);
-                            }
-                          }}
-                        />
-                        {serials.length > 0 && (
-                          <div className="absolute z-10 bg-white border rounded w-full max-h-56 overflow-y-auto shadow-md mt-1">
-                            {serials.map((serial) => {
-                              const selected = field.value.includes(serial.serialNumber.toString());
-                              return (
-                                <div
-                                  key={serial.serialNumber}
-                                  className={`flex items-center justify-between p-2 cursor-pointer hover:bg-gray-100 ${
-                                    selected ? "bg-blue-50" : ""
-                                  }`}
-                                  onClick={() => {
-                                    if (selected) {
-                                      field.onChange(
-                                        field.value.filter(
-                                          (id) => id !== serial.serialNumber.toString()
-                                        )
-                                      );
-                                    } else {
-                                      field.onChange([
-                                        ...field.value,
-                                        serial.serialNumber.toString(),
-                                      ]);
-                                    }
-                                    setSerials([]);
-                                  }}
-                                >
-                                  <span>{serial.serialNumber}</span>
-                                  {selected && (
-                                    <span className="text-blue-600 text-xs">✓</span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                      {/* <div className="mt-2 flex flex-wrap gap-2">
-                        {field.value.map((id) => (
-                          <span
-                            key={id}
-                            className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full flex items-center gap-1"
-                          >
-                            {id}
-                            <button
-                              type="button"
-                              className="text-blue-500 hover:text-red-500"
-                              onClick={() =>
-                                field.onChange(field.value.filter((v) => v !== id))
-                              }
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div> */}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                articleType === "CONSUMABLE" && (
-                  <FormField
+        <ScrollArea className="max-h-[70vh] pr-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Beneficiary Selection */}
+              <div className="grid grid-cols-2 gap-4">
+                 <FormField
                     control={form.control}
-                    name="quantity"
+                    name="structureId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Quantity</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            placeholder="Enter quantity"
-                            value={field.value}
-                            onChange={(e) =>
-                              field.onChange(parseInt(e.target.value) || 1)
-                            }
-                          />
-                        </FormControl>
+                        <FormLabel>Structure</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a structure" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {directions.map((structure) => (
+                              <SelectItem key={structure.id} value={structure.id.toString()}>
+                                {structure.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                )
-              )}
-            </div>
 
-            {/* Structure */}
-            <FormField
-              control={form.control}
-              name="structureId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Structure</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                <FormField
+                  control={form.control}
+                  name="subDirectionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sub Direction</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!selectedStructureId || subDirections.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a sub direction" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subDirections.map((sub) => (
+                            <SelectItem key={sub.id} value={sub.id.toString()}>
+                              {sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+               <FormField
+                  control={form.control}
+                  name="beneficiaryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Beneficiary</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={!selectedSubDirectionId || persons.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a beneficiary" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {persons.map((person) => (
+                            <SelectItem key={person.id} value={person.id.toString()}>
+                              {person.firstName} {person.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+              <div className="space-y-4">
+                <FormLabel>Articles to Distribute</FormLabel>
+                {fields.map((field, index) => (
+                  <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
+                     <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                     </Button>
+                    
+                    <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
+
+                    {form.getValues(`articles.${index}.article.type`) === 'HARDWARE' && (
+                       <FormField
+                          control={form.control}
+                          name={`articles.${index}.serialNumbers`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Serial Numbers</FormLabel>
+                               <div className="relative">
+                                <Input
+                                placeholder="Search and add serial numbers..."
+                                onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
+                                />
+                                {serials.length > 0 && (
+                                <div className="absolute z-10 bg-white border rounded w-full max-h-48 overflow-y-auto shadow-md mt-1">
+                                    {serials.map((serial) => (
+                                    <div
+                                        key={serial.id}
+                                        className="p-2 cursor-pointer hover:bg-gray-100"
+                                        onClick={() => handleSelectSerial(serial, index)}
+                                    >
+                                        {serial.serialNumber}
+                                    </div>
+                                    ))}
+                                </div>
+                                )}
+                            </div>
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {field.value?.map((sn) => (
+                                  <span
+                                    key={sn}
+                                    className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1"
+                                  >
+                                    {sn}
+                                    <button
+                                      type="button"
+                                      className="text-destructive hover:text-red-500"
+                                      onClick={() => field.onChange(field.value?.filter((v) => v !== sn))}
+                                    >
+                                      &times;
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                    )}
+
+                    {form.getValues(`articles.${index}.article.type`) === 'CONSUMABLE' && (
+                        <FormField
+                            control={form.control}
+                            name={`articles.${index}.quantity`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Quantity</FormLabel>
+                                <FormControl>
+                                    <Input
+                                    type="number"
+                                    min={1}
+                                    placeholder="Enter quantity"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
+                  </div>
+                ))}
+                
+                <div className="relative">
+                    <Input
+                        placeholder="Search for an article to add..."
+                        onChange={(e) => handleArticleSearch(e.target.value)}
+                    />
+                    {searchedArticles.length > 0 && (
+                        <div className="absolute z-10 bg-white border rounded w-full max-h-56 overflow-y-auto shadow-md mt-1">
+                            {searchedArticles.map((article) => (
+                                <div
+                                key={article.id}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => {
+                                    append({ article: article, serialNumbers: [], quantity: 1 });
+                                    setSearchedArticles([]);
+                                }}
+                                >
+                                {article.model} ({article.type})
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                 <FormMessage>
+                    {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && form.formState.errors.articles.message}
+                </FormMessage>
+              </div>
+
+              {/* Remarks */}
+              <FormField
+                control={form.control}
+                name="remarks"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Remarks</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a structure" />
-                      </SelectTrigger>
+                      <Textarea placeholder="Add any relevant remarks..." {...field} />
                     </FormControl>
-                    <SelectContent>
-                      {directions.map((structure) => (
-                        <SelectItem key={structure.id} value={structure.id.toString()}>
-                          {structure.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Sub-direction */}
-            <FormField
-              control={form.control}
-              name="subDirectionId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sub Direction</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!selectedStructureId || subDirections.length === 0}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a sub direction" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {subDirections.map((sub) => (
-                        <SelectItem key={sub.id} value={sub.id.toString()}>
-                          {sub.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Beneficiary */}
-            <FormField
-              control={form.control}
-              name="beneficiaryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Beneficiary</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!selectedSubDirectionId || persons.length === 0}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a beneficiary" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {persons.map((person) => (
-                        <SelectItem key={person.id} value={person.id.toString()}>
-                          {person.firstName} {person.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Remarks */}
-            <FormField
-              control={form.control}
-              name="remarks"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Remarks</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Add remarks..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Save Distribution"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              <DialogFooter>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Saving..." : "Save Distribution"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

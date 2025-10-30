@@ -106,18 +106,16 @@ type PaginatedResponse<T> = {
 const fetchData = <T>(
   data: T[],
   { pageIndex, pageSize }: { pageIndex: number; pageSize: number }
-): PaginatedResponse<T> => {
+): { data: T[], pageCount: number } => {
   const start = pageIndex * pageSize;
   const end = start + pageSize;
   const slicedData = data.slice(start, end);
   return {
-    content: slicedData,
-    page: pageIndex,
-    size: pageSize,
-    totalElements: data.length,
-    totalPages: Math.ceil(data.length / pageSize),
+    data: slicedData,
+    pageCount: Math.ceil(data.length / pageSize),
   };
 };
+
 export const getCountItemsForStructure = async (structureId: number): Promise<number> => {
   const response = await api.get<number>(`/structures/${structureId}/items/count`);
   return response.data;
@@ -177,7 +175,7 @@ export const getPersonsByIdStructure = async (idStructure: number) => {
     data: response.data as Person[],
   };
 };
-export async function searchArticles(query: string,type:string) {
+export async function searchArticles(query: string,type:string | "ALL") {
   
   if (!query) return { data: [] };
 
@@ -191,7 +189,13 @@ export async function searchItemsBySerialNumber(serialNumber: string, articleId:
   return res.data;
 }
 
-export const fetchOperations = (options: { pageIndex: number; pageSize: number }) => { fetchData(mockOperations, options); }
+export const fetchOperations = (options: { pageIndex: number; pageSize: number }) => {
+  const paginatedData = fetchData(mockOperations, options);
+  return {
+    data: paginatedData.data,
+    pageCount: paginatedData.pageCount
+  };
+}
 export const fetchPersons = async (options: { pageIndex: number; pageSize: number }) => {
   const { pageIndex, pageSize } = options;
 
@@ -230,11 +234,19 @@ export const fetchStructures = async (options: { pageIndex: number; pageSize: nu
 };
 export const fetchItemsForArticle = (articleId: number, options: { pageIndex: number; pageSize: number }) => {
   const items = mockItems.filter(i => i.articleId === articleId);
-  return fetchData(items, options);
+  const paginatedData = fetchData(items, options);
+  return {
+    data: paginatedData.data,
+    pageCount: paginatedData.pageCount
+  };
 }
 export const fetchArrivals = (options: { pageIndex: number; pageSize: number }) => {
   const arrivals = mockOperations.filter(op => op.type === "ARRIVAL");
-  return fetchData(arrivals, options);
+  const paginatedData = fetchData(arrivals, options);
+  return {
+    data: paginatedData.data,
+    pageCount: paginatedData.pageCount
+  };
 }
 export const fetchDistributions = async (options: { pageIndex: number; pageSize: number }) => {
   const { pageIndex, pageSize } = options;
@@ -256,5 +268,9 @@ export const fetchDistributions = async (options: { pageIndex: number; pageSize:
 }
 export const fetchReparations = (options: { pageIndex: number; pageSize: number }) => {
   const reparations = mockOperations.filter(op => op.type === "REPARATION");
-  return fetchData(reparations, options);
+  const paginatedData = fetchData(reparations, options);
+  return {
+    data: paginatedData.data,
+    pageCount: paginatedData.pageCount
+  };
 }
