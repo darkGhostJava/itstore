@@ -49,12 +49,9 @@ export const columns: ColumnDef<Person>[] = [
     accessorKey: "matricule",
     header: "Matricule",
   },
-  {
+   {
+    accessorFn: (row) => `${row.structure?.name ?? ""}`,
     header: "Structure",
-    cell: ({ row }) => {
-      const structure = mockStructures.find(s => s.id === row.original.structureId);
-      return structure?.name || "N/A";
-    },
   },
   {
     id: "actions",
