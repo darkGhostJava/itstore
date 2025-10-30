@@ -78,17 +78,14 @@ async function parseMultipartResponse(response: any) {
             if (contentDispositionMatch) {
                 const name = contentDispositionMatch[1];
                 
-                // Find where the headers end and the content begins
                 const headerEndIndex = part.indexOf('\r\n\r\n');
                 if (headerEndIndex === -1) continue;
 
-                // Extract the content after the headers, removing leading/trailing whitespace
                 const content = part.substring(headerEndIndex + 4).trim();
                 
                 if (!content) continue;
 
                 try {
-                    // atob requires a pure base64 string.
                     const byteCharacters = atob(content);
                     const byteNumbers = new Array(byteCharacters.length);
                     for (let i = 0; i < byteCharacters.length; i++) {
@@ -99,7 +96,7 @@ async function parseMultipartResponse(response: any) {
                     files.push({ filename: `${name}_decharge.docx`, blob });
                 } catch (e) {
                     console.error("Failed to decode base64 string for part:", name, e);
-                    throw e; // re-throw the error to be caught by the onSubmit handler
+                    throw e;
                 }
             }
         }
