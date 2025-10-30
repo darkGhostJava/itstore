@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -68,37 +69,33 @@ async function parseMultipartResponse(response: any) {
         throw new Error('Invalid multipart response: boundary not found');
     }
     const boundary = contentType.split('boundary=')[1];
-    const parts = response.data.split(`--${boundary}`);
+    const rawData = response.data;
 
+    // Use a regular expression to find all parts
+    const partRegex = new RegExp(`--${boundary}(?:--)?\\r\\nContent-Disposition: form-data; name="([^"]+)"\\r\\n\\r\\n([\\s\\S]*?)(?=\\r\\n--${boundary})`, 'g');
+    
     const files: { filename: string, blob: Blob }[] = [];
+    let match;
 
-    for (const part of parts) {
-        if (part.includes('Content-Disposition')) {
-            const contentDispositionMatch = part.match(/Content-Disposition: form-data; name="([^"]+)"/);
-            if (contentDispositionMatch) {
-                const name = contentDispositionMatch[1];
-                
-                const headerEndIndex = part.indexOf('\r\n\r\n');
-                if (headerEndIndex === -1) continue;
+    while ((match = partRegex.exec(rawData)) !== null) {
+        const name = match[1];
+        // The captured content group might have trailing newlines. trim() it.
+        const content = match[2].trim(); 
 
-                const content = part.substring(headerEndIndex + 4).trim();
-                
-                if (!content) continue;
+        if (!content) continue;
 
-                try {
-                    const byteCharacters = atob(content);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-                    files.push({ filename: `${name}_decharge.docx`, blob });
-                } catch (e) {
-                    console.error("Failed to decode base64 string for part:", name, e);
-                    throw e;
-                }
+        try {
+            const byteCharacters = atob(content);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            files.push({ filename: `${name}_decharge.docx`, blob });
+        } catch (e) {
+            console.error("Failed to decode base64 string for part:", name, e);
+            throw e;
         }
     }
     return files;
@@ -537,3 +534,7 @@ export function AddDistribution() {
     </Dialog>
   );
 }
+
+    
+
+    
