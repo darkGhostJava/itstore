@@ -70,6 +70,8 @@ export function AddDistribution() {
   const [persons, setPersons] = useState<Person[]>([]);
   const [serials, setSerials] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
+
   
   const form = useForm<DistributionFormValues>({
     resolver: zodResolver(distributionFormSchema),
@@ -182,7 +184,7 @@ export function AddDistribution() {
 
   const handleArticleSearch = async (query: string) => {
     if (query.length > 1) {
-      const res = await searchArticles(query, "ALL"); // Search all types
+      const res = await searchArticles(query, searchArticleType);
       setSearchedArticles(res.data || []);
     } else {
       setSearchedArticles([]);
@@ -408,13 +410,29 @@ export function AddDistribution() {
                   })}
                 </div>
                 
-                <div className="relative">
-                    <Input
-                        id="article-search"
-                        placeholder="Search for an article to add..."
-                        onChange={(e) => handleArticleSearch(e.target.value)}
-                        onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
-                    />
+                <div className="relative space-y-2">
+                    <div className="flex gap-2">
+                         <Select 
+                            value={searchArticleType}
+                            onValueChange={(value: "ALL" | "HARDWARE" | "CONSUMABLE") => setSearchArticleType(value)}
+                        >
+                            <SelectTrigger className="w-[150px]">
+                                <SelectValue placeholder="Select Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Types</SelectItem>
+                                <SelectItem value="HARDWARE">Hardware</SelectItem>
+                                <SelectItem value="CONSUMABLE">Consumable</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Input
+                            id="article-search"
+                            placeholder="Search for an article to add..."
+                            onChange={(e) => handleArticleSearch(e.target.value)}
+                            onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
+                            className="flex-1"
+                        />
+                    </div>
                     {searchedArticles.length > 0 && (
                         <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
                             {searchedArticles.map((article) => (
