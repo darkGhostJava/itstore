@@ -62,45 +62,6 @@ const distributionFormSchema = z.object({
 
 type DistributionFormValues = z.infer<typeof distributionFormSchema>;
 
-// Helper to parse multipart/mixed response
-async function parseMultipartResponse(response: any) {
-    const contentType = response.headers['content-type'];
-    if (!contentType || !contentType.includes('boundary=')) {
-        throw new Error('Invalid multipart response: boundary not found');
-    }
-    const boundary = contentType.split('boundary=')[1];
-    const rawData = response.data;
-
-    // Use a regular expression to find all parts
-    const partRegex = new RegExp(`--${boundary}(?:--)?\\r\\nContent-Disposition: form-data; name="([^"]+)"\\r\\n\\r\\n([\\s\\S]*?)(?=\\r\\n--${boundary})`, 'g');
-    
-    const files: { filename: string, blob: Blob }[] = [];
-    let match;
-
-    while ((match = partRegex.exec(rawData)) !== null) {
-        const name = match[1];
-        // The captured content group might have trailing newlines. trim() it.
-        const content = match[2].trim(); 
-
-        if (!content) continue;
-
-        try {
-            const byteCharacters = atob(content);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-            files.push({ filename: `${name}_decharge.docx`, blob });
-        } catch (e) {
-            console.error("Failed to decode base64 string for part:", name, e);
-            throw e;
-        }
-    }
-    return files;
-}
-
 export function AddDistribution() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -192,29 +153,25 @@ export function AddDistribution() {
       };
 
       const response = await api.post("/distributions", payload, {
-        responseType: "text", // Expect a multipart response as text
-        headers: {
-            'Accept': 'multipart/mixed'
-        }
-      });
-      
-      const files = await parseMultipartResponse(response);
-
-      files.forEach(file => {
-          const url = window.URL.createObjectURL(file.blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = file.filename;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+        responseType: "arraybuffer" ,
       });
 
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `decharge_${Date.now()}.pdf`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Distribution Added",
-        description: "Distribution recorded and document(s) downloaded successfully.",
+        description: "Distribution recorded and document downloaded successfully.",
       });
 
       form.reset();
@@ -224,7 +181,7 @@ export function AddDistribution() {
       console.error("Error adding distribution:", error);
       toast({
         title: "Error",
-        description: "Failed to add distribution or download files.",
+        description: "Failed to add distribution.",
         variant: "destructive",
       });
     } finally {
@@ -534,7 +491,3 @@ export function AddDistribution() {
     </Dialog>
   );
 }
-
-    
-
-    
