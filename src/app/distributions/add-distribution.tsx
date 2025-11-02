@@ -62,6 +62,45 @@ const distributionFormSchema = z.object({
 
 type DistributionFormValues = z.infer<typeof distributionFormSchema>;
 
+async function parseMultipartResponse(response: any) {
+  const boundary = response.headers['content-type'].split('boundary=')[1];
+  const parts = response.data.split(`--${boundary}`);
+  
+  const files: { name: string; blob: Blob }[] = [];
+
+  for (const part of parts) {
+    if (part.includes('Content-Disposition: form-data; name="')) {
+      const nameMatch = part.match(/name="([^"]+)"/);
+      const filenameMatch = part.match(/filename="([^"]+)"/);
+      
+      if (nameMatch) {
+        const name = nameMatch[1];
+        
+        const contentMatch = part.match(/\r\n\r\n([\s\S]*)\r\n/);
+
+        if (contentMatch) {
+          const content = contentMatch[1].trim();
+          try {
+            const byteCharacters = atob(content);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            
+            files.push({ name: filenameMatch ? filenameMatch[1] : name, blob });
+          } catch (e) {
+            console.error(`Failed to decode base64 string for part: ${name}`, e);
+          }
+        }
+      }
+    }
+  }
+
+  return files;
+}
+
 export function AddDistribution() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -69,7 +108,7 @@ export function AddDistribution() {
   const [directions, setDirections] = useState<Structure[]>([]);
   const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
-  const [serials, setSerials] = useState<Item[]>([]);
+  const [serials, setSerials] = useState<Record<number, Item[]>>({});
   const [loading, setLoading] = useState(false);
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
 
@@ -151,31 +190,39 @@ export function AddDistribution() {
         hardwares,
         consumables,
       };
-
+      
       const response = await api.post("/distributions", payload, {
-        responseType: "arraybuffer" ,
+        responseType: "text",
+        headers: { 'Accept': 'multipart/mixed' }
+      });
+      
+      const files = await parseMultipartResponse(response);
+
+      files.forEach((file, index) => {
+        const url = window.URL.createObjectURL(file.blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = file.name || `decharge_${index + 1}.docx`;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
       });
 
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `decharge_${Date.now()}.pdf`;
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Distribution Added",
-        description: "Distribution recorded and document downloaded successfully.",
+        description: "Distribution recorded and documents downloaded successfully.",
       });
 
       form.reset();
       remove(); // Clear all appended fields
+      setSearchedArticles([]);
+      setDirections([]);
+      setSubDirections([]);
+      setPersons([]);
+      setSerials({});
       setOpen(false);
     } catch (error) {
       console.error("Error adding distribution:", error);
@@ -198,12 +245,12 @@ export function AddDistribution() {
     }
   };
 
-  const handleSerialSearch = async (serialNumber: string, articleId: number) => {
+  const handleSerialSearch = async (serialNumber: string, articleId: number, fieldIndex: number) => {
      if (serialNumber.length > 0 && articleId) {
         const res = await searchItemsBySerialNumber(serialNumber, articleId);
-        setSerials(res || []);
+        setSerials(prev => ({ ...prev, [fieldIndex]: res || [] }));
       } else {
-        setSerials([]);
+        setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
       }
   }
 
@@ -212,8 +259,7 @@ export function AddDistribution() {
     if (!currentSerials.includes(serial.serialNumber)) {
         form.setValue(`articles.${fieldIndex}.serialNumbers`, [...currentSerials, serial.serialNumber]);
     }
-    setSerials([]);
-    // This is a workaround to clear the input. A better way would be to manage the input's state separately.
+    setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
     const serialInput = document.getElementById(`serial-search-${fieldIndex}`);
     if (serialInput) (serialInput as HTMLInputElement).value = '';
   };
@@ -221,7 +267,7 @@ export function AddDistribution() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={loading}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Distribution
         </Button>
@@ -328,6 +374,7 @@ export function AddDistribution() {
                 <div className="space-y-4">
                   {fields.map((field, index) => {
                      const articleType = form.getValues(`articles.${index}.article.type`);
+                     const currentSerials = serials[index] || [];
                      return (
                     <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
                       <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
@@ -352,11 +399,11 @@ export function AddDistribution() {
                                   <Input
                                   id={`serial-search-${index}`}
                                   placeholder="Search and add serial numbers..."
-                                  onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`))}
+                                  onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
                                   />
-                                  {serials.length > 0 && (
+                                  {currentSerials.length > 0 && (
                                   <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-48 overflow-y-auto">
-                                      {serials.map((serial) => (
+                                      {currentSerials.map((serial) => (
                                       <div
                                           key={serial.id}
                                           className="p-2 cursor-pointer hover:bg-muted"
