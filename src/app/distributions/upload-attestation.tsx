@@ -65,9 +65,15 @@ export function UploadAttestation({ distribution }: UploadAttestationProps) {
         accept=".pdf,.doc,.docx,image/*"
         disabled={isUploading}
       />
-      <DropdownMenuItem onSelect={handleMenuItemClick} disabled={isUploading}>
-        <Upload className="mr-2 h-4 w-4" />
-        {isUploading ? "Uploading..." : "Upload Attestation"}
+      <DropdownMenuItem
+        onSelect={(e) => e.preventDefault()}
+        disabled={isUploading}
+        asChild
+      >
+        <div onClick={handleMenuItemClick} className="flex items-center cursor-pointer">
+          <Upload className="mr-2 h-4 w-4" />
+          {isUploading ? "Uploading..." : "Upload Attestation"}
+        </div>
       </DropdownMenuItem>
     </>
   );
