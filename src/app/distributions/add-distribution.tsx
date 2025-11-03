@@ -62,44 +62,6 @@ const distributionFormSchema = z.object({
 
 type DistributionFormValues = z.infer<typeof distributionFormSchema>;
 
-async function parseMultipartResponse(response: any) {
-  const boundary = response.headers['content-type'].split('boundary=')[1];
-  const parts = response.data.split(`--${boundary}`);
-  
-  const files: { name: string; blob: Blob }[] = [];
-
-  for (const part of parts) {
-    if (part.includes('Content-Disposition: form-data; name="')) {
-      const nameMatch = part.match(/name="([^"]+)"/);
-      const filenameMatch = part.match(/filename="([^"]+)"/);
-      
-      if (nameMatch) {
-        const name = nameMatch[1];
-        
-        const contentMatch = part.match(/\r\n\r\n([\s\S]*)\r\n/);
-
-        if (contentMatch) {
-          const content = contentMatch[1].trim();
-          try {
-            const byteCharacters = atob(content);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-              byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-            
-            files.push({ name: filenameMatch ? filenameMatch[1] : name, blob });
-          } catch (e) {
-            console.error(`Failed to decode base64 string for part: ${name}`, e);
-          }
-        }
-      }
-    }
-  }
-
-  return files;
-}
 
 export function AddDistribution() {
   const [open, setOpen] = useState(false);
@@ -112,7 +74,7 @@ export function AddDistribution() {
   const [loading, setLoading] = useState(false);
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
 
-  
+
   const form = useForm<DistributionFormValues>({
     resolver: zodResolver(distributionFormSchema),
     defaultValues: {
@@ -182,7 +144,7 @@ export function AddDistribution() {
           consumables[dist.article.id] = dist.quantity;
         }
       });
-      
+
       const payload = {
         personId: parseInt(values.beneficiaryId),
         remarks: values.remarks,
@@ -190,25 +152,23 @@ export function AddDistribution() {
         hardwares,
         consumables,
       };
-      
-      const response = await api.post("/distributions", payload, {
-        responseType: "text",
-        headers: { 'Accept': 'multipart/mixed' }
-      });
-      
-      const files = await parseMultipartResponse(response);
 
-      files.forEach((file, index) => {
-        const url = window.URL.createObjectURL(file.blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = file.name || `decharge_${index + 1}.docx`;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+      const response = await api.post("/distributions", payload, {
+        responseType: "arraybuffer",
       });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `decharge_${Date.now()}.pdf`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
 
       toast({
@@ -246,18 +206,18 @@ export function AddDistribution() {
   };
 
   const handleSerialSearch = async (serialNumber: string, articleId: number, fieldIndex: number) => {
-     if (serialNumber.length > 0 && articleId) {
-        const res = await searchItemsBySerialNumber(serialNumber, articleId);
-        setSerials(prev => ({ ...prev, [fieldIndex]: res || [] }));
-      } else {
-        setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
-      }
+    if (serialNumber.length > 0 && articleId) {
+      const res = await searchItemsBySerialNumber(serialNumber, articleId);
+      setSerials(prev => ({ ...prev, [fieldIndex]: res || [] }));
+    } else {
+      setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
+    }
   }
 
   const handleSelectSerial = (serial: Item, fieldIndex: number) => {
     const currentSerials = form.getValues(`articles.${fieldIndex}.serialNumbers`) || [];
     if (!currentSerials.includes(serial.serialNumber)) {
-        form.setValue(`articles.${fieldIndex}.serialNumbers`, [...currentSerials, serial.serialNumber]);
+      form.setValue(`articles.${fieldIndex}.serialNumbers`, [...currentSerials, serial.serialNumber]);
     }
     setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
     const serialInput = document.getElementById(`serial-search-${fieldIndex}`);
@@ -285,30 +245,30 @@ export function AddDistribution() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {/* Beneficiary Selection */}
               <div className="grid grid-cols-2 gap-4">
-                 <FormField
-                    control={form.control}
-                    name="structureId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Structure</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a structure" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {directions.map((structure) => (
-                              <SelectItem key={structure.id} value={structure.id.toString()}>
-                                {structure.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="structureId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Structure</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a structure" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {directions.map((structure) => (
+                            <SelectItem key={structure.id} value={structure.id.toString()}>
+                              {structure.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
@@ -340,56 +300,56 @@ export function AddDistribution() {
                 />
               </div>
 
-               <FormField
-                  control={form.control}
-                  name="beneficiaryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Beneficiary</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={!selectedSubDirectionId || persons.length === 0}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a beneficiary" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {persons.map((person) => (
-                            <SelectItem key={person.id} value={person.id.toString()}>
-                              {person.firstName} {person.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="beneficiaryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Beneficiary</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!selectedSubDirectionId || persons.length === 0}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a beneficiary" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {persons.map((person) => (
+                          <SelectItem key={person.id} value={person.id.toString()}>
+                            {person.firstName} {person.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="space-y-4">
                 <FormLabel>Articles to Distribute</FormLabel>
                 <div className="space-y-4">
                   {fields.map((field, index) => {
-                     const articleType = form.getValues(`articles.${index}.article.type`);
-                     const currentSerials = serials[index] || [];
-                     return (
-                    <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
-                      <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
+                    const articleType = form.getValues(`articles.${index}.article.type`);
+                    const currentSerials = serials[index] || [];
+                    return (
+                      <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
+                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                      
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
-                        <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
-                          {articleType}
-                        </Badge>
-                      </div>
+                        </Button>
 
-                      {articleType === 'HARDWARE' && (
-                        <FormField
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
+                          <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
+                            {articleType}
+                          </Badge>
+                        </div>
+
+                        {articleType === 'HARDWARE' && (
+                          <FormField
                             control={form.control}
                             name={`articles.${index}.serialNumbers`}
                             render={({ field: serialField }) => (
@@ -397,24 +357,24 @@ export function AddDistribution() {
                                 <FormLabel>Serial Numbers</FormLabel>
                                 <div className="relative">
                                   <Input
-                                  id={`serial-search-${index}`}
-                                  placeholder="Search and add serial numbers..."
-                                  onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
+                                    id={`serial-search-${index}`}
+                                    placeholder="Search and add serial numbers..."
+                                    onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
                                   />
                                   {currentSerials.length > 0 && (
-                                  <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-48 overflow-y-auto">
+                                    <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-48 overflow-y-auto">
                                       {currentSerials.map((serial) => (
-                                      <div
+                                        <div
                                           key={serial.id}
                                           className="p-2 cursor-pointer hover:bg-muted"
                                           onClick={() => handleSelectSerial(serial, index)}
-                                      >
+                                        >
                                           {serial.serialNumber}
-                                      </div>
+                                        </div>
                                       ))}
-                                  </div>
+                                    </div>
                                   )}
-                              </div>
+                                </div>
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   {serialField.value?.map((sn) => (
                                     <span
@@ -436,78 +396,78 @@ export function AddDistribution() {
                               </FormItem>
                             )}
                           />
-                      )}
+                        )}
 
-                      {articleType === 'CONSUMABLE' && (
+                        {articleType === 'CONSUMABLE' && (
                           <FormField
-                              control={form.control}
-                              name={`articles.${index}.quantity`}
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Quantity</FormLabel>
-                                  <FormControl>
-                                      <Input
-                                      type="number"
-                                      min={1}
-                                      placeholder="Enter quantity"
-                                      {...field}
-                                      onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
-                                      />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
+                            control={form.control}
+                            name={`articles.${index}.quantity`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Quantity</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    placeholder="Enter quantity"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
                           />
-                      )}
-                    </div>
-                     )
+                        )}
+                      </div>
+                    )
                   })}
                 </div>
-                
+
                 <div className="relative space-y-2">
-                    <div className="flex gap-2">
-                         <Select 
-                            value={searchArticleType}
-                            onValueChange={(value: "ALL" | "HARDWARE" | "CONSUMABLE") => setSearchArticleType(value)}
+                  <div className="flex gap-2">
+                    <Select
+                      value={searchArticleType}
+                      onValueChange={(value: "ALL" | "HARDWARE" | "CONSUMABLE") => setSearchArticleType(value)}
+                    >
+                      <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Select Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">All Types</SelectItem>
+                        <SelectItem value="HARDWARE">Hardware</SelectItem>
+                        <SelectItem value="CONSUMABLE">Consumable</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      id="article-search"
+                      placeholder="Search for an article to add..."
+                      onChange={(e) => handleArticleSearch(e.target.value)}
+                      onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
+                      className="flex-1"
+                    />
+                  </div>
+                  {searchedArticles.length > 0 && (
+                    <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
+                      {searchedArticles.map((article) => (
+                        <div
+                          key={article.id}
+                          className="p-2 cursor-pointer hover:bg-muted"
+                          onMouseDown={() => { // use onMouseDown to fire before blur
+                            append({ article: article, serialNumbers: [], quantity: 1 });
+                            setSearchedArticles([]);
+                            const articleInput = document.getElementById('article-search');
+                            if (articleInput) (articleInput as HTMLInputElement).value = '';
+                          }}
                         >
-                            <SelectTrigger className="w-[150px]">
-                                <SelectValue placeholder="Select Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="ALL">All Types</SelectItem>
-                                <SelectItem value="HARDWARE">Hardware</SelectItem>
-                                <SelectItem value="CONSUMABLE">Consumable</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <Input
-                            id="article-search"
-                            placeholder="Search for an article to add..."
-                            onChange={(e) => handleArticleSearch(e.target.value)}
-                            onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
-                            className="flex-1"
-                        />
-                    </div>
-                    {searchedArticles.length > 0 && (
-                        <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
-                            {searchedArticles.map((article) => (
-                                <div
-                                key={article.id}
-                                className="p-2 cursor-pointer hover:bg-muted"
-                                onMouseDown={() => { // use onMouseDown to fire before blur
-                                    append({ article: article, serialNumbers: [], quantity: 1 });
-                                    setSearchedArticles([]);
-                                    const articleInput = document.getElementById('article-search');
-                                    if(articleInput) (articleInput as HTMLInputElement).value = '';
-                                }}
-                                >
-                                {article.model} ({article.type})
-                                </div>
-                            ))}
+                          {article.model} ({article.type})
                         </div>
-                    )}
+                      ))}
+                    </div>
+                  )}
                 </div>
-                 <FormMessage>
-                    {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && form.formState.errors.articles.message}
+                <FormMessage>
+                  {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && form.formState.errors.articles.message}
                 </FormMessage>
               </div>
 
