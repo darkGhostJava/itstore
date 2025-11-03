@@ -1,8 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Operation } from "@/lib/definitions";
-import { mockUsers, mockItems, mockArticles, mockPersons } from "@/lib/data";
+import type { Distribution } from "@/lib/definitions";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -13,8 +12,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
+import { UploadAttestation } from "./upload-attestation";
 
-export const columns: ColumnDef<Operation>[] = [
+export const columns: ColumnDef<Distribution>[] = [
   {
     header: "Article",
     cell: ({ row }) => {
@@ -53,6 +53,7 @@ export const columns: ColumnDef<Operation>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
+      const distribution = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -64,6 +65,7 @@ export const columns: ColumnDef<Operation>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem>View Details</DropdownMenuItem>
+            <UploadAttestation distribution={distribution} />
           </DropdownMenuContent>
         </DropdownMenu>
       );
