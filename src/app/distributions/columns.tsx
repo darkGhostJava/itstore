@@ -9,10 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { UploadAttestation } from "./upload-attestation";
+import { DownloadAttestation } from "./download-attestation";
 
 export const columns: ColumnDef<Distribution>[] = [
   {
@@ -65,7 +67,9 @@ export const columns: ColumnDef<Distribution>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem>View Details</DropdownMenuItem>
+            <DropdownMenuSeparator />
             <UploadAttestation distribution={distribution} />
+            <DownloadAttestation distribution={distribution} />
           </DropdownMenuContent>
         </DropdownMenu>
       );
