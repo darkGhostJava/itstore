@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { mockArticles } from "@/lib/data";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { fetchItemsForArticle } from "@/lib/data";
+import { fetchItemsForArticle, api } from "@/lib/data";
 
 const itemColumns: ColumnDef<Item>[] = [
   {
@@ -28,28 +27,56 @@ const itemColumns: ColumnDef<Item>[] = [
 
 export default function ArticleDetailPage({ params }: { params: { id: string } }) {
   const articleId = parseInt(params.id);
-  const article = mockArticles.find(a => a.id === articleId);
+  const [article, setArticle] = React.useState<Article | null>(null);
 
   const [data, setData] = React.useState<Item[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoadingArticle, setIsLoadingArticle] = React.useState(true);
+
+  React.useEffect(() => {
+    const getArticle = async () => {
+      if (!articleId) return;
+      try {
+        setIsLoadingArticle(true);
+        const response = await api.get<Article>(`/articles/${articleId}`);
+        setArticle(response.data);
+      } catch (error) {
+        console.error("Failed to fetch article:", error);
+        setArticle(null);
+      } finally {
+        setIsLoadingArticle(false);
+      }
+    };
+    getArticle();
+  }, [articleId]);
+
 
   const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     if (!articleId) return;
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const result = fetchItemsForArticle(articleId, { pageIndex, pageSize });
-    setData(result.data);
-    setPageCount(result.pageCount);
-    setIsLoading(false);
+    try {
+      const result = await fetchItemsForArticle(articleId, { pageIndex, pageSize });
+      setData(result.data);
+      setPageCount(result.pageCount);
+    } catch(error) {
+      console.error("Failed to fetch items:", error);
+      setData([]);
+      setPageCount(0);
+    } finally {
+      setIsLoading(false);
+    }
   }, [articleId]);
 
+
+  if (isLoadingArticle) {
+    // You can return a more detailed loader here
+    return <div>Loading article details...</div>;
+  }
 
   if (!article) {
     notFound();
   }
-
-  const items = mockItems.filter(i => i.articleId === article.id);
 
   return (
     <div className="flex flex-col gap-8">
@@ -73,7 +100,7 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
                 </Badge>
               </div>
               <div>
-                <span className="font-semibold">Total Items: </span> {items.length}
+                <span className="font-semibold">Total Items: </span> {article.quantity}
               </div>
             </CardContent>
           </Card>

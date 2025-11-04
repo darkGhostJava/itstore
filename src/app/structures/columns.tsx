@@ -2,7 +2,6 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Structure } from "@/lib/definitions";
-import { mockPersons, mockStructures } from "@/lib/data";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,8 +21,7 @@ export const columns: ColumnDef<Structure>[] = [
   },
   {
     header: "Chef",
-    accessorFn: (row) => `${row.chef?.firstName ?? ""} ${row.chef?.lastName ?? ""}`,
-
+    accessorFn: (row) => row.chef ? `${row.chef.firstName} ${row.chef.lastName}` : "N/A",
   },
   {
     header: "Items",
