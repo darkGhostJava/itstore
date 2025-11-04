@@ -6,6 +6,15 @@ import { DataTable } from "@/components/data-table/data-table";
 import { columns } from "./columns";
 import { fetchOperations } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
+import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
+
+const operationTypes = [
+  { label: "Arrival", value: "ARRIVAL" },
+  { label: "Distribution", value: "DISTRIBUTION" },
+  { label: "Reparation", value: "REPARATION" },
+  { label: "Reversement", value: "REVERSEMENT" },
+  { label: "Reforme", value: "REFORME" },
+]
 
 export default function OperationsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
@@ -15,7 +24,7 @@ export default function OperationsPage() {
   const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 500));
-    const result = fetchOperations({ pageIndex, pageSize });
+    const result = await fetchOperations({ pageIndex, pageSize });
     setData(result.data);
     setPageCount(result.pageCount);
     setIsLoading(false);
@@ -34,6 +43,13 @@ export default function OperationsPage() {
         isLoading={isLoading}
         filterKey="remarks" 
         filterPlaceholder="Filter by remarks..."
+        facetedFilters={
+          <DataTableFacetedFilter
+            column={null} // Pass null or a mock column, it's not used in this specific implementation
+            title="Type"
+            options={operationTypes}
+          />
+        }
       />
     </div>
   );

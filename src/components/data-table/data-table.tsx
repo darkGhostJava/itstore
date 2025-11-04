@@ -38,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   isLoading?: boolean
   filterKey?: string
   filterPlaceholder?: string
+  facetedFilters?: React.ReactNode
 }
 
 export function DataTable<TData, TValue>({
@@ -48,6 +49,7 @@ export function DataTable<TData, TValue>({
   isLoading = false,
   filterKey,
   filterPlaceholder,
+  facetedFilters,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -106,6 +108,7 @@ export function DataTable<TData, TValue>({
         table={table}
         filterKey={filterKey}
         filterPlaceholder={filterPlaceholder}
+        facetedFilters={facetedFilters}
       />
       <div className="rounded-md border">
         <Table>

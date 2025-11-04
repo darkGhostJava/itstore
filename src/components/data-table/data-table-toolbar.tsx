@@ -11,12 +11,14 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>
   filterKey?: string
   filterPlaceholder?: string
+  facetedFilters?: React.ReactNode
 }
 
 export function DataTableToolbar<TData>({
   table,
   filterKey,
   filterPlaceholder,
+  facetedFilters,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -35,6 +37,7 @@ export function DataTableToolbar<TData>({
             className="h-8 w-[150px] lg:w-[250px]"
           />
         )}
+        {facetedFilters}
         {isFiltered && (
           <Button
             variant="ghost"
