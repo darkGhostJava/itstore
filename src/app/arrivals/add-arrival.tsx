@@ -182,9 +182,9 @@ export function AddArrival() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="BUDGET_2023">Budget 2023</SelectItem>
-                        <SelectItem value="BUDGET_2024">Budget 2024</SelectItem>
-                        <SelectItem value="EXCEPTIONAL">Exceptional Budget</SelectItem>
+                        <SelectItem value="COOPERATION">Budget de coopération</SelectItem>
+                        <SelectItem value="MDN">Budget Mdn</SelectItem>
+                        <SelectItem value="PRESIDENCE">Présidence</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
