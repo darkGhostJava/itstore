@@ -2,7 +2,6 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Operation } from "@/lib/definitions";
-import { mockUsers, mockItems, mockArticles, mockPersons } from "@/lib/data";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -44,17 +43,16 @@ export const columns: ColumnDef<Operation>[] = [
   },
   {
     header: "User",
-    accessorKey: "userId",
+    accessorKey: "user.name",
     cell: ({ row }) => {
-      const user = mockUsers.find(u => u.id === row.original.userId);
-      return user?.name || "Unknown";
+      return row.original.user?.name || "Unknown";
     },
   },
   {
     header: "Beneficiary",
-    accessorKey: "beneficiaryId",
+    accessorKey: "beneficiary.firstName",
     cell: ({ row }) => {
-      const person = mockPersons.find(p => p.id === row.original.beneficiaryId);
+      const person = row.original.beneficiary;
       return person ? `${person.firstName} ${person.lastName}` : "N/A";
     },
   },

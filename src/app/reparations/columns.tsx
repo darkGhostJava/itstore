@@ -1,8 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Operation } from "@/lib/definitions";
-import { mockUsers, mockItems, mockArticles } from "@/lib/data";
+import type { Operation, Item } from "@/lib/definitions";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -18,18 +17,18 @@ export const columns: ColumnDef<Operation>[] = [
   {
     header: "Article",
     cell: ({ row }) => {
-      const firstItemId = row.original.itemIds[0];
-      const item = mockItems.find(i => i.id === firstItemId);
-      const article = item ? mockArticles.find(a => a.id === item.articleId) : null;
+      const items = (row.original as any).items as Item[] | undefined;
+      if (!items || items.length === 0) return "N/A";
+      const article = items[0].article;
       return article ? `${article.model} - ${article.designation}` : "N/A";
     },
   },
   {
     header: "Serial Number",
      cell: ({ row }) => {
-      const firstItemId = row.original.itemIds[0];
-      const item = mockItems.find(i => i.id === firstItemId);
-      return item?.serialNumber || 'N/A';
+      const items = (row.original as any).items as Item[] | undefined;
+      if (!items || items.length === 0) return "N/A";
+      return items[0]?.serialNumber || 'N/A';
     },
   },
   {
@@ -44,8 +43,7 @@ export const columns: ColumnDef<Operation>[] = [
   {
     header: "User",
     cell: ({ row }) => {
-      const user = mockUsers.find(u => u.id === row.original.userId);
-      return user?.name || "Unknown";
+      return row.original.user?.name || "Unknown";
     },
   },
   {

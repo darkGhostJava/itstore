@@ -2,7 +2,6 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Person } from "@/lib/definitions";
-import { mockStructures } from "@/lib/data";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,8 +49,9 @@ export const columns: ColumnDef<Person>[] = [
     header: "Matricule",
   },
    {
-    accessorFn: (row) => `${row.structure?.name ?? ""}`,
+    accessorKey: "structure.name",
     header: "Structure",
+    cell: ({ row }) => row.original.structure?.name ?? "N/A",
   },
   {
     id: "actions",
