@@ -23,6 +23,8 @@ export async function StatsCards() {
     { title: "Items in Stock", value: statsData.itemsInStock, icon: Boxes },
     { title: "Distributed Items", value: statsData.distributedItems, icon: ArrowRightLeft },
     { title: "Under Repair", value: statsData.underRepair, icon: Wrench },
+    { title: "Reformed", value: statsData.reformedCount, icon: Building },
+
     { title: "Structures", value: statsData.structuresCount, icon: Building },
   ];
 
@@ -44,19 +46,19 @@ export async function StatsCards() {
 }
 
 export function StatsCardsSkeleton() {
-    return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {Array.from({ length: 5 }).map((_, i) => (
-                <Card key={i}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-4" />
-                    </CardHeader>
-                    <CardContent>
-                        <Skeleton className="h-8 w-12" />
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
-    );
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Card key={i}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-8 w-12" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }
