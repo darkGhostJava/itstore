@@ -46,7 +46,7 @@ export function DownloadAttestation({ distribution }: DownloadAttestationProps) 
       window.URL.revokeObjectURL(url);
       
     } catch (error: any) {
-      if (error.response && error.response.status === 404) {
+      if (error.response && (error.response.status === 404 || error.response.status === 400)) {
         toast({
           variant: "destructive",
           title: "Attestation Not Found",
