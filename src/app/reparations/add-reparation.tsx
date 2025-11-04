@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Item } from "@/lib/definitions";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StatusBadge } from "@/components/shared/status-badge";
 
 const reparationItemSchema = z.object({
   item: z.any().refine(val => val, { message: "Please select an item." }),
@@ -132,7 +133,7 @@ export function AddReparation() {
                       <div>
                         <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
                         <p className="text-sm">Serial Number: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
-                        <p className="text-sm">Current Status: <Badge variant="outline">{field.item.status.replace("_", " ")}</Badge></p>
+                        <p className="text-sm">Current Status: <StatusBadge status={field.item.status} /></p>
                       </div>
 
                       <FormField
@@ -162,7 +163,7 @@ export function AddReparation() {
                       id="item-search"
                       placeholder="Search by serial number to add..."
                       onChange={(e) => handleItemSearch(e.target.value)}
-                       onBlur={() => setTimeout(() => setSearchedItems([])), 150)}
+                       onBlur={() => setTimeout(() => setSearchedItems([]), 150)}
                       className="flex-1"
                     />
                     {searchedItems.length > 0 && (

@@ -15,5 +15,5 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       ? "destructive"
       : "outline";
       
-  return <Badge variant={variant}>{status.replace("_", " ")}</Badge>;
+  return <Badge variant={variant}>{status.replace(/_/g, " ")}</Badge>;
 }
