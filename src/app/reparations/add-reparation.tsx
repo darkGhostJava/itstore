@@ -22,19 +22,23 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { PlusCircle, Trash2 } from "lucide-react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { searchItems } from "@/lib/data";
+import { searchItems, registerReparations } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Item } from "@/lib/definitions";
-import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-const reparationFormSchema = z.object({
+const reparationItemSchema = z.object({
   item: z.any().refine(val => val, { message: "Please select an item." }),
   remarks: z.string().min(1, "Remarks are required."),
+});
+
+const reparationFormSchema = z.object({
+  reparations: z.array(reparationItemSchema).min(1, "Please add at least one item for repair."),
 });
 
 type ReparationFormValues = z.infer<typeof reparationFormSchema>;
@@ -48,34 +52,39 @@ export function AddReparation() {
   const form = useForm<ReparationFormValues>({
     resolver: zodResolver(reparationFormSchema),
     defaultValues: {
-      item: null,
-      remarks: "",
+      reparations: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "reparations",
   });
 
   async function onSubmit(values: ReparationFormValues) {
     setLoading(true);
     try {
-      const payload = {
-        itemId: values.item.id,
-        remarks: values.remarks,
+      const payload = values.reparations.map(rep => ({
+        itemId: rep.item.id,
+        remarks: rep.remarks,
         userId: 1, // Assuming a logged-in user
-      };
+      }));
 
-      await api.post("/reparations", payload);
+      await registerReparations(payload);
 
       toast({
-        title: "Repair Registered",
-        description: "The item has been successfully registered for repair.",
+        title: "Repair(s) Registered",
+        description: "The items have been successfully registered for repair.",
       });
 
       form.reset();
+      remove();
       setOpen(false);
     } catch (error) {
       console.error("Error registering repair:", error);
       toast({
         title: "Error",
-        description: "Failed to register the item for repair.",
+        description: "Failed to register the items for repair.",
         variant: "destructive",
       });
     } finally {
@@ -91,8 +100,6 @@ export function AddReparation() {
       setSearchedItems([]);
     }
   };
-  
-  const selectedItem = form.watch("item");
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -103,28 +110,59 @@ export function AddReparation() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Register Item for Repair</DialogTitle>
+          <DialogTitle>Register Items for Repair</DialogTitle>
           <DialogDescription>
-            Find an item by its serial number and add remarks.
+            Find items by serial number and add repair remarks for each.
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            
-            <FormField
-              control={form.control}
-              name="item"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Item Serial Number</FormLabel>
+        <ScrollArea className="max-h-[70vh] pr-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-4">
+                <FormLabel>Items to Repair</FormLabel>
+                <div className="space-y-4">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
+                       <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      
+                      <div>
+                        <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
+                        <p className="text-sm">Serial Number: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
+                        <p className="text-sm">Current Status: <Badge variant="outline">{field.item.status.replace("_", " ")}</Badge></p>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name={`reparations.${index}.remarks`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Repair Remarks</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describe the issue with this item..."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="relative space-y-2">
+                  <FormLabel htmlFor="item-search">Add Item by Serial Number</FormLabel>
                    <div className="relative">
                     <Input
                       id="item-search"
-                      placeholder="Search by serial number..."
+                      placeholder="Search by serial number to add..."
                       onChange={(e) => handleItemSearch(e.target.value)}
-                       onBlur={() => setTimeout(() => setSearchedItems([]), 150)}
+                       onBlur={() => setTimeout(() => setSearchedItems([])), 150)}
                       className="flex-1"
                     />
                     {searchedItems.length > 0 && (
@@ -134,10 +172,10 @@ export function AddReparation() {
                             key={item.id}
                             className="p-2 cursor-pointer hover:bg-muted"
                             onMouseDown={() => {
-                              field.onChange(item);
+                              append({ item: item, remarks: "" });
                               setSearchedItems([]);
                               const searchInput = document.getElementById('item-search');
-                              if (searchInput) (searchInput as HTMLInputElement).value = item.serialNumber;
+                              if (searchInput) (searchInput as HTMLInputElement).value = "";
                             }}
                           >
                             {item.serialNumber} ({item.article.model})
@@ -146,42 +184,19 @@ export function AddReparation() {
                       </div>
                     )}
                   </div>
-                  {selectedItem && (
-                    <div className="mt-2 rounded-md border p-4 space-y-2">
-                         <p className="font-semibold text-sm">{selectedItem.article.model} - <span className="text-xs text-muted-foreground">{selectedItem.article.designation}</span></p>
-                         <p className="text-sm">Serial Number: <Badge variant="secondary">{selectedItem.serialNumber}</Badge></p>
-                         <p className="text-sm">Current Status: <Badge variant="outline">{selectedItem.status.replace("_", " ")}</Badge></p>
-                    </div>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="remarks"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Remarks</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe the issue with the item..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Save Repair"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                  <FormMessage>
+                    {form.formState.errors.reparations &&  typeof form.formState.errors.reparations.message === 'string' && form.formState.errors.reparations.message}
+                  </FormMessage>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Saving..." : "Save Repairs"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

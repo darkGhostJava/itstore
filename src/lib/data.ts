@@ -192,3 +192,7 @@ export const fetchReparations = async (options: { pageIndex: number; pageSize: n
     pageCount: response.data.totalPages
   };
 }
+
+export const registerReparations = async (payload: { itemId: number; remarks: string; userId: number; }[]) => {
+  return await api.post("/reparations/batch", payload);
+}
