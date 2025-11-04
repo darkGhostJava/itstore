@@ -42,7 +42,7 @@ import { Badge } from "@/components/ui/badge";
 
 const articleArrivalSchema = z.object({
   article: z.any().refine(val => val, { message: "Please select an article." }),
-  serialNumbers: z.string().optional(),
+  serialNumbers: z.array(z.string()).optional(),
   quantity: z.number().optional(),
 });
 
@@ -60,6 +60,7 @@ export function AddArrival() {
   const [searchedArticles, setSearchedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
+  const [serialNumberInputs, setSerialNumberInputs] = useState<Record<number, string>>({});
 
   const form = useForm<ArrivalFormValues>({
     resolver: zodResolver(arrivalFormSchema),
@@ -70,7 +71,7 @@ export function AddArrival() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "articles",
   });
@@ -82,7 +83,7 @@ export function AddArrival() {
         ...values,
         articles: values.articles.map(a => ({
           articleId: a.article.id,
-          ...(a.article.type === 'HARDWARE' ? { serialNumbers: a.serialNumbers?.split('\n').filter(sn => sn.trim() !== '') || [] } : {}),
+          ...(a.article.type === 'HARDWARE' ? { serialNumbers: a.serialNumbers || [] } : {}),
           ...(a.article.type === 'CONSUMABLE' ? { quantity: a.quantity } : {}),
         })),
         userId: 1, // Assuming a logged-in user
@@ -117,6 +118,36 @@ export function AddArrival() {
     } else {
       setSearchedArticles([]);
     }
+  };
+
+  const handleAddSerialNumber = (index: number) => {
+    const newSerial = serialNumberInputs[index]?.trim();
+    if (!newSerial) return;
+
+    const currentSerials = form.getValues(`articles.${index}.serialNumbers`) || [];
+    if (!currentSerials.includes(newSerial)) {
+        const field = fields[index];
+        update(index, {
+            ...field,
+            serialNumbers: [...currentSerials, newSerial]
+        });
+        setSerialNumberInputs(prev => ({ ...prev, [index]: '' }));
+    } else {
+        toast({
+            title: "Duplicate Serial Number",
+            description: "This serial number has already been added.",
+            variant: "destructive"
+        });
+    }
+  };
+
+  const handleRemoveSerialNumber = (articleIndex: number, serialToRemove: string) => {
+    const currentSerials = form.getValues(`articles.${articleIndex}.serialNumbers`) || [];
+    const field = fields[articleIndex];
+    update(articleIndex, {
+        ...field,
+        serialNumbers: currentSerials.filter(sn => sn !== serialToRemove)
+    });
   };
 
   return (
@@ -166,6 +197,7 @@ export function AddArrival() {
                 <div className="space-y-4">
                   {fields.map((field, index) => {
                     const articleType = form.getValues(`articles.${index}.article.type`);
+                    const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
                     return (
                       <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
                         <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
@@ -180,19 +212,38 @@ export function AddArrival() {
                         </div>
 
                         {articleType === 'HARDWARE' && (
-                          <FormField
-                            control={form.control}
-                            name={`articles.${index}.serialNumbers`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Serial Numbers</FormLabel>
-                                <FormControl>
-                                  <Textarea placeholder="Enter each serial number on a new line..." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <FormItem>
+                            <FormLabel>Serial Numbers</FormLabel>
+                            <div className="flex gap-2">
+                              <Input
+                                value={serialNumberInputs[index] || ''}
+                                onChange={(e) => setSerialNumberInputs(prev => ({ ...prev, [index]: e.target.value }))}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddSerialNumber(index);
+                                  }
+                                }}
+                                placeholder="Enter serial number..."
+                              />
+                              <Button type="button" onClick={() => handleAddSerialNumber(index)}>Add</Button>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {addedSerials?.map((sn) => (
+                                <Badge key={sn} variant="secondary" className="flex items-center gap-1">
+                                  {sn}
+                                  <button
+                                    type="button"
+                                    className="ml-1 rounded-full text-destructive hover:text-red-500"
+                                    onClick={() => handleRemoveSerialNumber(index, sn)}
+                                  >
+                                    &times;
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
                         )}
 
                         {articleType === 'CONSUMABLE' && (
@@ -251,7 +302,7 @@ export function AddArrival() {
                           key={article.id}
                           className="p-2 cursor-pointer hover:bg-muted"
                           onMouseDown={() => {
-                            append({ article: article, serialNumbers: '', quantity: 1 });
+                            append({ article: article, serialNumbers: [], quantity: 1 });
                             setSearchedArticles([]);
                             const articleInput = document.getElementById('article-search');
                             if (articleInput) (articleInput as HTMLInputElement).value = '';
