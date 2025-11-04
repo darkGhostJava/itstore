@@ -13,6 +13,8 @@ type PaginatedResponse<T> = {
 
 export const getStats = async (): Promise<Stats> => {
   const response = await api.get('/stats');
+  console.log(response);
+  
   return response.data;
 }
 
@@ -200,7 +202,7 @@ export const fetchReparations = async (options: { pageIndex: number; pageSize: n
 }
 
 export const registerReparations = async (payload: { itemId: number; remarks: string; userId: number; }[]) => {
-  return await api.post("/reparations/batch", payload);
+  return await api.post("/reparations", payload);
 }
 
     
