@@ -79,14 +79,23 @@ export function AddArrival() {
   async function onSubmit(values: ArrivalFormValues) {
     setLoading(true);
     try {
+      const hardwares: { [key: number]: string[] } = {};
+      const consumables: { [key: number]: number } = {};
+
+      values.articles.forEach(a => {
+        if (a.article.type === 'HARDWARE') {
+          hardwares[a.article.id] = a.serialNumbers || [];
+        } else if (a.article.type === 'CONSUMABLE') {
+          consumables[a.article.id] = a.quantity || 1;
+        }
+      });
+      
       const payload = {
-        ...values,
-        articles: values.articles.map(a => ({
-          articleId: a.article.id,
-          ...(a.article.type === 'HARDWARE' ? { serialNumbers: a.serialNumbers || [] } : {}),
-          ...(a.article.type === 'CONSUMABLE' ? { quantity: a.quantity } : {}),
-        })),
+        budget: values.budget,
+        hardwares,
+        consumables,
         userId: 1, // Assuming a logged-in user
+        remark: values.remarks,
       };
 
       await api.post("/arrivals", payload);
