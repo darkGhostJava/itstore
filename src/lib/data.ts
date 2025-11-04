@@ -81,6 +81,12 @@ export async function searchItemsBySerialNumber(serialNumber: string, articleId:
   return res.data;
 }
 
+export async function searchItemsBySerialNumberAndPerson(personId: number, serialNumber: string): Promise<Item[]> {
+  if (serialNumber.length < 2) return [];
+  const res = await api.get<Item[]>(`/items/search/person/${personId}/${serialNumber}`);
+  return res.data;
+}
+
 export const fetchOperations = async (options: { pageIndex: number; pageSize: number }) => {
   const { pageIndex, pageSize } = options;
   const response = await api.get<PaginatedResponse<Operation>>("/operations", {
@@ -196,3 +202,5 @@ export const fetchReparations = async (options: { pageIndex: number; pageSize: n
 export const registerReparations = async (payload: { itemId: number; remarks: string; userId: number; }[]) => {
   return await api.post("/reparations/batch", payload);
 }
+
+    
