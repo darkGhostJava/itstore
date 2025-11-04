@@ -1,3 +1,4 @@
+
 import { api } from './api';
 import type { Article, Item, Person, Structure, Operation, Distribution, Stats } from './definitions';
 
@@ -67,6 +68,13 @@ export async function searchArticles(query: string,type:string | "ALL") {
   const res = await api.get(`/articles/searchByName/${encodeURIComponent(type)}/${encodeURIComponent(query)}`);
   return res;
 }
+
+export async function searchItems(serialNumber: string): Promise<Item[]> {
+  if (serialNumber.length < 2) return [];
+  const res = await api.get<Item[]>(`/items/search/${serialNumber}`);
+  return res.data;
+}
+
 
 export async function searchItemsBySerialNumber(serialNumber: string, articleId: number) {
   const res = await api.get(`/items/search/${articleId}/${serialNumber}`);
