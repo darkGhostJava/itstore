@@ -9,7 +9,7 @@ export type Article = {
 export type Item = {
   id: number;
   serialNumber: string;
-  articleId: number;
+  article: Article;
   status: "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED";
 };
 
@@ -19,7 +19,7 @@ export type Person = {
   lastName: string;
   grade: string;
   matricule: string;
-  structureId: number;
+  structure: Structure;
   function: string;
 };
 
@@ -35,17 +35,18 @@ export type Operation = {
   type: "ARRIVAL" | "DISTRIBUTION" | "REPARATION" | "REVERSEMENT" | "REFORME";
   date: string;
   remarks: string;
-  itemIds: number[];
-  beneficiaryId?: number;
-  userId: number;
+  user: User;
+  beneficiary?: Person;
 };
+
 export type Distribution = {
   id: number;
   date: string;
   remarks: string;
   item: Item;
-  beneficiary: Person;
+  person: Person;
   user: User;
+  hasAttestation: boolean;
 }
 
 export type User = {
@@ -53,3 +54,11 @@ export type User = {
   username: string;
   name: string;
 };
+
+export type Stats = {
+  totalArticles: number;
+  itemsInStock: number;
+  distributedItems: number;
+  underRepair: number;
+  structuresCount: number;
+}

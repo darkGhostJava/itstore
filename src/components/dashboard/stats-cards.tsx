@@ -6,7 +6,7 @@ import {
   Wrench,
   Building,
 } from "lucide-react";
-import { mockArticles, mockItems, mockStructures } from "@/lib/data";
+import { getStats } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 
 type StatCard = {
@@ -15,25 +15,15 @@ type StatCard = {
   icon: React.ElementType;
 };
 
-export function StatsCards() {
-  const totalArticles = mockArticles.length;
-  const itemsInStock = mockItems.filter(
-    (item) => item.status === "IN_STOCK"
-  ).length;
-  const distributedItems = mockItems.filter(
-    (item) => item.status === "DISTRIBUTED"
-  ).length;
-  const underRepair = mockItems.filter(
-    (item) => item.status === "UNDER_REPAIR"
-  ).length;
-  const structuresCount = mockStructures.length;
+export async function StatsCards() {
+  const statsData = await getStats();
 
   const stats: StatCard[] = [
-    { title: "Total Articles", value: totalArticles, icon: Package },
-    { title: "Items in Stock", value: itemsInStock, icon: Boxes },
-    { title: "Distributed Items", value: distributedItems, icon: ArrowRightLeft },
-    { title: "Under Repair", value: underRepair, icon: Wrench },
-    { title: "Structures", value: structuresCount, icon: Building },
+    { title: "Total Articles", value: statsData.totalArticles, icon: Package },
+    { title: "Items in Stock", value: statsData.itemsInStock, icon: Boxes },
+    { title: "Distributed Items", value: statsData.distributedItems, icon: ArrowRightLeft },
+    { title: "Under Repair", value: statsData.underRepair, icon: Wrench },
+    { title: "Structures", value: statsData.structuresCount, icon: Building },
   ];
 
   return (

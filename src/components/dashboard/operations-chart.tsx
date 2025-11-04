@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   Bar,
   BarChart,
@@ -10,22 +11,40 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockOperations } from "@/lib/data";
+import { fetchAllOperations } from "@/lib/data";
+import type { Operation } from "@/lib/definitions";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
 
 export function OperationsChart() {
   const { theme } = useTheme();
-  
-  const operationCounts = mockOperations.reduce((acc, op) => {
-    acc[op.type] = (acc[op.type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const [chartData, setChartData] = useState<{ name: string; total: number }[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const chartData = Object.entries(operationCounts).map(([name, total]) => ({
-    name,
-    total,
-  }));
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        setLoading(true);
+        const operations: Operation[] = await fetchAllOperations();
+        const operationCounts = operations.reduce((acc, op) => {
+          acc[op.type] = (acc[op.type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        const data = Object.entries(operationCounts).map(([name, total]) => ({
+          name,
+          total,
+        }));
+        setChartData(data);
+      } catch (error) {
+        console.error("Failed to fetch operations for chart:", error);
+        setChartData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getData();
+  }, []);
 
   const colors = {
     light: {
@@ -37,8 +56,12 @@ export function OperationsChart() {
       fill: "#90CAF9", // primary
     },
   };
-  
+
   const currentColors = theme === 'dark' ? colors.dark : colors.light;
+  
+  if (loading) {
+    return <OperationsChartSkeleton />;
+  }
 
   return (
     <Card>
@@ -62,7 +85,7 @@ export function OperationsChart() {
               axisLine={false}
               tickFormatter={(value) => `${value}`}
             />
-             <Tooltip
+            <Tooltip
               contentStyle={{
                 backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
                 border: '1px solid #334155'
@@ -79,14 +102,14 @@ export function OperationsChart() {
 }
 
 export function OperationsChartSkeleton() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Operations Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Skeleton className="h-[350px] w-full" />
-            </CardContent>
-        </Card>
-    );
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Operations Overview</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[350px] w-full" />
+      </CardContent>
+    </Card>
+  );
 }

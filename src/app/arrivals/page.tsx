@@ -2,12 +2,11 @@
 
 import * as React from "react";
 import { PageHeader } from "@/components/shared/page-header";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
 import { DataTable } from "@/components/data-table/data-table";
 import { columns } from "./columns";
 import { fetchArrivals } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
+import { AddArrival } from "./add-arrival";
 
 export default function ArrivalsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
@@ -16,8 +15,7 @@ export default function ArrivalsPage() {
 
   const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const result = fetchArrivals({ pageIndex, pageSize });
+    const result = await fetchArrivals({ pageIndex, pageSize });
     setData(result.data);
     setPageCount(result.pageCount);
     setIsLoading(false);
@@ -29,10 +27,7 @@ export default function ArrivalsPage() {
       <PageHeader
         title="Arrivals"
         actions={
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Arrival
-          </Button>
+          <AddArrival />
         }
       />
       <DataTable 
