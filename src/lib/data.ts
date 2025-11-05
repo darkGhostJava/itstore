@@ -205,4 +205,11 @@ export const registerReparations = async (payload: { itemId: number; remarks: st
   return await api.post("/reparations", payload);
 }
 
+export const markItemAsRepaired = async (itemId: number) => {
+  return await api.put(`/items/${itemId}/repaired`);
+}
+
+export const markItemAsReformed = async (itemId: number) => {
+  return await api.put(`/items/${itemId}/reformed`);
+}
     
