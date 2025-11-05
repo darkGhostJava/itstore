@@ -12,7 +12,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { markItemAsReformed } from "@/lib/data";
@@ -31,7 +30,8 @@ export function ReformItemDialog({ item }: ReformItemDialogProps) {
   const handleReform = async () => {
     setIsPending(true);
     try {
-      await markItemAsReformed(item.id);
+      // Assuming a logged-in user with ID 1
+      await markItemAsReformed(item.id, 1);
       toast({
         title: "Success",
         description: `Item with serial number ${item.serialNumber} has been marked as reformed.`,
@@ -52,7 +52,13 @@ export function ReformItemDialog({ item }: ReformItemDialogProps) {
 
   return (
     <>
-      <DropdownMenuItem onSelect={() => setOpen(true)} className="text-destructive focus:text-destructive/90">
+      <DropdownMenuItem
+        onSelect={(e) => {
+          e.preventDefault();
+          setOpen(true);
+        }}
+        className="text-destructive focus:text-destructive/90"
+      >
         <ArchiveX className="mr-2 h-4 w-4" />
         Mark as Reformed
       </DropdownMenuItem>
