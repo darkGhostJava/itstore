@@ -11,7 +11,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { fetchItemsForArticle, api } from "@/lib/data";
+import { fetchItemsForArticle } from "@/lib/data";
+import { api } from "@/lib/api";
 
 const itemColumns: ColumnDef<Item>[] = [
   {

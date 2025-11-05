@@ -85,7 +85,7 @@ export async function searchItemsBySerialNumber(serialNumber: string, articleId:
 
 export async function searchItemsBySerialNumberAndPerson(personId: number, serialNumber: string): Promise<Item[]> {
   if (serialNumber.length < 2) return [];
-  const res = await api.get<Item[]>(`/items/search/person/${personId}/${serialNumber}`);
+  const res = await api.get<Item[]>(`/items/search/person/distributed/${personId}/${serialNumber}`);
   return res.data;
 }
 
