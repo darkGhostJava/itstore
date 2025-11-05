@@ -9,9 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
+import { RepairItemDialog } from "./repair-item-dialog";
+import { ReformItemDialog } from "./reform-item-dialog";
 
 export const columns: ColumnDef<Operation>[] = [
   {
@@ -49,6 +52,10 @@ export const columns: ColumnDef<Operation>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
+      const items = (row.original as any).items as Item[] | undefined;
+      const item = items?.[0];
+      if (!item) return null;
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -60,7 +67,9 @@ export const columns: ColumnDef<Operation>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem>View Details</DropdownMenuItem>
-            <DropdownMenuItem>Update Status</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <RepairItemDialog item={item} />
+            <ReformItemDialog item={item} />
           </DropdownMenuContent>
         </DropdownMenu>
       );
