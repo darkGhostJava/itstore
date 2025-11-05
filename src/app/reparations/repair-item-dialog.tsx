@@ -12,7 +12,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { markItemAsRepaired } from "@/lib/data";
@@ -31,7 +30,8 @@ export function RepairItemDialog({ item }: RepairItemDialogProps) {
   const handleRepair = async () => {
     setIsPending(true);
     try {
-      await markItemAsRepaired(item.id);
+      // Assuming a logged-in user with ID 1
+      await markItemAsRepaired(item.id, 1);
       toast({
         title: "Success",
         description: `Item with serial number ${item.serialNumber} has been marked as repaired.`,
@@ -52,7 +52,13 @@ export function RepairItemDialog({ item }: RepairItemDialogProps) {
 
   return (
     <>
-      <DropdownMenuItem onSelect={() => setOpen(true)} className="text-green-600 focus:text-green-700">
+      <DropdownMenuItem
+        onSelect={(e) => {
+          e.preventDefault();
+          setOpen(true);
+        }}
+        className="text-green-600 focus:text-green-700"
+      >
         <Wrench className="mr-2 h-4 w-4" />
         Mark as Repaired
       </DropdownMenuItem>
