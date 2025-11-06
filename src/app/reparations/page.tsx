@@ -29,11 +29,11 @@ export default function ReparationsPage() {
 
   fetchDataRef.current = fetchData;
 
-  const handleSuccess = () => {
+  const handleSuccess = React.useCallback(() => {
     if (fetchDataRef.current) {
       fetchDataRef.current({ pageIndex: 0, pageSize: 10 });
     }
-  };
+  }, []);
 
   const columns = React.useMemo(() => getReparationColumns({ onSuccess: handleSuccess }), [handleSuccess]);
 
