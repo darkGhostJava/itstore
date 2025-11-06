@@ -14,7 +14,7 @@ type PaginatedResponse<T> = {
 export const getStats = async (): Promise<Stats> => {
   const response = await api.get('/stats');
   console.log(response);
-  
+
   return response.data;
 }
 
@@ -51,7 +51,7 @@ export const getAllDirections = async () => {
   };
 };
 
-export const getSubDirectionsOfDirection = async (directionId:number) => {
+export const getSubDirectionsOfDirection = async (directionId: number) => {
   const response = await api.get<Structure[]>(`/structures/sub_directions/${directionId}`);
   return {
     data: response.data as Structure[],
@@ -65,7 +65,7 @@ export const getPersonsByIdStructure = async (idStructure: number) => {
   };
 };
 
-export async function searchArticles(query: string,type:string | "ALL") {
+export async function searchArticles(query: string, type: string | "ALL") {
   if (!query) return { data: [] };
   const res = await api.get(`/articles/searchByName/${encodeURIComponent(type)}/${encodeURIComponent(query)}`);
   return res;
@@ -145,17 +145,17 @@ export const fetchStructures = async (options: { pageIndex: number; pageSize: nu
 };
 
 export const fetchItemsForArticle = async (articleId: number, options: { pageIndex: number; pageSize: number }) => {
-    const { pageIndex, pageSize } = options;
-    const response = await api.get<PaginatedResponse<Item>>(`/items/article/${articleId}`, {
-        params: {
-            page: pageIndex,
-            size: pageSize,
-        },
-    });
-    return {
-        data: response.data.content,
-        pageCount: response.data.totalPages,
-    };
+  const { pageIndex, pageSize } = options;
+  const response = await api.get<PaginatedResponse<Item>>(`/items/article/${articleId}`, {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+    },
+  });
+  return {
+    data: response.data.content,
+    pageCount: response.data.totalPages,
+  };
 }
 
 export const fetchArrivals = async (options: { pageIndex: number; pageSize: number }) => {
@@ -202,14 +202,66 @@ export const fetchReparations = async (options: { pageIndex: number; pageSize: n
 }
 
 export const registerReparations = async (payload: { itemId: number; remarks: string; userId: number; }[]) => {
-  return await api.post("/reparations", payload);
+
+  const response = await api.post("/reparations", payload, {
+    responseType: "arraybuffer",
+  });
+
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `decharge_${Date.now()}.pdf`;
+  link.target = "_blank";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+  return response;
+
 }
 
 export const markItemAsRepaired = async (itemId: number, userId: number) => {
-  return await api.put(`/items/${itemId}/repaired`, null, { params: { userId } });
+
+  const response = await api.put(`/items/repaired/${itemId}/${userId}`, null, {
+    responseType: "arraybuffer",
+  });
+
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `decharge_${Date.now()}.pdf`;
+  link.target = "_blank";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+  return response;
+
 }
 
 export const markItemAsReformed = async (itemId: number, userId: number) => {
-  return await api.put(`/items/${itemId}/reformed`, null, { params: { userId } });
+  const response = await api.put(`/items/reformed/${itemId}/${userId}`, null, {
+    responseType: "arraybuffer",
+  });
+
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `decharge_${Date.now()}.pdf`;
+  link.target = "_blank";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+  return response;
 }
-    
+
