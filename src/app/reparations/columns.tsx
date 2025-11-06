@@ -50,6 +50,15 @@ export const columns: ColumnDef<Operation>[] = [
     },
   },
   {
+    header: "Status",
+    cell: ({ row }) => {
+      const items = (row.original as any).items as Item[] | undefined;
+      if (!items || items.length === 0) return "N/A";
+      const status = items[0].status;
+      return status ? `${status}` : "N/A";
+    },
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const items = (row.original as any).items as Item[] | undefined;
