@@ -10,7 +10,7 @@ export type Item = {
   id: number;
   serialNumber: string;
   article: Article;
-  status: "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED";
+  status: "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED" | "REPAIRED";
 };
 
 export type Person = {

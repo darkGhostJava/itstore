@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { RepairItemDialog } from "./repair-item-dialog";
 import { ReformItemDialog } from "./reform-item-dialog";
+import { StatusBadge } from "@/components/shared/status-badge";
 
 export const columns: ColumnDef<Operation>[] = [
   {
@@ -55,7 +56,7 @@ export const columns: ColumnDef<Operation>[] = [
       const items = (row.original as any).items as Item[] | undefined;
       if (!items || items.length === 0) return "N/A";
       const status = items[0].status;
-      return status ? `${status}` : "N/A";
+      return status ? <StatusBadge status={status} /> : "N/A";
     },
   },
   {
@@ -63,7 +64,10 @@ export const columns: ColumnDef<Operation>[] = [
     cell: ({ row }) => {
       const items = (row.original as any).items as Item[] | undefined;
       const item = items?.[0];
-      if (!item) return null;
+      
+      if (!item || item.status !== 'UNDER_REPAIR') {
+        return null;
+      }
 
       return (
         <DropdownMenu>

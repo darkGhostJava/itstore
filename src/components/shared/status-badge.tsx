@@ -6,14 +6,26 @@ type StatusBadgeProps = {
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const variant: "default" | "secondary" | "destructive" | "outline" =
-    status === "IN_STOCK"
-      ? "default"
-      : status === "DISTRIBUTED"
-      ? "secondary"
-      : status === "UNDER_REPAIR"
-      ? "destructive"
-      : "outline";
+  let variant: "default" | "secondary" | "destructive" | "outline";
+  switch (status) {
+    case "IN_STOCK":
+      variant = "default";
+      break;
+    case "REPAIRED":
+      variant = "default"; // Or choose another color like a blue
+      break;
+    case "DISTRIBUTED":
+      variant = "secondary";
+      break;
+    case "UNDER_REPAIR":
+      variant = "destructive";
+      break;
+    case "REFORMED":
+      variant = "outline";
+      break;
+    default:
+      variant = "outline";
+  }
       
   return <Badge variant={variant}>{status.replace(/_/g, " ")}</Badge>;
 }
