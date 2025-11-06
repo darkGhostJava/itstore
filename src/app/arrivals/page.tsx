@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -12,22 +13,34 @@ export default function ArrivalsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
+  
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number }) => Promise<void>) | null>(null);
 
   const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setIsLoading(true);
-    const result = await fetchArrivals({ pageIndex, pageSize });
-    setData(result.data);
-    setPageCount(result.pageCount);
-    setIsLoading(false);
+    try {
+      const result = await fetchArrivals({ pageIndex, pageSize });
+      setData(result.data);
+      setPageCount(result.pageCount);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  fetchDataRef.current = fetchData;
+
+  const handleSuccess = () => {
+    if (fetchDataRef.current) {
+      fetchDataRef.current({ pageIndex: 0, pageSize: 10 });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Arrivals"
         actions={
-          <AddArrival />
+          <AddArrival onSuccess={handleSuccess} />
         }
       />
       <DataTable 

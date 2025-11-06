@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -17,7 +18,11 @@ import { RepairItemDialog } from "./repair-item-dialog";
 import { ReformItemDialog } from "./reform-item-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
 
-export const columns: ColumnDef<Operation>[] = [
+type ReparationColumnProps = {
+  onSuccess: () => void;
+}
+
+export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): ColumnDef<Operation>[] => [
   {
     header: "Article",
     cell: ({ row }) => {
@@ -81,8 +86,8 @@ export const columns: ColumnDef<Operation>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem>View Details</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <RepairItemDialog item={item} />
-            <ReformItemDialog item={item} />
+            <RepairItemDialog item={item} onSuccess={onSuccess} />
+            <ReformItemDialog item={item} onSuccess={onSuccess} />
           </DropdownMenuContent>
         </DropdownMenu>
       );

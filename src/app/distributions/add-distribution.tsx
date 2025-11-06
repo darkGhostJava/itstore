@@ -62,8 +62,11 @@ const distributionFormSchema = z.object({
 
 type DistributionFormValues = z.infer<typeof distributionFormSchema>;
 
+interface AddDistributionProps {
+  onSuccess?: () => void;
+}
 
-export function AddDistribution() {
+export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [searchedArticles, setSearchedArticles] = useState<Article[]>([]);
@@ -93,11 +96,13 @@ export function AddDistribution() {
 
   // Load directions
   useEffect(() => {
-    (async () => {
-      const res = await getAllDirections();
-      setDirections(res.data || []);
-    })();
-  }, []);
+    if(open) {
+      (async () => {
+        const res = await getAllDirections();
+        setDirections(res.data || []);
+      })();
+    }
+  }, [open]);
 
   const selectedStructureId = form.watch("structureId");
   const selectedSubDirectionId = form.watch("subDirectionId");
@@ -178,12 +183,8 @@ export function AddDistribution() {
 
       form.reset();
       remove(); // Clear all appended fields
-      setSearchedArticles([]);
-      setDirections([]);
-      setSubDirections([]);
-      setPersons([]);
-      setSerials({});
       setOpen(false);
+      onSuccess?.(); // Trigger refresh
     } catch (error) {
       console.error("Error adding distribution:", error);
       toast({
@@ -227,7 +228,7 @@ export function AddDistribution() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button disabled={loading}>
+        <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Distribution
         </Button>

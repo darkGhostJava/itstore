@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -34,6 +35,8 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isLoadingArticle, setIsLoadingArticle] = React.useState(true);
+  
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number }) => Promise<void>) | null>(null);
 
   React.useEffect(() => {
     const getArticle = async () => {
@@ -68,6 +71,14 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
       setIsLoading(false);
     }
   }, [articleId]);
+
+  fetchDataRef.current = fetchData;
+
+  const handleSuccess = () => {
+    if (fetchDataRef.current) {
+      fetchDataRef.current({ pageIndex: 0, pageSize: 10 });
+    }
+  };
 
 
   if (isLoadingArticle) {
@@ -111,7 +122,8 @@ export default function ArticleDetailPage({ params }: { params: { id: string } }
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <CardTitle>Items</CardTitle>
-                    <Button size="sm">
+                    {/* AddItems component will be created later and will use onSuccess */}
+                    <Button size="sm" > 
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Items
                     </Button>

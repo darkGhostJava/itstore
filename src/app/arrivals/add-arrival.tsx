@@ -54,7 +54,11 @@ const arrivalFormSchema = z.object({
 
 type ArrivalFormValues = z.infer<typeof arrivalFormSchema>;
 
-export function AddArrival() {
+interface AddArrivalProps {
+  onSuccess?: () => void;
+}
+
+export function AddArrival({ onSuccess }: AddArrivalProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [searchedArticles, setSearchedArticles] = useState<Article[]>([]);
@@ -108,6 +112,7 @@ export function AddArrival() {
       form.reset();
       remove(); // Clear all appended fields
       setOpen(false);
+      onSuccess?.(); // Trigger refresh
     } catch (error) {
       console.error("Error adding arrival:", error);
       toast({

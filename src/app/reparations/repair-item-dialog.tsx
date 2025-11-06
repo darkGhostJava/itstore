@@ -20,9 +20,10 @@ import { Wrench } from "lucide-react";
 
 interface RepairItemDialogProps {
   item: Item;
+  onSuccess?: () => void;
 }
 
-export function RepairItemDialog({ item }: RepairItemDialogProps) {
+export function RepairItemDialog({ item, onSuccess }: RepairItemDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
@@ -37,7 +38,7 @@ export function RepairItemDialog({ item }: RepairItemDialogProps) {
         description: `Item with serial number ${item.serialNumber} has been marked as repaired.`,
       });
       setOpen(false);
-      // Here you might want to trigger a data refresh for the table
+      onSuccess?.(); // Trigger refresh
     } catch (error) {
       console.error("Failed to mark item as repaired:", error);
       toast({

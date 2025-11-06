@@ -60,7 +60,11 @@ const reparationFormSchema = z.object({
 
 type ReparationFormValues = z.infer<typeof reparationFormSchema>;
 
-export function AddReparation() {
+interface AddReparationProps {
+  onSuccess?: () => void;
+}
+
+export function AddReparation({ onSuccess }: AddReparationProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -144,6 +148,7 @@ export function AddReparation() {
       form.reset();
       remove();
       setOpen(false);
+      onSuccess?.(); // Trigger refresh
     } catch (error) {
       console.error("Error registering repair:", error);
       toast({

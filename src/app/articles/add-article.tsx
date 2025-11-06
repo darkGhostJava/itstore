@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -40,8 +41,13 @@ const formSchema = z.object({
   type: z.enum(["HARDWARE", "CONSUMABLE"]),
 });
 
-export function AddArticle() {
+interface AddArticleProps {
+  onSuccess?: () => void;
+}
+
+export function AddArticle({ onSuccess }: AddArticleProps) {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,14 +59,26 @@ export function AddArticle() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    api.post("/articles", values);
-    toast({
-      title: "Article Added",
-      description: `${values.model} has been added to the articles list.`,
-    });
-    setOpen(false);
-    form.reset();
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
+    try {
+      await api.post("/articles", values);
+      toast({
+        title: "Article Added",
+        description: `${values.model} has been added to the articles list.`,
+      });
+      setOpen(false);
+      form.reset();
+      onSuccess?.(); // Trigger refresh
+    } catch (error) {
+       toast({
+        title: "Error",
+        description: "Failed to add article.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -131,7 +149,9 @@ export function AddArticle() {
             />
             
             <DialogFooter>
-              <Button type="submit">Save Article</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : "Save Article"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

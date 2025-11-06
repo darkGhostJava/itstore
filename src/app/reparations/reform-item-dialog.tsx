@@ -20,9 +20,10 @@ import { ArchiveX } from "lucide-react";
 
 interface ReformItemDialogProps {
   item: Item;
+  onSuccess?: () => void;
 }
 
-export function ReformItemDialog({ item }: ReformItemDialogProps) {
+export function ReformItemDialog({ item, onSuccess }: ReformItemDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
@@ -37,7 +38,7 @@ export function ReformItemDialog({ item }: ReformItemDialogProps) {
         description: `Item with serial number ${item.serialNumber} has been marked as reformed.`,
       });
       setOpen(false);
-      // Here you might want to trigger a data refresh for the table
+      onSuccess?.(); // Trigger refresh
     } catch (error) {
       console.error("Failed to mark item as reformed:", error);
       toast({

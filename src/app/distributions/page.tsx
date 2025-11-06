@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -6,30 +7,40 @@ import { DataTable } from "@/components/data-table/data-table";
 import { columns } from "./columns";
 import { fetchDistributions } from "@/lib/data";
 import { AddDistribution } from "./add-distribution";
-import type { Distribution, Operation } from "@/lib/definitions";
+import type { Distribution } from "@/lib/definitions";
 
 export default function DistributionsPage() {
   const [data, setData] = React.useState<Distribution[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
 
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number }) => Promise<void>) | null>(null);
+
   const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const result = await fetchDistributions({ pageIndex, pageSize });
-
-    
-    setData(result.data);
-    setPageCount(result.pageCount);
-    setIsLoading(false);
+    try {
+      const result = await fetchDistributions({ pageIndex, pageSize });
+      setData(result.data);
+      setPageCount(result.pageCount);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  fetchDataRef.current = fetchData;
+
+  const handleSuccess = () => {
+    if (fetchDataRef.current) {
+      fetchDataRef.current({ pageIndex: 0, pageSize: 10 });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Distributions"
         actions={
-          <AddDistribution />
+          <AddDistribution onSuccess={handleSuccess} />
         }
       />
       <DataTable 
