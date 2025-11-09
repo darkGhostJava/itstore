@@ -14,10 +14,9 @@ export default function PersonsPage() {
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
     setIsLoading(true);
-    // await new Promise(resolve => setTimeout(resolve, 500));
-    const result = await fetchPersons({ pageIndex, pageSize });
+    const result = await fetchPersons({ pageIndex, pageSize, query });
     setData(result.data);
     setPageCount(result.pageCount);
     setIsLoading(false);

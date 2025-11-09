@@ -38,11 +38,11 @@ export default function PersonDetailPage() {
   }, [personId]);
 
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
     if (!personId) return;
     setIsLoading(true);
     try {
-      const result = await fetchItemsForPerson(personId, { pageIndex, pageSize });
+      const result = await fetchItemsForPerson(personId, { pageIndex, pageSize, query });
       setData(result.data);
       setPageCount(result.pageCount);
     } catch(error) {

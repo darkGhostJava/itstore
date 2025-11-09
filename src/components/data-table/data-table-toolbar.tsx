@@ -12,6 +12,8 @@ interface DataTableToolbarProps<TData> {
   filterKey?: string
   filterPlaceholder?: string
   facetedFilters?: React.ReactNode
+  query?: string;
+  onQueryChange?: (value: string) => void;
 }
 
 export function DataTableToolbar<TData>({
@@ -19,20 +21,19 @@ export function DataTableToolbar<TData>({
   filterKey,
   filterPlaceholder,
   facetedFilters,
+  query,
+  onQueryChange,
 }: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0
+  const isFiltered = table.getState().columnFilters.length > 0 || (query && query.length > 0)
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
-        {filterKey && (
+        {filterKey && onQueryChange && (
           <Input
             placeholder={filterPlaceholder || `Filter by ${filterKey}...`}
-            value={
-              (table.getColumn(filterKey)?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn(filterKey)?.setFilterValue(event.target.value)
+            value={query ?? ""}
+            onChange={(event) => onQueryChange(event.target.value)
             }
             className="h-8 w-[150px] lg:w-[250px]"
           />
@@ -41,7 +42,10 @@ export function DataTableToolbar<TData>({
         {isFiltered && (
           <Button
             variant="ghost"
-            onClick={() => table.resetColumnFilters()}
+            onClick={() => {
+              table.resetColumnFilters();
+              if(onQueryChange) onQueryChange("");
+            }}
             className="h-8 px-2 lg:px-3"
           >
             Reset

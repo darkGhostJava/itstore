@@ -14,14 +14,13 @@ export default function ArticlesPage() {
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
   
-  // Create a stable reference to the fetchData function
-  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number }) => Promise<void>) | null>(null);
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; }) => Promise<void>) | null>(null);
 
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
     setIsLoading(true);
     try {
-      const result = await fetchArticles({ pageIndex, pageSize });
+      const result = await fetchArticles({ pageIndex, pageSize, query });
       setData(result.data);
       setPageCount(result.pageCount);
     }
@@ -30,13 +29,11 @@ export default function ArticlesPage() {
     }
   }, []);
 
-  // Store the latest version of fetchData in the ref
   fetchDataRef.current = fetchData;
   
   const handleSuccess = () => {
-    // Call the latest fetchData function from the ref
     if (fetchDataRef.current) {
-       fetchDataRef.current({ pageIndex: 0, pageSize: 10 }); // Or use current pagination state
+       fetchDataRef.current({ pageIndex: 0, pageSize: 10 });
     }
   };
   

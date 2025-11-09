@@ -19,13 +19,14 @@ export const getStats = async (): Promise<Stats> => {
   return response.data;
 }
 
-export const fetchArticles = async (options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchArticles = async (options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
 
   const response = await api.get<PaginatedResponse<Article>>("/articles", {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
 
@@ -95,12 +96,13 @@ export async function searchItemsBySerialNumberAndPerson(personId: number, seria
   return res.data;
 }
 
-export const fetchOperations = async (options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchOperations = async (options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
   const response = await api.get<PaginatedResponse<Operation>>("/operations", {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
   return {
@@ -114,12 +116,13 @@ export const fetchAllOperations = async () => {
   return response.data;
 }
 
-export const fetchPersons = async (options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchPersons = async (options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
   const response = await api.get<PaginatedResponse<Person>>("/persons", {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
 
@@ -137,12 +140,13 @@ export const fetchPersonById = async (id: number): Promise<Person> => {
   return response.data;
 }
 
-export const fetchStructures = async (options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchStructures = async (options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
   const response = await api.get<PaginatedResponse<Structure>>("/structures", {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
 
@@ -160,12 +164,13 @@ export const fetchStructureById = async (id: number): Promise<Structure> => {
     return response.data;
 }
 
-export const fetchItemsForArticle = async (articleId: number, options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchItemsForArticle = async (articleId: number, options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
   const response = await api.get<PaginatedResponse<Item>>(`/items/article/${articleId}`, {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
   return {
@@ -179,12 +184,13 @@ export const fetchAllItems = async () => {
   return response.data;
 }
 
-export const fetchItemsForPerson = async (personId: number, options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchItemsForPerson = async (personId: number, options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
   const response = await api.get<PaginatedResponse<Item>>(`/items/person/${personId}`, {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
   return {
@@ -193,12 +199,13 @@ export const fetchItemsForPerson = async (personId: number, options: { pageIndex
   };
 }
 
-export const fetchItemsForStructure = async (structureId: number, options: { pageIndex: number; pageSize: number }) => {
-    const { pageIndex, pageSize } = options;
+export const fetchItemsForStructure = async (structureId: number, options: { pageIndex: number; pageSize: number; query?: string; }) => {
+    const { pageIndex, pageSize, query } = options;
     const response = await api.get<PaginatedResponse<Item>>(`/structures/${structureId}/items`, {
         params: {
         page: pageIndex,
         size: pageSize,
+        query: query || undefined,
         },
     });
     return {
@@ -207,12 +214,13 @@ export const fetchItemsForStructure = async (structureId: number, options: { pag
     };
 }
 
-export const fetchArrivals = async (options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchArrivals = async (options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
   const response = await api.get<PaginatedResponse<Operation>>("/arrivals", {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
   return {
@@ -221,12 +229,13 @@ export const fetchArrivals = async (options: { pageIndex: number; pageSize: numb
   };
 }
 
-export const fetchDistributions = async (options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchDistributions = async (options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
   const response = await api.get<PaginatedResponse<Distribution>>("/distributions", {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
 
@@ -236,12 +245,13 @@ export const fetchDistributions = async (options: { pageIndex: number; pageSize:
   };
 }
 
-export const fetchReparations = async (options: { pageIndex: number; pageSize: number }) => {
-  const { pageIndex, pageSize } = options;
+export const fetchReparations = async (options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
   const response = await api.get<PaginatedResponse<Operation>>("/reparations", {
     params: {
       page: pageIndex,
       size: pageSize,
+      query: query || undefined,
     },
   });
   return {
