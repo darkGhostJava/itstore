@@ -12,6 +12,7 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "../ui/skeleton";
 import type { Operation } from "@/lib/definitions";
+import { Badge } from "../ui/badge";
 
 export function RecentOperations() {
   const [operations, setOperations] = React.useState<Operation[]>([]);
@@ -67,9 +68,15 @@ export function RecentOperations() {
                   <AvatarFallback>{userInitial}</AvatarFallback>
                 </Avatar>
                 <div className="grid gap-1">
-                  <p className="text-sm font-medium leading-none">
-                    <span className="font-semibold">{op.type}</span>: {op.remarks || 'No remarks'}
-                  </p>
+                  <div className="text-sm font-medium leading-none flex items-center gap-2">
+                    <Badge variant={
+                      op.type === "ARRIVAL" ? "default" :
+                      op.type === "DISTRIBUTION" ? "secondary" :
+                      op.type === "REPARATION" ? "destructive" :
+                      "outline"
+                    }>{op.type}</Badge>
+                    <span className="text-muted-foreground">{op.remarks || 'No remarks'}</span>
+                  </div>
                   <p className="text-sm text-muted-foreground">by {userName}</p>
                 </div>
                 <div className="ml-auto text-sm text-muted-foreground">
