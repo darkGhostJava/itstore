@@ -45,7 +45,7 @@ export const getAllArticles = async () => {
   };
 };
 
-export const getArticlesInStock = async () => {
+export const getArticlesInStock = async (): Promise<Record<string, number>> => {
     const response = await api.get<Record<string, number>>("/articles/in-stock");
     return response.data;
 }
@@ -172,6 +172,11 @@ export const fetchItemsForArticle = async (articleId: number, options: { pageInd
     data: response.data.content,
     pageCount: response.data.totalPages,
   };
+}
+
+export const fetchAllItems = async () => {
+  const response = await api.get<Item[]>('/items/all');
+  return response.data;
 }
 
 export const fetchItemsForPerson = async (personId: number, options: { pageIndex: number; pageSize: number }) => {
