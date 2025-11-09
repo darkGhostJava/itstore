@@ -14,20 +14,35 @@ export default function ReparationsPage() {
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
 
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number }) => Promise<void>) | null>(null);
+
   const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setIsLoading(true);
-    const result = await fetchReparations({ pageIndex, pageSize });
-    setData(result.data);
-    setPageCount(result.pageCount);
-    setIsLoading(false);
+    try {
+      const result = await fetchReparations({ pageIndex, pageSize });
+      setData(result.data);
+      setPageCount(result.pageCount);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  fetchDataRef.current = fetchData;
+
+  const handleSuccess = React.useCallback(() => {
+    if (fetchDataRef.current) {
+      fetchDataRef.current({ pageIndex: 0, pageSize: 10 });
+    }
+  }, []);
+
+  const columns = React.useMemo(() => getReparationColumns({ onSuccess: handleSuccess }), [handleSuccess]);
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Repairs"
         actions={
-          <AddReparation />
+          <AddReparation onSuccess={handleSuccess} />
         }
       />
       <DataTable 

@@ -6,7 +6,7 @@ type StatusBadgeProps = {
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  let variant: "default" | "secondary" | "destructive" | "outline";
+  let variant: "default" | "secondary" | "destructive" | "outline" | "reformed" | "repaired";
   switch (status) {
     case "IN_STOCK":
       variant = "default";
@@ -15,13 +15,13 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       variant = "default"; // Or choose another color like a blue
       break;
     case "DISTRIBUTED":
-      variant = "secondary";
+      variant = "repaired";
       break;
     case "UNDER_REPAIR":
       variant = "destructive";
       break;
     case "REFORMED":
-      variant = "outline";
+      variant = "reformed";
       break;
     default:
       variant = "outline";
