@@ -61,5 +61,5 @@ export type Stats = {
   distributedItems: number;
   underRepair: number;
   structuresCount: number;
-  reformedCount:number
+  reformedCount: number;
 }

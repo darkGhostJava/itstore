@@ -9,6 +9,7 @@ import {
   YAxis,
   Tooltip,
   Legend,
+  Cell,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchAllOperations } from "@/lib/data";
@@ -16,9 +17,24 @@ import type { Operation } from "@/lib/definitions";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
 
+// Define colors for each operation type
+const getPath = (x: number, y: number, width: number, height: number) => {
+  return `M${x},${y + height}C${x + width / 3},${y + height} ${x + width / 2},${y + height / 3}
+  ${x + width / 2}, ${y}
+  C${x + width / 2},${y + height / 3} ${x + (2 * width) / 3},${y + height} ${x + width}, ${y + height}
+  Z`;
+};
+
+const TriangleBar = (props: any) => {
+  const { fill, x, y, width, height } = props;
+
+  return <path d={getPath(x, y, width, height)} stroke="none" fill={fill} />;
+};
+
+
 export function OperationsChart() {
   const { theme } = useTheme();
-  const [chartData, setChartData] = useState<{ name: string; total: number }[]>([]);
+  const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,14 +63,8 @@ export function OperationsChart() {
   }, []);
 
   const colors = {
-    light: {
-      text: "#1e293b", // slate-800
-      fill: "#90CAF9", // primary
-    },
-    dark: {
-      text: "#f8fafc", // slate-50
-      fill: "#90CAF9", // primary
-    },
+    light: ["#90CAF9", "#80CBC4", "#FFE082", "#F48FB1", "#CE93D8"],
+    dark: ["#90CAF9", "#80CBC4", "#FFE082", "#F48FB1", "#CE93D8"],
   };
 
   const currentColors = theme === 'dark' ? colors.dark : colors.light;
@@ -73,13 +83,13 @@ export function OperationsChart() {
           <BarChart data={chartData}>
             <XAxis
               dataKey="name"
-              stroke={currentColors.text}
+              stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
               fontSize={12}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              stroke={currentColors.text}
+              stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
               fontSize={12}
               tickLine={false}
               axisLine={false}
@@ -92,8 +102,12 @@ export function OperationsChart() {
               }}
               cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0' }}
             />
-            <Legend wrapperStyle={{ color: currentColors.text }} />
-            <Bar dataKey="total" fill={currentColors.fill} radius={[4, 4, 0, 0]} />
+            <Legend wrapperStyle={{ color: theme === 'dark' ? '#f8fafc' : '#1e293b' }} />
+            <Bar dataKey="total" shape={<TriangleBar />} label={{ position: 'top' }}>
+                {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={currentColors[index % currentColors.length]} />
+                ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
