@@ -19,7 +19,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { getAllArticles } from "@/lib/data";
+import { getArticlesInStock } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
@@ -33,7 +33,7 @@ export function ArticleDistributionChart() {
     const getData = async () => {
       try {
         setLoading(true);
-        const { data: articles }: { data: Article[] } = await getAllArticles();
+        const articles: Article[] = await getArticlesInStock();
         const designationCounts = articles.reduce((acc, article) => {
           const designation = article.designation;
           acc[designation] = (acc[designation] || 0) + article.quantity;
@@ -68,7 +68,7 @@ export function ArticleDistributionChart() {
     <Card>
       <CardHeader>
         <CardTitle>Article Inventory</CardTitle>
-        <CardDescription>Item count by designation</CardDescription>
+        <CardDescription>In-stock item count by designation</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -111,7 +111,7 @@ export function ArticleDistributionChartSkeleton() {
     <Card>
       <CardHeader>
         <CardTitle>Article Inventory</CardTitle>
-        <CardDescription>Item count by designation</CardDescription>
+        <CardDescription>In-stock item count by designation</CardDescription>
       </CardHeader>
       <CardContent>
         <Skeleton className="h-[350px] w-full" />
