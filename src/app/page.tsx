@@ -5,6 +5,7 @@ import { OperationsChart, OperationsChartSkeleton } from "@/components/dashboard
 import { RecentOperations, RecentOperationsSkeleton } from "@/components/dashboard/recent-operations";
 import { PageHeader } from "@/components/shared/page-header";
 import { ArticleDistributionChart, ArticleDistributionChartSkeleton } from "@/components/dashboard/article-distribution-chart";
+import { ArticleStatsCards, ArticleStatsCardsSkeleton } from "@/components/dashboard/article-stats-cards";
 
 export default function DashboardPage() {
   return (
@@ -13,6 +14,14 @@ export default function DashboardPage() {
       <Suspense fallback={<StatsCardsSkeleton />}>
         <StatsCards />
       </Suspense>
+
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold tracking-tight">In-Stock Designations</h2>
+        <Suspense fallback={<ArticleStatsCardsSkeleton />}>
+          <ArticleStatsCards />
+        </Suspense>
+      </div>
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
            <Suspense fallback={<ArticleDistributionChartSkeleton />}>
