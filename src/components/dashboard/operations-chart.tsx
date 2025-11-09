@@ -103,7 +103,7 @@ export function OperationsChart() {
               }}
               cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0' }}
             />
-            <Bar dataKey="total" label={{ position: 'top' }} fill="#8884d8">
+            <Bar dataKey="total" label={{ position: 'top' }} fill="#8884d8" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={currentColors[index % currentColors.length]} />
               ))}

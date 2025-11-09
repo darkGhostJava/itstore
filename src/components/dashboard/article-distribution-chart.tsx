@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -39,10 +40,13 @@ export function ArticleDistributionChart() {
           return acc;
         }, {} as Record<string, number>);
 
-        const data = Object.entries(designationCounts).map(([name, value]) => ({
-          name,
-          value,
-        }));
+        const data = Object.entries(designationCounts)
+          .map(([name, value]) => ({
+            name,
+            value,
+          }))
+          .sort((a, b) => b.value - a.value); 
+
         setChartData(data);
       } catch (error) {
         console.error("Failed to fetch articles for chart:", error);
@@ -68,23 +72,24 @@ export function ArticleDistributionChart() {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
+          <BarChart data={chartData} margin={{ left: 0, right: 20, top: 5, bottom: 5 }}>
              <XAxis 
-              type="number"
-              stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              type="category"
               dataKey="name"
               stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              width={100}
               interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis
+              stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              width={30}
             />
             <Tooltip
               contentStyle={{
