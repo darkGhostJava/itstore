@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -12,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import Link from "next/link";
 
 export const columns: ColumnDef<Person>[] = [
   {
@@ -56,6 +58,7 @@ export const columns: ColumnDef<Person>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
+      const person = row.original;
       return (
         <div className="text-right">
           <DropdownMenu>
@@ -67,6 +70,9 @@ export const columns: ColumnDef<Person>[] = [
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+               <DropdownMenuItem asChild>
+                <Link href={`/persons/${person.id}`}>View Details</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem>Edit Person</DropdownMenuItem>
               <DropdownMenuItem className="text-destructive">Delete Person</DropdownMenuItem>
             </DropdownMenuContent>
