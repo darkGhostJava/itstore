@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  LabelList,
 } from "recharts";
 import {
   Card,
@@ -51,6 +52,7 @@ export function ArticleDistributionChart() {
   }, []);
 
   const barColor = theme === 'dark' ? '#90CAF9' : '#1E88E5';
+  const labelColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
 
   if (loading) {
     return <ArticleDistributionChartSkeleton />;
@@ -64,7 +66,7 @@ export function ArticleDistributionChart() {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} margin={{ left: 0, right: 20, top: 5, bottom: 5 }}>
+          <BarChart data={chartData} margin={{ left: 0, right: 20, top: 20, bottom: 5 }}>
              <XAxis 
               dataKey="name"
               stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
@@ -91,7 +93,9 @@ export function ArticleDistributionChart() {
               }}
                cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0' }}
             />
-            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="value" position="top" fill={labelColor} fontSize={12} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
