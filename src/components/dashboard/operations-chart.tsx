@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -102,11 +103,10 @@ export function OperationsChart() {
               }}
               cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0' }}
             />
-            <Legend wrapperStyle={{ color: theme === 'dark' ? '#f8fafc' : '#1e293b' }} />
-            <Bar dataKey="total" shape={<TriangleBar />} label={{ position: 'top' }}>
-                {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={currentColors[index % currentColors.length]} />
-                ))}
+            <Bar dataKey="total" label={{ position: 'top' }} fill="#8884d8">
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={currentColors[index % currentColors.length]} />
+              ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
