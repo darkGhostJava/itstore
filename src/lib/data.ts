@@ -46,7 +46,7 @@ export const getAllArticles = async () => {
 };
 
 export const getArticlesInStock = async () => {
-    const response = await api.get<Article[]>("/articles/in-stock");
+    const response = await api.get<Record<string, number>>("/articles/in-stock");
     return response.data;
 }
 
