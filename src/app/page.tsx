@@ -1,3 +1,4 @@
+
 import { Suspense } from "react";
 import { StatsCards, StatsCardsSkeleton } from "@/components/dashboard/stats-cards";
 import { OperationsChart, OperationsChartSkeleton } from "@/components/dashboard/operations-chart";
