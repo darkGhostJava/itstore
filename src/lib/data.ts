@@ -45,6 +45,11 @@ export const getAllArticles = async () => {
   };
 };
 
+export const getArticlesInStock = async () => {
+    const response = await api.get<Article[]>("/articles/in-stock");
+    return response.data;
+}
+
 export const getAllDirections = async () => {
   const response = await api.get<Structure[]>("/structures/directions");
   return {
