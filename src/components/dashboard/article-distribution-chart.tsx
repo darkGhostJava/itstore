@@ -9,8 +9,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
-  Cell,
 } from "recharts";
 import {
   Card,
@@ -20,7 +18,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { getArticlesInStock } from "@/lib/data";
-import type { Article } from "@/lib/definitions";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
 
@@ -33,12 +30,7 @@ export function ArticleDistributionChart() {
     const getData = async () => {
       try {
         setLoading(true);
-        const articles: Article[] = await getArticlesInStock();
-        const designationCounts = articles.reduce((acc, article) => {
-          const designation = article.designation;
-          acc[designation] = (acc[designation] || 0) + article.quantity;
-          return acc;
-        }, {} as Record<string, number>);
+        const designationCounts: Record<string, number> = await getArticlesInStock();
 
         const data = Object.entries(designationCounts)
           .map(([name, value]) => ({
@@ -90,6 +82,7 @@ export function ArticleDistributionChart() {
               tickLine={false}
               axisLine={false}
               width={30}
+              allowDecimals={false}
             />
             <Tooltip
               contentStyle={{
