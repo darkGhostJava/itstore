@@ -3,6 +3,7 @@ import { StatsCards, StatsCardsSkeleton } from "@/components/dashboard/stats-car
 import { OperationsChart, OperationsChartSkeleton } from "@/components/dashboard/operations-chart";
 import { RecentOperations, RecentOperationsSkeleton } from "@/components/dashboard/recent-operations";
 import { PageHeader } from "@/components/shared/page-header";
+import { ArticleDistributionChart, ArticleDistributionChartSkeleton } from "@/components/dashboard/article-distribution-chart";
 
 export default function DashboardPage() {
   return (
@@ -18,11 +19,16 @@ export default function DashboardPage() {
           </Suspense>
         </div>
         <div className="lg:col-span-1">
+           <Suspense fallback={<ArticleDistributionChartSkeleton />}>
+            <ArticleDistributionChart />
+          </Suspense>
+        </div>
+      </div>
+       <div className="lg:col-span-1">
           <Suspense fallback={<RecentOperationsSkeleton />}>
             <RecentOperations />
           </Suspense>
         </div>
-      </div>
     </div>
   );
 }
