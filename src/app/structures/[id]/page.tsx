@@ -39,11 +39,11 @@ export default function StructureDetailPage() {
   }, [structureId]);
 
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
     if (!structureId) return;
     setIsLoading(true);
     try {
-      const result = await fetchItemsForStructure(structureId, { pageIndex, pageSize });
+      const result = await fetchItemsForStructure(structureId, { pageIndex, pageSize, query });
       setData(result.data);
       setPageCount(result.pageCount);
     } catch(error) {

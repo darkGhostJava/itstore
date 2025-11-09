@@ -29,12 +29,13 @@ import {
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
 import { Skeleton } from "../ui/skeleton"
+import { useDebounce } from "@/hooks/use-debounce"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   pageCount: number
-  fetchData: (options: { pageIndex: number, pageSize: number }) => void
+  fetchData: (options: { pageIndex: number, pageSize: number, query?: string }) => void
   isLoading?: boolean
   filterKey?: string
   filterPlaceholder?: string
@@ -65,17 +66,8 @@ export function DataTable<TData, TValue>({
       pageSize: 10,
     })
 
-  React.useEffect(() => {
-    fetchData({ pageIndex, pageSize })
-  }, [fetchData, pageIndex, pageSize])
-
-  const pagination = React.useMemo(
-    () => ({
-      pageIndex,
-      pageSize,
-    }),
-    [pageIndex, pageSize]
-  )
+  const [query, setQuery] = React.useState('');
+  const debouncedQuery = useDebounce(query, 500);
 
   const table = useReactTable({
     data,
@@ -101,7 +93,20 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-  })
+  });
+
+  React.useEffect(() => {
+    // When the debounced query changes, or pagination changes, fetch new data.
+    // We reset page index to 0 when query changes.
+    if(debouncedQuery !== query) { // Query is changing, reset to first page
+      table.setPageIndex(0);
+      fetchData({ pageIndex: 0, pageSize, query: debouncedQuery });
+    } else { // Pagination is changing
+      fetchData({ pageIndex, pageSize, query: debouncedQuery });
+    }
+  }, [debouncedQuery, pageIndex, pageSize, fetchData, table, query]);
+  
+
   return (
     <div className="space-y-4">
       <DataTableToolbar
@@ -109,6 +114,8 @@ export function DataTable<TData, TValue>({
         filterKey={filterKey}
         filterPlaceholder={filterPlaceholder}
         facetedFilters={facetedFilters}
+        query={query}
+        onQueryChange={setQuery}
       />
       <div className="rounded-md border">
         <Table>

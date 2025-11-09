@@ -37,7 +37,7 @@ export default function ArticleDetailPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isLoadingArticle, setIsLoadingArticle] = React.useState(true);
   
-  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number }) => Promise<void>) | null>(null);
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; }) => Promise<void>) | null>(null);
 
   React.useEffect(() => {
     const getArticle = async () => {
@@ -57,11 +57,11 @@ export default function ArticleDetailPage() {
   }, [articleId]);
 
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
     if (!articleId) return;
     setIsLoading(true);
     try {
-      const result = await fetchItemsForArticle(articleId, { pageIndex, pageSize });
+      const result = await fetchItemsForArticle(articleId, { pageIndex, pageSize, query });
       setData(result.data);
       setPageCount(result.pageCount);
     } catch(error) {
@@ -83,7 +83,6 @@ export default function ArticleDetailPage() {
 
 
   if (isLoadingArticle) {
-    // You can return a more detailed loader here
     return <div>Loading article details...</div>;
   }
 
@@ -123,7 +122,6 @@ export default function ArticleDetailPage() {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <CardTitle>Items</CardTitle>
-                    {/* AddItems component will be created later and will use onSuccess */}
                     <Button size="sm" > 
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Items
