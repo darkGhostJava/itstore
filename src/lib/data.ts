@@ -124,6 +124,11 @@ export const fetchPersons = async (options: { pageIndex: number; pageSize: numbe
     size: response.data.size,
     totalElements: response.data.totalElements,
   };
+};
+
+export const fetchPersonById = async (id: number): Promise<Person> => {
+  const response = await api.get<Person>(`/persons/${id}`);
+  return response.data;
 }
 
 export const fetchStructures = async (options: { pageIndex: number; pageSize: number }) => {
@@ -147,6 +152,20 @@ export const fetchStructures = async (options: { pageIndex: number; pageSize: nu
 export const fetchItemsForArticle = async (articleId: number, options: { pageIndex: number; pageSize: number }) => {
   const { pageIndex, pageSize } = options;
   const response = await api.get<PaginatedResponse<Item>>(`/items/article/${articleId}`, {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+    },
+  });
+  return {
+    data: response.data.content,
+    pageCount: response.data.totalPages,
+  };
+}
+
+export const fetchItemsForPerson = async (personId: number, options: { pageIndex: number; pageSize: number }) => {
+  const { pageIndex, pageSize } = options;
+  const response = await api.get<PaginatedResponse<Item>>(`/persons/${personId}/items`, {
     params: {
       page: pageIndex,
       size: pageSize,
@@ -264,4 +283,3 @@ export const markItemAsReformed = async (itemId: number, userId: number) => {
   window.URL.revokeObjectURL(url);
   return response;
 }
-
