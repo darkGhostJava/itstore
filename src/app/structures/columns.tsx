@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { api } from "@/lib/api";
 import React from "react";
+import Link from "next/link";
 
 export const columns: ColumnDef<Structure>[] = [
   {
@@ -37,10 +38,10 @@ export const columns: ColumnDef<Structure>[] = [
       return <span>{count ?? "..."}</span>;
     }
   },
-
   {
     id: "actions",
     cell: ({ row }) => {
+      const structure = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -51,7 +52,9 @@ export const columns: ColumnDef<Structure>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Edit Structure</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/structures/${structure.id}`}>View Details</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem>Assign Chef</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

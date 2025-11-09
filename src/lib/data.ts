@@ -1,4 +1,5 @@
 
+
 import { api } from './api';
 import type { Article, Item, Person, Structure, Operation, Distribution, Stats } from './definitions';
 
@@ -149,6 +150,11 @@ export const fetchStructures = async (options: { pageIndex: number; pageSize: nu
   };
 };
 
+export const fetchStructureById = async (id: number): Promise<Structure> => {
+    const response = await api.get<Structure>(`/structures/${id}`);
+    return response.data;
+}
+
 export const fetchItemsForArticle = async (articleId: number, options: { pageIndex: number; pageSize: number }) => {
   const { pageIndex, pageSize } = options;
   const response = await api.get<PaginatedResponse<Item>>(`/items/article/${articleId}`, {
@@ -175,6 +181,20 @@ export const fetchItemsForPerson = async (personId: number, options: { pageIndex
     data: response.data.content,
     pageCount: response.data.totalPages,
   };
+}
+
+export const fetchItemsForStructure = async (structureId: number, options: { pageIndex: number; pageSize: number }) => {
+    const { pageIndex, pageSize } = options;
+    const response = await api.get<PaginatedResponse<Item>>(`/structures/${structureId}/items`, {
+        params: {
+        page: pageIndex,
+        size: pageSize,
+        },
+    });
+    return {
+        data: response.data.content,
+        pageCount: response.data.totalPages,
+    };
 }
 
 export const fetchArrivals = async (options: { pageIndex: number; pageSize: number }) => {
