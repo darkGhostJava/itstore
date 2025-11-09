@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react";
@@ -41,7 +42,7 @@ export function RecentOperations() {
   }
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Recent Operations</CardTitle>
       </CardHeader>
@@ -75,11 +76,11 @@ export function RecentOperations() {
                       op.type === "REPARATION" ? "destructive" :
                       "outline"
                     }>{op.type}</Badge>
-                    <span className="text-muted-foreground">{op.remarks || 'No remarks'}</span>
+                    <span className="text-muted-foreground truncate max-w-[200px]">{op.remarks || 'No remarks'}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">by {userName}</p>
                 </div>
-                <div className="ml-auto text-sm text-muted-foreground">
+                <div className="ml-auto text-sm text-muted-foreground whitespace-nowrap">
                   {formatDistanceToNow(new Date(op.date), { addSuffix: true })}
                 </div>
               </div>
