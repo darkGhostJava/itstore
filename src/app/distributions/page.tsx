@@ -49,8 +49,8 @@ export default function DistributionsPage() {
         pageCount={pageCount}
         fetchData={fetchData}
         isLoading={isLoading}
-        filterKey="remarks" 
-        filterPlaceholder="Filter by remarks..."
+        filterKey="serial number" 
+        filterPlaceholder="Filter by serial number..."
       />
     </div>
   );

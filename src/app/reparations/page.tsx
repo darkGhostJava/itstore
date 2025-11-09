@@ -51,8 +51,8 @@ export default function ReparationsPage() {
         pageCount={pageCount}
         fetchData={fetchData}
         isLoading={isLoading}
-        filterKey="remarks" 
-        filterPlaceholder="Filter by remarks..."
+        filterKey="serial number" 
+        filterPlaceholder="Filter by serial number..."
       />
     </div>
   );
