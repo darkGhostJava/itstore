@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,8 @@ const itemColumns: ColumnDef<Item>[] = [
   },
 ];
 
-export default function ArticleDetailPage({ params }: { params: { id: string } }) {
+export default function ArticleDetailPage() {
+  const params = useParams<{ id: string }>();
   const articleId = parseInt(params.id);
   const [article, setArticle] = React.useState<Article | null>(null);
 
