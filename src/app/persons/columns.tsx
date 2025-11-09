@@ -39,8 +39,12 @@ export const columns: ColumnDef<Person>[] = [
     enableHiding: false,
   },
   {
-    header: "Name",
-    cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
+    accessorKey: "firstName",
+    header: "First Name",
+  },
+  {
+    accessorKey: "lastName",
+    header: "Last Name",
   },
   {
     accessorKey: "grade",
@@ -50,7 +54,7 @@ export const columns: ColumnDef<Person>[] = [
     accessorKey: "matricule",
     header: "Matricule",
   },
-   {
+  {
     accessorKey: "structure.name",
     header: "Structure",
     cell: ({ row }) => row.original.structure?.name ?? "N/A",
@@ -70,7 +74,7 @@ export const columns: ColumnDef<Person>[] = [
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-               <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild>
                 <Link href={`/persons/${person.id}`}>View Details</Link>
               </DropdownMenuItem>
               <DropdownMenuItem>Edit Person</DropdownMenuItem>

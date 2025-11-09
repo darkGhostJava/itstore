@@ -40,7 +40,7 @@ export default function PersonsPage() {
         pageCount={pageCount}
         fetchData={fetchData}
         isLoading={isLoading}
-        filterKey="lastName" 
+        filterKey="lastName"
         filterPlaceholder="Filter by name..."
       />
     </div>
