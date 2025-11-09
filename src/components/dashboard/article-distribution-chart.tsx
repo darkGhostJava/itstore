@@ -2,14 +2,22 @@
 
 import { useState, useEffect } from "react";
 import {
-  Pie,
-  PieChart,
+  Bar,
+  BarChart,
   ResponsiveContainer,
+  XAxis,
+  YAxis,
   Tooltip,
   Legend,
   Cell,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { getAllArticles } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { useTheme } from "next-themes";
@@ -46,13 +54,8 @@ export function ArticleDistributionChart() {
     getData();
   }, []);
 
-  const colors = {
-    light: ["#90CAF9", "#80CBC4", "#FFE082", "#F48FB1", "#CE93D8", "#A5D6A7", "#B39DDB"],
-    dark: ["#90CAF9", "#80CBC4", "#FFE082", "#F48FB1", "#CE93D8", "#A5D6A7", "#B39DDB"],
-  };
+  const barColor = theme === 'dark' ? '#90CAF9' : '#1E88E5';
 
-  const currentColors = theme === 'dark' ? colors.dark : colors.light;
-  
   if (loading) {
     return <ArticleDistributionChartSkeleton />;
   }
@@ -64,39 +67,34 @@ export function ArticleDistributionChart() {
         <CardDescription>Item count by designation</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 20, top: 5, bottom: 5 }}>
+             <XAxis 
+              type="number"
+              stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              width={100}
+              interval={0}
+            />
             <Tooltip
               contentStyle={{
                 backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
                 border: '1px solid #334155'
               }}
+               cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0' }}
             />
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
-                const RADIAN = Math.PI / 180;
-                const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                return (
-                  <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-                    {`${(percent * 100).toFixed(0)}%`}
-                  </text>
-                );
-              }}
-              outerRadius={80}
-              dataKey="value"
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={currentColors[index % currentColors.length]} />
-              ))}
-            </Pie>
-            <Legend iconSize={10} />
-          </PieChart>
+            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]} />
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
@@ -108,10 +106,10 @@ export function ArticleDistributionChartSkeleton() {
     <Card>
       <CardHeader>
         <CardTitle>Article Inventory</CardTitle>
-         <CardDescription>Item count by designation</CardDescription>
+        <CardDescription>Item count by designation</CardDescription>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-[300px] w-full" />
+        <Skeleton className="h-[350px] w-full" />
       </CardContent>
     </Card>
   );
