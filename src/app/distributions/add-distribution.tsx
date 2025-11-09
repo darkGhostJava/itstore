@@ -462,6 +462,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           }}
                         >
                           {article.model} ({article.type})
+                          <span className="text-sm text-muted-foreground ml-2">
+                             (In Stock: {article.quantity})
+                          </span>
                         </div>
                       ))}
                     </div>
