@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table/data-table";
@@ -10,7 +10,8 @@ import { Item, Person } from "@/lib/definitions";
 import { columns as itemColumns } from "./columns";
 import { fetchItemsForPerson, fetchPersonById } from "@/lib/data";
 
-export default function PersonDetailPage({ params }: { params: { id: string } }) {
+export default function PersonDetailPage() {
+  const params = useParams<{ id: string }>();
   const personId = parseInt(params.id);
   const [person, setPerson] = React.useState<Person | null>(null);
 
