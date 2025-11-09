@@ -24,7 +24,7 @@ export default function DashboardPage() {
           </Suspense>
         </div>
       </div>
-       <div className="lg:col-span-1">
+       <div className="grid grid-cols-1 gap-8">
           <Suspense fallback={<RecentOperationsSkeleton />}>
             <RecentOperations />
           </Suspense>
