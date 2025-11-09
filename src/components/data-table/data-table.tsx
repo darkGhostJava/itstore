@@ -69,6 +69,14 @@ export function DataTable<TData, TValue>({
   const [query, setQuery] = React.useState('');
   const debouncedQuery = useDebounce(query, 500);
 
+  const pagination = React.useMemo(
+    () => ({
+      pageIndex,
+      pageSize,
+    }),
+    [pageIndex, pageSize]
+  );
+  
   const table = useReactTable({
     data,
     columns,
@@ -95,16 +103,22 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
+  const previousQuery = React.useRef(query);
+  
   React.useEffect(() => {
     // When the debounced query changes, or pagination changes, fetch new data.
-    // We reset page index to 0 when query changes.
-    if(debouncedQuery !== query) { // Query is changing, reset to first page
+    const isQueryChanged = previousQuery.current !== debouncedQuery;
+    
+    if (isQueryChanged) {
       table.setPageIndex(0);
       fetchData({ pageIndex: 0, pageSize, query: debouncedQuery });
-    } else { // Pagination is changing
+    } else {
       fetchData({ pageIndex, pageSize, query: debouncedQuery });
     }
-  }, [debouncedQuery, pageIndex, pageSize, fetchData, table, query]);
+
+    previousQuery.current = debouncedQuery;
+
+  }, [debouncedQuery, pageIndex, pageSize, fetchData, table]);
   
 
   return (
