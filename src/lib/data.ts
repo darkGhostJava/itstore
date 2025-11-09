@@ -185,7 +185,7 @@ export const fetchItemsForPerson = async (personId: number, options: { pageIndex
 
 export const fetchItemsForStructure = async (structureId: number, options: { pageIndex: number; pageSize: number }) => {
     const { pageIndex, pageSize } = options;
-    const response = await api.get<PaginatedResponse<Item>>(`/structures/${structureId}/items`, {
+    const response = await api.get<PaginatedResponse<Item>>(`items/structure/${structureId}`, {
         params: {
         page: pageIndex,
         size: pageSize,
