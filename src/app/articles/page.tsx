@@ -8,8 +8,13 @@ import { columns } from "./columns";
 import { fetchArticles } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { AddArticle } from "./add-article";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function ArticlesPage() {
+function ArticlesPageContent() {
+  const searchParams = useSearchParams();
+  const designationQuery = searchParams.get("designation") || "";
+
   const [data, setData] = React.useState<Article[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -33,7 +38,7 @@ export default function ArticlesPage() {
   
   const handleSuccess = () => {
     if (fetchDataRef.current) {
-       fetchDataRef.current({ pageIndex: 0, pageSize: 10 });
+       fetchDataRef.current({ pageIndex: 0, pageSize: 10, query: designationQuery });
     }
   };
   
@@ -53,7 +58,17 @@ export default function ArticlesPage() {
         isLoading={isLoading}
         filterKey="designation"
         filterPlaceholder="Filter by designation..."
+        initialQuery={designationQuery}
       />
     </div>
   );
+}
+
+
+export default function ArticlesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ArticlesPageContent />
+    </Suspense>
+  )
 }

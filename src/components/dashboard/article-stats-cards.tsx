@@ -1,13 +1,25 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
-import { getArticlesInStock } from "@/lib/data";
+import { getInStockArticles } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
+import Link from "next/link";
+import { Article } from "@/lib/definitions";
 
+// This component now shows the count per designation and links to the filtered articles page.
 export async function ArticleStatsCards() {
-  const statsData = await getArticlesInStock();
+  const articlesInStock = await getInStockArticles();
 
-  const designations = Object.entries(statsData).map(([title, value]) => ({
+  const designationCounts: Record<string, number> = {};
+
+  articlesInStock.forEach(article => {
+    if(designationCounts[article.designation]) {
+      designationCounts[article.designation] += article.quantity;
+    } else {
+      designationCounts[article.designation] = article.quantity;
+    }
+  });
+
+  const designations = Object.entries(designationCounts).map(([title, value]) => ({
     title,
     value,
     icon: Package,
@@ -29,15 +41,17 @@ export async function ArticleStatsCards() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
       {designations.map((stat) => (
-        <Card key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-          </CardContent>
-        </Card>
+        <Link key={stat.title} href={`/articles?designation=${encodeURIComponent(stat.title)}`}>
+            <Card className="hover:bg-muted/50 transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+            </CardContent>
+            </Card>
+        </Link>
       ))}
     </div>
   );

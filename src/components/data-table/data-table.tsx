@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -40,6 +41,7 @@ interface DataTableProps<TData, TValue> {
   filterKey?: string
   filterPlaceholder?: string
   facetedFilters?: React.ReactNode
+  initialQuery?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -51,6 +53,7 @@ export function DataTable<TData, TValue>({
   filterKey,
   filterPlaceholder,
   facetedFilters,
+  initialQuery = '',
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -66,7 +69,7 @@ export function DataTable<TData, TValue>({
       pageSize: 10,
     })
 
-  const [query, setQuery] = React.useState('');
+  const [query, setQuery] = React.useState(initialQuery);
   const debouncedQuery = useDebounce(query, 500);
 
   const pagination = React.useMemo(
@@ -103,7 +106,7 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const previousQuery = React.useRef(query);
+  const previousQuery = React.useRef(debouncedQuery);
   
   React.useEffect(() => {
     // When the debounced query changes, or pagination changes, fetch new data.
