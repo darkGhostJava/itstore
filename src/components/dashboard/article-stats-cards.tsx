@@ -1,29 +1,55 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { getInStockArticles } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
 import { Article } from "@/lib/definitions";
+import React from "react";
 
 // This component now shows the count per designation and links to the filtered articles page.
-export async function ArticleStatsCards() {
-  const articlesInStock = await getInStockArticles();
+export function ArticleStatsCards() {
+  const [designations, setDesignations] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const designationCounts: Record<string, number> = {};
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const articlesInStock = await getInStockArticles();
 
-  articlesInStock.forEach(article => {
-    if(designationCounts[article.designation]) {
-      designationCounts[article.designation] += article.quantity;
-    } else {
-      designationCounts[article.designation] = article.quantity;
-    }
-  });
+        const designationCounts: Record<string, number> = {};
 
-  const designations = Object.entries(designationCounts).map(([title, value]) => ({
-    title,
-    value,
-    icon: Package,
-  }));
+        articlesInStock.forEach(article => {
+          if(designationCounts[article.designation]) {
+            designationCounts[article.designation] += article.quantity;
+          } else {
+            designationCounts[article.designation] = article.quantity;
+          }
+        });
+
+        const designationData = Object.entries(designationCounts).map(([title, value]) => ({
+          title,
+          value,
+          icon: Package,
+        }));
+
+        setDesignations(designationData);
+      } catch (error) {
+        console.error("Failed to fetch article stats:", error);
+        setDesignations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return <ArticleStatsCardsSkeleton />;
+  }
 
   if (designations.length === 0) {
     return (

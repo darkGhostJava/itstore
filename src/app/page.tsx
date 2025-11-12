@@ -17,9 +17,7 @@ export default function DashboardPage() {
 
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold tracking-tight">In-Stock Designations</h2>
-        <Suspense fallback={<ArticleStatsCardsSkeleton />}>
-          <ArticleStatsCards />
-        </Suspense>
+        <ArticleStatsCards />
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

@@ -37,6 +37,10 @@ const cookiePersistor = {
 
 
 export function KeycloakProvider({ children }: KeycloakProviderProps) {
+  if (typeof keycloak === 'undefined') {
+    return <>{children}</>;
+  }
+  
   return (
     <SSRKeycloakProvider
       keycloak={keycloak}
