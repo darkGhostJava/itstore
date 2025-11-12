@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { KeycloakProvider } from "@/components/providers/keycloak-provider";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -36,23 +37,25 @@ export default function RootLayout({
           spaceGrotesk.variable
         )}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="relative flex min-h-screen w-full">
-            <Sidebar />
-            <div className="flex flex-1 flex-col sm:pl-14">
-              <Header />
-              <main className="flex-1 p-4 sm:p-6 md:p-8">
-                {children}
-              </main>
+        <KeycloakProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="relative flex min-h-screen w-full">
+              <Sidebar />
+              <div className="flex flex-1 flex-col sm:pl-14">
+                <Header />
+                <main className="flex-1 p-4 sm:p-6 md:p-8">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
-          <Toaster />
-        </ThemeProvider>
+            <Toaster />
+          </ThemeProvider>
+        </KeycloakProvider>
       </body>
     </html>
   );
