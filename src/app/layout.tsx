@@ -1,9 +1,9 @@
 
 "use client";
 
+import "./globals.css";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
-import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,13 +23,6 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: '--font-headline',
 });
-
-// export const metadata: Metadata = {
-//   title: "ITSM Dashboard",
-//   description: "IT Store Management Dashboard",
-// };
-// Metadata needs to be exported from a server component.
-// We can create a client component to handle the protected logic.
 
 function ProtectedApp({ children }: { children: React.ReactNode }) {
   const { keycloak, initialized } = useKeycloak<KeycloakInstance>();
@@ -58,9 +51,8 @@ function ProtectedApp({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
-  )
+  );
 }
-
 
 export default function RootLayout({
   children,
