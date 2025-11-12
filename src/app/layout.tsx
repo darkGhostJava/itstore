@@ -1,3 +1,6 @@
+
+"use client";
+
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
@@ -7,6 +10,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { KeycloakProvider } from "@/components/providers/keycloak-provider";
+import { useKeycloak } from "@react-keycloak/ssr";
+import type { KeycloakInstance } from "keycloak-js";
+import { Button } from "@/components/ui/button";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -18,10 +24,43 @@ const spaceGrotesk = Space_Grotesk({
   variable: '--font-headline',
 });
 
-export const metadata: Metadata = {
-  title: "ITSM Dashboard",
-  description: "IT Store Management Dashboard",
-};
+// export const metadata: Metadata = {
+//   title: "ITSM Dashboard",
+//   description: "IT Store Management Dashboard",
+// };
+// Metadata needs to be exported from a server component.
+// We can create a client component to handle the protected logic.
+
+function ProtectedApp({ children }: { children: React.ReactNode }) {
+  const { keycloak, initialized } = useKeycloak<KeycloakInstance>();
+
+  if (!initialized || !keycloak) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  if (!keycloak.authenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <h2 className="text-2xl font-bold">Access Denied</h2>
+        <p>You need to be logged in to access this application.</p>
+        <Button onClick={() => keycloak.login()}>Log In</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex min-h-screen w-full">
+      <Sidebar />
+      <div className="flex flex-1 flex-col sm:pl-14">
+        <Header />
+        <main className="flex-1 p-4 sm:p-6 md:p-8">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
+}
+
 
 export default function RootLayout({
   children,
@@ -44,15 +83,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="relative flex min-h-screen w-full">
-              <Sidebar />
-              <div className="flex flex-1 flex-col sm:pl-14">
-                <Header />
-                <main className="flex-1 p-4 sm:p-6 md:p-8">
-                  {children}
-                </main>
-              </div>
-            </div>
+            <ProtectedApp>
+              {children}
+            </ProtectedApp>
             <Toaster />
           </ThemeProvider>
         </KeycloakProvider>
