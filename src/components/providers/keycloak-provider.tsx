@@ -3,7 +3,6 @@
 import { SSRKeycloakProvider } from '@react-keycloak/ssr';
 import keycloak from '@/lib/keycloak';
 import { ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
 
 interface KeycloakProviderProps {
   children: ReactNode;
@@ -19,7 +18,12 @@ const cookiePersistor = {
       acc[key] = value;
       return acc;
     }, {} as Record<string, string>);
-    return cookies['keycloak-token'];
+    const token = cookies['keycloak-token'];
+    try {
+        return token ? JSON.parse(token) : undefined;
+    } catch (e) {
+        return undefined;
+    }
   },
   set: (token: any) => {
     if (typeof window === 'undefined') return;
@@ -33,8 +37,6 @@ const cookiePersistor = {
 
 
 export function KeycloakProvider({ children }: KeycloakProviderProps) {
-  const pathname = usePathname();
-  
   return (
     <SSRKeycloakProvider
       keycloak={keycloak}
