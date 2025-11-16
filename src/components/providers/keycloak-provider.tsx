@@ -1,6 +1,7 @@
+
 "use client";
 
-import { SSRKeycloakProvider } from '@react-keycloak/ssr';
+import { SSRKeycloakProvider, useKeycloak } from '@react-keycloak/ssr';
 import Keycloak from 'keycloak-js';
 import { ReactNode, useMemo } from 'react';
 import keycloakConfig from '@/lib/keycloak';
