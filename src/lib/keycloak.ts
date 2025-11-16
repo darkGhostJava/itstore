@@ -1,4 +1,3 @@
-
 import type { KeycloakConfig } from 'keycloak-js';
 
 const keycloakConfig: KeycloakConfig = {
