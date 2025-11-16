@@ -1,11 +1,10 @@
-
 "use client";
 
 import { SSRKeycloakProvider } from '@react-keycloak/ssr';
-import keycloak from '@/lib/keycloak';
-import { ReactNode } from 'react';
+import Keycloak from 'keycloak-js';
+import { ReactNode, useMemo } from 'react';
+import keycloakConfig from '@/lib/keycloak';
 
-// Create a simple persistor that does nothing on the server
 const persistor = {
   getTokens: () => {
     return {
@@ -18,11 +17,18 @@ const persistor = {
   clearTokens: () => {},
 };
 
-interface KeycloakProviderProps {
-  children: ReactNode;
-}
+export function KeycloakProvider({ children }: { children: ReactNode }) {
+  const keycloak = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return new Keycloak(keycloakConfig);
+    }
+    return undefined;
+  }, []);
 
-export function KeycloakProvider({ children }: KeycloakProviderProps) {
+  if (!keycloak) {
+    return <>{children}</>;
+  }
+
   return (
     <SSRKeycloakProvider
       keycloak={keycloak}
@@ -32,4 +38,3 @@ export function KeycloakProvider({ children }: KeycloakProviderProps) {
     </SSRKeycloakProvider>
   );
 }
-

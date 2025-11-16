@@ -1,10 +1,10 @@
 
-import Keycloak from 'keycloak-js';
+import type { KeycloakConfig } from 'keycloak-js';
 
-const keycloak = typeof window !== "undefined" ? new Keycloak({
+const keycloakConfig: KeycloakConfig = {
   url: 'http://localhost:8080',
   realm: 'your-realm',
   clientId: 'your-client-id',
-}) : undefined;
+};
 
-export default keycloak;
+export default keycloakConfig;

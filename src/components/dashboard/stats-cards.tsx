@@ -1,4 +1,6 @@
 
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Package,
@@ -10,6 +12,8 @@ import {
 } from "lucide-react";
 import { getStats } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
+import React from "react";
+import { Stats } from "@/lib/definitions";
 
 type StatCard = {
   title: string;
@@ -17,8 +21,30 @@ type StatCard = {
   icon: React.ElementType;
 };
 
-export async function StatsCards() {
-  const statsData = await getStats();
+export function StatsCards() {
+  const [statsData, setStatsData] = React.useState<Stats | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const data = await getStats();
+        setStatsData(data);
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+        setStatsData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading || !statsData) {
+    return <StatsCardsSkeleton />;
+  }
 
   const stats: StatCard[] = [
     { title: "Total Articles", value: statsData.totalArticles, icon: Package },
