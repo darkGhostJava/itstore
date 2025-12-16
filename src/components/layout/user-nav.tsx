@@ -1,9 +1,11 @@
+"use client";
+
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,58 +14,56 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { PlaceHolderImages } from "@/lib/placeholder-images"
-import { ThemeToggle } from "./theme-toggle"
+} from "@/components/ui/dropdown-menu";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { ThemeToggle } from "./theme-toggle";
+import { useKeycloak } from "@react-keycloak/web";
 
 export function UserNav() {
-  const userAvatar = PlaceHolderImages.find(img => img.id === 'user-1');
+  const { keycloak } = useKeycloak();
+
+  const userAvatar = PlaceHolderImages.find((img) => img.id === "user-1");
+
+  const handleLogout = () => {
+    keycloak.logout({
+      redirectUri: window.location.origin, // redirect back to your frontend
+    });
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            {userAvatar && (
-               <AvatarImage 
-                src={userAvatar.imageUrl} 
-                alt="User avatar" 
-                width={40} 
-                height={40}
-                data-ai-hint={userAvatar.imageHint}
-              />
-            )}
-            <AvatarFallback>JD</AvatarFallback>
+         
+            <AvatarFallback>User</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">John Doe</p>
+            <p className="text-sm font-medium leading-none">
+              {keycloak.tokenParsed?.preferred_username || "User"}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-              jdoe@example.com
+              {keycloak.tokenParsed?.email || "example@email"}
             </p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+
+
         <DropdownMenuItem>
-         <ThemeToggle />
+          <ThemeToggle />
         </DropdownMenuItem>
+
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

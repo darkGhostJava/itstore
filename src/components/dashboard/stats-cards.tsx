@@ -1,26 +1,29 @@
+"use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Package,
-  Boxes,
-  ArrowRightLeft,
-  Wrench,
-  Building,
-  ArchiveX,
-} from "lucide-react";
+import { Package, Boxes, ArrowRightLeft, Wrench, Building, ArchiveX } from "lucide-react";
 import { getStats } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
+import { Stats } from "@/lib/definitions";
 
-type StatCard = {
-  title: string;
-  value: number;
-  icon: React.ElementType;
-};
+import React, { useEffect, useState } from "react";
 
-export async function StatsCards() {
-  const statsData = await getStats();
+export function StatsCards() {
+  const [statsData, setStatsData] = useState<Stats | null>(null);
 
-  const stats: StatCard[] = [
+  useEffect(() => {
+    const fetchStats = async () => {
+      const data = await getStats();
+      setStatsData(data);
+    };
+
+    fetchStats();
+  }, []);
+
+  // Still loading?
+  if (!statsData) return <StatsCardsSkeleton />;
+
+  const stats = [
     { title: "Total Articles", value: statsData.totalArticles, icon: Package },
     { title: "Items in Stock", value: statsData.itemsInStock, icon: Boxes },
     { title: "Distributed Items", value: statsData.distributedItems, icon: ArrowRightLeft },
@@ -33,7 +36,7 @@ export async function StatsCards() {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
       {stats.map((stat) => (
         <Card key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
             <stat.icon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -45,7 +48,6 @@ export async function StatsCards() {
     </div>
   );
 }
-
 export function StatsCardsSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">

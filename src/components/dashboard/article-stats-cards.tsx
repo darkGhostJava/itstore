@@ -1,12 +1,25 @@
+"use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { getArticlesInStock } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
+import { useEffect, useState } from "react";
 
-export async function ArticleStatsCards() {
-  const statsData = await getArticlesInStock();
+export  function ArticleStatsCards() {
+  const [statsData, setStatsData] = useState<Record<string, number> | null>(null);
 
+  useEffect(() => {
+    const fetchStats = async () => {
+      const data = await getArticlesInStock();
+      setStatsData(data);
+    };
+
+    fetchStats();
+  }, []);
+
+  // Still loading?
+  if (!statsData) return <ArticleStatsCardsSkeleton/>;
   const designations = Object.entries(statsData).map(([title, value]) => ({
     title,
     value,

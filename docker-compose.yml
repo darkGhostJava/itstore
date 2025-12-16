@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  node-app:
+    # image: itstore-node-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    container_name: node-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    depends_on:
+      - node-app
+    ports:
+      - "443:443"
+    volumes:
+      - ./certs:/etc/ssl/certs
+      - ./certs:/etc/ssl/private
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
