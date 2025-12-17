@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "@react-keycloak/ssr";
 import { useEffect } from "react";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -8,21 +8,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // If Keycloak is initialized but not authenticated, force login
-    if (initialized && !keycloak.authenticated) {
-      keycloak.login();
+    if (initialized && !keycloak?.authenticated) {
+      keycloak?.login();
     }
-  }, [initialized, keycloak.authenticated, keycloak]);
+  }, [initialized, keycloak]);
 
   // Show a loader while Keycloak is initializing
-  if (!initialized) {
+  if (!initialized || !keycloak?.authenticated) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
 
   // If authenticated, render the page
-  if (keycloak.authenticated) {
-    return <>{children}</>;
-  }
-
-  // Fallback (usually briefly visible before redirect)
-  return <div>Redirecting to login...</div>;
+  return <>{children}</>;
 }

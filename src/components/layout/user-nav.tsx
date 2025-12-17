@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ThemeToggle } from "./theme-toggle";
-import { useKeycloak } from "@react-keycloak/web";
+import { useKeycloak } from "@react-keycloak/ssr";
 
 export function UserNav() {
   const { keycloak } = useKeycloak();
@@ -25,7 +25,7 @@ export function UserNav() {
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-1");
 
   const handleLogout = () => {
-    keycloak.logout({
+    keycloak?.logout({
       redirectUri: window.location.origin, // redirect back to your frontend
     });
   };
@@ -45,10 +45,10 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {keycloak.tokenParsed?.preferred_username || "User"}
+              {keycloak?.tokenParsed?.preferred_username || "User"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {keycloak.tokenParsed?.email || "example@email"}
+              {keycloak?.tokenParsed?.email || "example@email"}
             </p>
           </div>
         </DropdownMenuLabel>
