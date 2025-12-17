@@ -21,9 +21,11 @@ import {
 import { getArticlesInStock } from "@/lib/data";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
+import { useRouter } from "next/navigation";
 
 export function ArticleDistributionChart() {
   const { theme } = useTheme();
+  const router = useRouter();
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,6 +52,12 @@ export function ArticleDistributionChart() {
     };
     getData();
   }, []);
+
+  const handleBarClick = (data: any) => {
+    if (data && data.name) {
+      router.push(`/articles?query=${encodeURIComponent(data.name)}`);
+    }
+  };
 
   const barColor = theme === 'dark' ? '#90CAF9' : '#1E88E5';
   const labelColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
@@ -91,9 +99,9 @@ export function ArticleDistributionChart() {
                 backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
                 border: '1px solid #334155'
               }}
-               cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0' }}
+               cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0', cursor: 'pointer' }}
             />
-            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]}>
+            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]} onClick={handleBarClick} className="cursor-pointer">
                 <LabelList dataKey="value" position="top" fill={labelColor} fontSize={12} />
             </Bar>
           </BarChart>
