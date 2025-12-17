@@ -1,9 +1,8 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Package, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Package } from "lucide-react";
 import { getArticlesInStock } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
@@ -17,7 +16,7 @@ export  function ArticleStatsCards() {
       try {
         const data = await getArticlesInStock();
         setStatsData(data);
-      } catch (error) {
+      } catch (error) => {
         console.error("Failed to fetch article stats:", error);
         setStatsData({}); // Set to empty object on error
       }
@@ -50,23 +49,17 @@ export  function ArticleStatsCards() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
       {designations.map((stat) => (
-        <Card key={stat.title} className="flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-          </CardContent>
-          <CardFooter className="mt-auto">
-            <Button asChild size="sm" variant="outline" className="w-full">
-              <Link href={`/articles?query=${encodeURIComponent(stat.title)}`}>
-                View
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardFooter>
-        </Card>
+        <Link key={stat.title} href={`/articles?query=${encodeURIComponent(stat.title)}`} className="hover:shadow-lg transition-shadow rounded-lg">
+          <Card className="flex flex-col h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <stat.icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+            </CardContent>
+          </Card>
+        </Link>
       ))}
     </div>
   );
@@ -84,9 +77,6 @@ export function ArticleStatsCardsSkeleton() {
           <CardContent>
             <Skeleton className="h-8 w-12" />
           </CardContent>
-          <CardFooter className="mt-auto">
-            <Skeleton className="h-9 w-full" />
-          </CardFooter>
         </Card>
       ))}
     </div>
