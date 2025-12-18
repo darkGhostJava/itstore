@@ -1,0 +1,75 @@
+
+"use client";
+
+import * as React from "react";
+import { useSearchParams } from "next/navigation";
+import { PageHeader } from "@/components/shared/page-header";
+import { DataTable } from "@/components/data-table/data-table";
+import { columns } from "./columns";
+import { fetchArticles } from "@/lib/data";
+import type { Article } from "@/lib/definitions";
+import { AddArticle } from "../articles/add-article";
+
+function ConsumablesPageContent() {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("query") || "";
+
+  const [data, setData] = React.useState<Article[]>([]);
+  const [pageCount, setPageCount] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(false);
+  
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; }) => Promise<void>) | null>(null);
+
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
+    setIsLoading(true);
+    try {
+      const result = await fetchArticles({ pageIndex, pageSize, query, type: 'CONSUMABLE' });
+      setData(result.data);
+      setPageCount(result.pageCount);
+    }
+    finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  fetchDataRef.current = fetchData;
+  
+  const handleSuccess = () => {
+    if (fetchDataRef.current) {
+       const currentPageIndex = 0; 
+       const currentPageSize = 10;
+       const currentQuery = initialQuery; 
+       fetchDataRef.current({ pageIndex: currentPageIndex, pageSize: currentPageSize, query: currentQuery });
+    }
+  };
+  
+  return (
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title="Consumables"
+        actions={
+          <AddArticle onSuccess={handleSuccess} />
+        }
+      />
+      <DataTable
+        columns={columns}
+        data={data}
+        pageCount={pageCount}
+        fetchData={fetchData}
+        isLoading={isLoading}
+        filterKey="designation"
+        filterPlaceholder="Filter by designation..."
+        initialQuery={initialQuery}
+      />
+    </div>
+  );
+}
+
+
+export default function ConsumablesPage() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <ConsumablesPageContent />
+    </React.Suspense>
+  )
+}

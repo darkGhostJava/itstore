@@ -19,14 +19,15 @@ export const getStats = async (): Promise<Stats> => {
   return response.data;
 }
 
-export const fetchArticles = async (options: { pageIndex: number; pageSize: number; query?: string; }) => {
-  const { pageIndex, pageSize, query } = options;
+export const fetchArticles = async (options: { pageIndex: number; pageSize: number; query?: string; type?: 'HARDWARE' | 'CONSUMABLE' }) => {
+  const { pageIndex, pageSize, query, type } = options;
 
   const response = await api.get<PaginatedResponse<Article>>("/articles", {
     params: {
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
+      type: type || undefined,
     },
   });
 
@@ -38,6 +39,24 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
     totalElements: response.data.totalElements,
   };
 };
+
+export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
+  
+  const response = await api.get<PaginatedResponse<Item>>("/items", {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+      query: query || undefined,
+      type: type,
+    },
+  });
+  
+  return {
+    data: response.data.content as Item[],
+    pageCount: response.data.totalPages,
+  };
+}
 
 export const getAllArticles = async () => {
   const response = await api.get<Article[]>("/articles/all");

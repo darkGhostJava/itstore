@@ -10,6 +10,8 @@ import {
   History,
   PanelLeft,
   Workflow,
+  HardDrive,
+  Printer,
 } from "lucide-react";
 
 import {
@@ -23,7 +25,8 @@ import { UserNav } from "./user-nav";
 
 const mobileNavItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/articles", label: "Articles", icon: Package },
+  { href: "/hardware", label: "Hardware", icon: HardDrive },
+  { href: "/consumables", label: "Consumables", icon: Printer },
   { href: "/arrivals", label: "Arrivals", icon: Truck },
   { href: "/distributions", label: "Distributions", icon: ArrowRightLeft },
   { href: "/reparations", label: "Repairs", icon: Wrench },

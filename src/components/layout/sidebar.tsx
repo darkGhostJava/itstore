@@ -12,6 +12,8 @@ import {
   Building,
   History,
   Workflow,
+  HardDrive,
+  Printer,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -25,7 +27,8 @@ import { Button } from "../ui/button";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/articles", label: "Articles", icon: Package },
+  { href: "/hardware", label: "Hardware", icon: HardDrive },
+  { href: "/consumables", label: "Consumables", icon: Printer },
   { href: "/arrivals", label: "Arrivals", icon: Truck },
   { href: "/distributions", label: "Distributions", icon: ArrowRightLeft },
   { href: "/reparations", label: "Repairs", icon: Wrench },
