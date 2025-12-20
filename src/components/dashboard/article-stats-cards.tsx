@@ -2,54 +2,69 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package } from "lucide-react";
-import { getArticlesInStock } from "@/lib/data";
+import { HardDrive, Printer } from "lucide-react";
+import { getArticlesInStockCons, getArticlesInStockMateriel } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-export  function ArticleStatsCards() {
+interface ArticleStatsCardsProps {
+  type: "hardware" | "consumable";
+}
+
+export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
   const [statsData, setStatsData] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const data = await getArticlesInStock();
+        const data =
+          type === "hardware"
+            ? await getArticlesInStockMateriel()
+            : await getArticlesInStockCons();
         setStatsData(data);
       } catch (error) {
-        console.error("Failed to fetch article stats:", error);
+        console.error(`Failed to fetch ${type} stats:`, error);
         setStatsData({}); // Set to empty object on error
       }
     };
 
     fetchStats();
-  }, []);
+  }, [type]);
 
-  if (!statsData) return <ArticleStatsCardsSkeleton/>;
-  
+  if (!statsData) return <ArticleStatsCardsSkeleton />;
+
   const designations = Object.entries(statsData).map(([title, value]) => ({
     title,
     value,
-    icon: Package,
+    icon: type === "hardware" ? HardDrive : Printer,
   }));
+
+  const linkHref = type === 'hardware' ? '/hardware' : '/consumables';
 
   if (designations.length === 0) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>No In-Stock Designations</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground">There are currently no items in stock.</p>
-            </CardContent>
-        </Card>
-    )
+      <Card>
+        <CardHeader>
+          <CardTitle>No In-Stock {type === 'hardware' ? 'Hardware' : 'Consumables'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            There are currently no items in stock for this category.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
       {designations.map((stat) => (
-        <Link key={stat.title} href={`/hardware?query=${encodeURIComponent(stat.title)}`} className="hover:shadow-lg transition-shadow rounded-lg">
+        <Link
+          key={stat.title}
+          href={`${linkHref}?query=${encodeURIComponent(stat.title)}`}
+          className="hover:shadow-lg transition-shadow rounded-lg"
+        >
           <Card className="flex flex-col h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
