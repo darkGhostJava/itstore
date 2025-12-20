@@ -30,10 +30,6 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
     },
   },
   {
-    accessorKey: "serialNumber",
-    header: "Serial Number",
-  },
-  {
     header: "Article",
     cell: ({ row }) => {
       const { article } = row.original;
@@ -43,6 +39,10 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
    {
     accessorKey: "article.designation",
     header: "Designation",
+  },
+  {
+    accessorKey: "serialNumber",
+    header: "Serial Number",
   },
   {
     accessorKey: "status",
