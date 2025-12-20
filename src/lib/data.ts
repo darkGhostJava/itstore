@@ -65,11 +65,14 @@ export const getAllArticles = async () => {
   };
 };
 
-export const getArticlesInStock = async (): Promise<Record<string, number>> => {
-    const response = await api.get<Record<string, number>>("/articles/in-stock");
+export const getArticlesInStockCons = async (): Promise<Record<string, number>> => {
+    const response = await api.get<Record<string, number>>("/articles/in-stock/consomables");
     return response.data;
 }
-
+export const getArticlesInStockMateriel= async (): Promise<Record<string, number>> => {
+    const response = await api.get<Record<string, number>>("/articles/in-stock/materiel");
+    return response.data;
+}
 export const getAllDirections = async () => {
   const response = await api.get<Structure[]>("/structures/directions");
   return {

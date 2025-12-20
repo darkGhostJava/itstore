@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
-import { getArticlesInStock } from "@/lib/data";
+import { getArticlesInStockCons } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -14,7 +14,7 @@ export  function ArticleStatsCards() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const data = await getArticlesInStock();
+        const data = await getArticlesInStockCons();
         setStatsData(data);
       } catch (error) {
         console.error("Failed to fetch article stats:", error);

@@ -18,7 +18,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { getArticlesInStock } from "@/lib/data";
+import { getArticlesInStockCons } from "@/lib/data";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/navigation";
@@ -33,7 +33,7 @@ export function ArticleDistributionChart() {
     const getData = async () => {
       try {
         setLoading(true);
-        const designationCounts: Record<string, number> = await getArticlesInStock();
+        const designationCounts: Record<string, number> = await getArticlesInStockCons();
 
         const data = Object.entries(designationCounts)
           .map(([name, value]) => ({
