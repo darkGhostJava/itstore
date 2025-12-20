@@ -18,12 +18,20 @@ export default function DashboardPage() {
     <AuthGuard>
       <div className="flex flex-col gap-8">
         <PageHeader title="Dashboard" />
-        <StatsCards />
+        <Suspense fallback={<StatsCardsSkeleton />}>
+          <StatsCards />
+        </Suspense>
 
         <div className="space-y-4">
-          <h2 className="text-2xl font-semibold tracking-tight">In-Stock Designations</h2>
-          <ArticleStatsCards />
+          <h2 className="text-2xl font-semibold tracking-tight">In-Stock Hardware</h2>
+          <ArticleStatsCards type="hardware" />
         </div>
+
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold tracking-tight">In-Stock Consumables</h2>
+          <ArticleStatsCards type="consumable" />
+        </div>
+
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
