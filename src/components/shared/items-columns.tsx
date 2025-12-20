@@ -24,6 +24,12 @@ type ItemsColumnProps = {
 
 export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item>[] => [
   {
+    header: "#",
+    cell: ({ row }) => {
+      return row.index + 1;
+    },
+  },
+  {
     accessorKey: "serialNumber",
     header: "Serial Number",
   },

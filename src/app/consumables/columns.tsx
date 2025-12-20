@@ -15,6 +15,12 @@ import Link from "next/link";
 
 export const columns: ColumnDef<Article>[] = [
   {
+    header: "#",
+    cell: ({ row }) => {
+      return row.index + 1;
+    },
+  },
+  {
     accessorKey: "model",
     header: "Model",
   },
