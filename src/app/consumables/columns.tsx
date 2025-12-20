@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -47,9 +48,6 @@ export const columns: ColumnDef<Article>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem asChild>
-              <Link href={`/articles/${article.id}`}>View Details</Link>
-            </DropdownMenuItem>
             <DropdownMenuItem>Edit Article</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
