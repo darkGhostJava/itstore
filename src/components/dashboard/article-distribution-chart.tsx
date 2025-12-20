@@ -18,22 +18,31 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { getArticlesInStockCons } from "@/lib/data";
+import { getArticlesInStockCons, getArticlesInStockMateriel } from "@/lib/data";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/navigation";
 
-export function ArticleDistributionChart() {
+interface ArticleDistributionChartProps {
+  type: "hardware" | "consumable";
+}
+
+export function ArticleDistributionChart({ type }: ArticleDistributionChartProps) {
   const { theme } = useTheme();
   const router = useRouter();
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const title = type === "hardware" ? "Hardware Inventory" : "Consumable Inventory";
+  const description = type === 'hardware' ? "In-stock hardware count by designation" : "In-stock consumable count by designation";
+  const linkHref = type === 'hardware' ? '/hardware' : '/consumables';
+
   useEffect(() => {
     const getData = async () => {
       try {
         setLoading(true);
-        const designationCounts: Record<string, number> = await getArticlesInStockCons();
+        const fetcher = type === 'hardware' ? getArticlesInStockMateriel : getArticlesInStockCons;
+        const designationCounts: Record<string, number> = await fetcher();
 
         const data = Object.entries(designationCounts)
           .map(([name, value]) => ({
@@ -44,18 +53,18 @@ export function ArticleDistributionChart() {
 
         setChartData(data);
       } catch (error) {
-        console.error("Failed to fetch articles for chart:", error);
+        console.error(`Failed to fetch ${type} for chart:`, error);
         setChartData([]);
       } finally {
         setLoading(false);
       }
     };
     getData();
-  }, []);
+  }, [type]);
 
   const handleBarClick = (data: any) => {
     if (data && data.name) {
-      router.push(`/articles?query=${encodeURIComponent(data.name)}`);
+      router.push(`${linkHref}?query=${encodeURIComponent(data.name)}`);
     }
   };
 
@@ -63,14 +72,14 @@ export function ArticleDistributionChart() {
   const labelColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
 
   if (loading) {
-    return <ArticleDistributionChartSkeleton />;
+    return <ArticleDistributionChartSkeleton title={title} description={description} />;
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Article Inventory</CardTitle>
-        <CardDescription>In-stock item count by designation</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -111,12 +120,17 @@ export function ArticleDistributionChart() {
   );
 }
 
-export function ArticleDistributionChartSkeleton() {
+interface ArticleDistributionChartSkeletonProps {
+  title?: string;
+  description?: string;
+}
+
+export function ArticleDistributionChartSkeleton({ title = "Loading...", description = "Fetching data..." }: ArticleDistributionChartSkeletonProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Article Inventory</CardTitle>
-        <CardDescription>In-stock item count by designation</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         <Skeleton className="h-[350px] w-full" />
