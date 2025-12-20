@@ -43,7 +43,7 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
 export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pageIndex: number; pageSize: number; query?: string; }) => {
   const { pageIndex, pageSize, query } = options;
   
-  const response = await api.get<PaginatedResponse<Item>>("/items", {
+  const response = await api.get<PaginatedResponse<Item>>(`/items/search/in-stock`, {
     params: {
       page: pageIndex,
       size: pageSize,

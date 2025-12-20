@@ -1,6 +1,7 @@
 "use client";
 
-import { useKeycloak } from "@react-keycloak/ssr";
+
+import { useKeycloak } from "@react-keycloak/web";
 import { useEffect } from "react";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {

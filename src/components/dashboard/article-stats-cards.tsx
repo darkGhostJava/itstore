@@ -16,7 +16,7 @@ export  function ArticleStatsCards() {
       try {
         const data = await getArticlesInStock();
         setStatsData(data);
-      } catch (error) => {
+      } catch (error) {
         console.error("Failed to fetch article stats:", error);
         setStatsData({}); // Set to empty object on error
       }
@@ -49,7 +49,7 @@ export  function ArticleStatsCards() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
       {designations.map((stat) => (
-        <Link key={stat.title} href={`/articles?query=${encodeURIComponent(stat.title)}`} className="hover:shadow-lg transition-shadow rounded-lg">
+        <Link key={stat.title} href={`/hardware?query=${encodeURIComponent(stat.title)}`} className="hover:shadow-lg transition-shadow rounded-lg">
           <Card className="flex flex-col h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
