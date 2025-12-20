@@ -43,6 +43,16 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
   {
     accessorKey: "serialNumber",
     header: "Serial Number",
+    cell: ({ row }) => {
+        const item = row.original;
+        return (
+            <Button variant="link" asChild className="p-0 h-auto">
+                <Link href={`/items/${item.id}`}>
+                    {item.serialNumber}
+                </Link>
+            </Button>
+        )
+    }
   },
   {
     accessorKey: "status",
@@ -70,7 +80,7 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link href={`/articles/${item.article.id}`}>View Article</Link>
+              <Link href={`/items/${item.id}`}>View History</Link>
             </DropdownMenuItem>
              {isUnderRepair && (
               <>

@@ -1,5 +1,4 @@
 
-
 import { api } from './api';
 import type { Article, Item, Person, Structure, Operation, Distribution, Stats } from './definitions';
 
@@ -344,4 +343,24 @@ export const markItemAsReformed = async (itemId: number, userId: number) => {
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
   return response;
+}
+
+export const fetchItemById = async (id: number): Promise<Item> => {
+  const response = await api.get<Item>(`/items/${id}`);
+  return response.data;
+}
+
+export const fetchOperationsForItem = async (itemId: number, options: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const { pageIndex, pageSize, query } = options;
+  const response = await api.get<PaginatedResponse<Operation>>(`/operations/item/${itemId}`, {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+      query: query || undefined,
+    },
+  });
+  return {
+    data: response.data.content,
+    pageCount: response.data.totalPages,
+  };
 }
