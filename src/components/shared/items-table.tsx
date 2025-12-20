@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -10,9 +11,11 @@ interface ItemsTableProps {
   pageCount: number;
   fetchData: (options: { pageIndex: number; pageSize: number; query?: string; }) => void;
   isLoading: boolean;
+  initialQuery?: string;
+  filterKey?: "serialNumber" | "designation";
 }
 
-export function ItemsTable({ data, pageCount, fetchData, isLoading }: ItemsTableProps) {
+export function ItemsTable({ data, pageCount, fetchData, isLoading, initialQuery, filterKey = "serialNumber" }: ItemsTableProps) {
 
   const handleSuccess = React.useCallback(() => {
     fetchData({ pageIndex: 0, pageSize: 10 });
@@ -27,8 +30,9 @@ export function ItemsTable({ data, pageCount, fetchData, isLoading }: ItemsTable
         pageCount={pageCount}
         fetchData={fetchData}
         isLoading={isLoading}
-        filterKey="serialNumber"
-        filterPlaceholder="Filter by serial number..."
+        filterKey={filterKey}
+        filterPlaceholder={`Filter by ${filterKey}...`}
+        initialQuery={initialQuery}
       />
   );
 }

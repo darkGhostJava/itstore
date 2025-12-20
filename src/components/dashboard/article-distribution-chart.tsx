@@ -63,11 +63,15 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
   }, [type]);
 
   const handleBarClick = (data: any) => {
-    if (data && data.name) {
-      router.push(`${linkHref}?query=${encodeURIComponent(data.name)}`);
+    if (data && data.activePayload && data.activePayload[0] && data.activePayload[0].payload) {
+      const payload = data.activePayload[0].payload;
+      if (payload.name) {
+        const queryKey = type === 'hardware' ? 'designation' : 'designation';
+        router.push(`${linkHref}?query=${encodeURIComponent(payload.name)}`);
+      }
     }
   };
-
+  
   const barColor = theme === 'dark' ? '#90CAF9' : '#1E88E5';
   const labelColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
 
@@ -83,7 +87,7 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} margin={{ left: 0, right: 20, top: 20, bottom: 5 }}>
+          <BarChart data={chartData} margin={{ left: 0, right: 20, top: 20, bottom: 5 }} onClick={handleBarClick}>
              <XAxis 
               dataKey="name"
               stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
@@ -110,7 +114,7 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
               }}
                cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0', cursor: 'pointer' }}
             />
-            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]} onClick={handleBarClick} className="cursor-pointer">
+            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]} className="cursor-pointer">
                 <LabelList dataKey="value" position="top" fill={labelColor} fontSize={12} />
             </Bar>
           </BarChart>
