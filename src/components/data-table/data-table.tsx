@@ -93,6 +93,8 @@ export function DataTable<TData, TValue>({
     },
     enableRowSelection: true,
     manualPagination: true,
+    manualSorting: true,
+    manualFiltering: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -106,28 +108,28 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const previousQuery = React.useRef(query);
-  const previousSorting = React.useRef(sorting);
-  
+  const isInitialMount = React.useRef(true);
+
   React.useEffect(() => {
-    const isQueryChanged = previousQuery.current !== debouncedQuery;
-    const isSortingChanged = JSON.stringify(previousSorting.current) !== JSON.stringify(sorting);
+    // On initial mount, fetchData is called by the parent component.
+    // This effect should only run on subsequent changes.
+    if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+    }
 
     const sortField = sorting.length > 0 ? sorting[0].id : undefined;
     const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
 
-    if (isQueryChanged || isSortingChanged) {
-      table.setPageIndex(0);
-      fetchData({ pageIndex: 0, pageSize, query: debouncedQuery, sort: sortField, order: sortOrder });
-    } else {
-      fetchData({ pageIndex, pageSize, query: debouncedQuery, sort: sortField, order: sortOrder });
-    }
+    fetchData({ pageIndex, pageSize, query: debouncedQuery, sort: sortField, order: sortOrder });
 
-    previousQuery.current = debouncedQuery;
-    previousSorting.current = sorting;
+  }, [debouncedQuery, pageIndex, pageSize, sorting, fetchData]);
 
-  }, [debouncedQuery, pageIndex, pageSize, fetchData, table, sorting]);
-  
+  // When query or sorting changes, reset to the first page
+  React.useEffect(() => {
+    table.setPageIndex(0);
+  }, [debouncedQuery, sorting, table]);
+
 
   return (
     <div className="space-y-4">
