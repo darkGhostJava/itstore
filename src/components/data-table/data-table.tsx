@@ -36,7 +36,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   pageCount: number
-  fetchData: (options: { pageIndex: number, pageSize: number, query?: string }) => void
+  fetchData: (options: { pageIndex: number, pageSize: number, query?: string, sort?: string, order?: string }) => void
   isLoading?: boolean
   filterKey?: string
   filterPlaceholder?: string
@@ -107,21 +107,26 @@ export function DataTable<TData, TValue>({
   });
 
   const previousQuery = React.useRef(query);
+  const previousSorting = React.useRef(sorting);
   
   React.useEffect(() => {
-    // When the debounced query changes, or pagination changes, fetch new data.
     const isQueryChanged = previousQuery.current !== debouncedQuery;
-    
-    if (isQueryChanged) {
+    const isSortingChanged = JSON.stringify(previousSorting.current) !== JSON.stringify(sorting);
+
+    const sortField = sorting.length > 0 ? sorting[0].id : undefined;
+    const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
+
+    if (isQueryChanged || isSortingChanged) {
       table.setPageIndex(0);
-      fetchData({ pageIndex: 0, pageSize, query: debouncedQuery });
+      fetchData({ pageIndex: 0, pageSize, query: debouncedQuery, sort: sortField, order: sortOrder });
     } else {
-      fetchData({ pageIndex, pageSize, query: debouncedQuery });
+      fetchData({ pageIndex, pageSize, query: debouncedQuery, sort: sortField, order: sortOrder });
     }
 
     previousQuery.current = debouncedQuery;
+    previousSorting.current = sorting;
 
-  }, [debouncedQuery, pageIndex, pageSize, fetchData, table]);
+  }, [debouncedQuery, pageIndex, pageSize, fetchData, table, sorting]);
   
 
   return (

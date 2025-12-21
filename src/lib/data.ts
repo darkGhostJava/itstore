@@ -39,8 +39,8 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
   };
 };
 
-export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pageIndex: number; pageSize: number; query?: string; }) => {
-  const { pageIndex, pageSize, query } = options;
+export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pageIndex: number; pageSize: number; query?: string; sort?: string; order?: string; }) => {
+  const { pageIndex, pageSize, query, sort, order } = options;
   
   const response = await api.get<PaginatedResponse<Item>>(`/items/search`, {
     params: {
@@ -48,6 +48,8 @@ export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pag
       size: pageSize,
       query: query || undefined,
       type: type,
+      sort: sort || 'id',
+      order: order || 'asc',
     },
   });
   

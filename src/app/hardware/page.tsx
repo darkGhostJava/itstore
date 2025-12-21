@@ -17,12 +17,12 @@ function HardwarePageContent() {
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
   
-  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; }) => Promise<void>) | null>(null);
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; sort?: string; order?: string; }) => Promise<void>) | null>(null);
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort, order }: { pageIndex: number; pageSize: number; query?: string; sort?: string; order?: string; }) => {
     setIsLoading(true);
     try {
-      const result = await fetchItems("HARDWARE", { pageIndex, pageSize, query });
+      const result = await fetchItems("HARDWARE", { pageIndex, pageSize, query, sort, order });
       setData(result.data);
       setPageCount(result.pageCount);
     }
