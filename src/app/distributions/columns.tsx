@@ -20,6 +20,12 @@ import { DataTableColumnHeader } from "@/components/data-table/data-table-column
 
 export const columns: ColumnDef<Distribution>[] = [
   {
+    header: "#",
+    cell: ({ row }) => {
+      return row.index + 1;
+    },
+  },
+  {
     header: "Article",
     accessorKey: "item.article.model",
     cell: ({ row }) => {
