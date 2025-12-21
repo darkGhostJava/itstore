@@ -40,6 +40,12 @@ export const columns: ColumnDef<Person>[] = [
     enableHiding: false,
   },
   {
+    header: "#",
+    cell: ({ row }) => {
+      return row.index + 1;
+    },
+  },
+  {
     accessorKey: "firstName",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="First Name" />

@@ -25,6 +25,12 @@ type ReparationColumnProps = {
 
 export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): ColumnDef<Operation>[] => [
   {
+    header: "#",
+    cell: ({ row }) => {
+      return row.index + 1;
+    },
+  },
+  {
     header: "Article",
     accessorKey: "items[0].article.model",
     cell: ({ row }) => {
