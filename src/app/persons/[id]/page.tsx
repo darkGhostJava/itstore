@@ -38,11 +38,11 @@ export default function PersonDetailPage() {
   }, [personId]);
 
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     if (!personId) return;
     setIsLoading(true);
     try {
-      const result = await fetchItemsForPerson(personId, { pageIndex, pageSize, query });
+      const result = await fetchItemsForPerson(personId, { pageIndex, pageSize, query, sort });
       setData(result.data);
       setPageCount(result.pageCount);
     } catch(error) {
@@ -53,6 +53,12 @@ export default function PersonDetailPage() {
       setIsLoading(false);
     }
   }, [personId]);
+
+  React.useEffect(() => {
+    if (personId) {
+      fetchData({ pageIndex: 0, pageSize: 10 });
+    }
+  }, [fetchData, personId]);
 
   if (isLoadingPerson) {
     return <div>Loading person details...</div>;

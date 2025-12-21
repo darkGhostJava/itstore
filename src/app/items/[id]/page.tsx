@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -40,11 +41,11 @@ export default function ItemHistoryPage() {
   }, [itemId]);
 
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     if (!itemId) return;
     setIsLoading(true);
     try {
-      const result = await fetchOperationsForItem(itemId, { pageIndex, pageSize, query });
+      const result = await fetchOperationsForItem(itemId, { pageIndex, pageSize, query, sort });
       setData(result.data);
       setPageCount(result.pageCount);
     } catch(error) {
@@ -55,6 +56,12 @@ export default function ItemHistoryPage() {
       setIsLoading(false);
     }
   }, [itemId]);
+
+  React.useEffect(() => {
+    if (itemId) {
+      fetchData({ pageIndex: 0, pageSize: 10 });
+    }
+  }, [fetchData, itemId]);
 
   if (isLoadingItem) {
     return <div>Loading item details...</div>;

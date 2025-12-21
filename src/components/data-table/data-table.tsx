@@ -36,7 +36,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   pageCount: number
-  fetchData: (options: { pageIndex: number, pageSize: number, query?: string, sort?: string, order?: string }) => void
+  fetchData: (options: { pageIndex: number, pageSize: number, query?: string, sort?: string }) => void
   isLoading?: boolean
   filterKey?: string
   filterPlaceholder?: string
@@ -108,27 +108,15 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const isInitialMount = React.useRef(true);
-
   React.useEffect(() => {
-    // On initial mount, fetchData is called by the parent component.
-    // This effect should only run on subsequent changes.
-    if (isInitialMount.current) {
-        isInitialMount.current = false;
-        return;
-    }
-
-    const sortField = sorting.length > 0 ? sorting[0].id : undefined;
-    const sortOrder = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : undefined;
-
-    fetchData({ pageIndex, pageSize, query: debouncedQuery, sort: sortField, order: sortOrder });
-
-  }, [debouncedQuery, pageIndex, pageSize, sorting, fetchData]);
-
-  // When query or sorting changes, reset to the first page
-  React.useEffect(() => {
+    // When query or sorting changes, reset to the first page
     table.setPageIndex(0);
   }, [debouncedQuery, sorting, table]);
+  
+  React.useEffect(() => {
+    const sort = sorting.length > 0 ? `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}` : undefined;
+    fetchData({ pageIndex, pageSize, query: debouncedQuery, sort });
+  }, [fetchData, pageIndex, pageSize, debouncedQuery, sorting]);
 
 
   return (

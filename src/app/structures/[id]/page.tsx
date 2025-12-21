@@ -39,11 +39,11 @@ export default function StructureDetailPage() {
   }, [structureId]);
 
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     if (!structureId) return;
     setIsLoading(true);
     try {
-      const result = await fetchItemsForStructure(structureId, { pageIndex, pageSize, query });
+      const result = await fetchItemsForStructure(structureId, { pageIndex, pageSize, query, sort });
       setData(result.data);
       setPageCount(result.pageCount);
     } catch(error) {
@@ -54,6 +54,12 @@ export default function StructureDetailPage() {
       setIsLoading(false);
     }
   }, [structureId]);
+  
+  React.useEffect(() => {
+    if (structureId) {
+        fetchData({ pageIndex: 0, pageSize: 10 });
+    }
+  }, [fetchData, structureId]);
 
   if (isLoadingStructure) {
     return <div>Loading structure details...</div>;

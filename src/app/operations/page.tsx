@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -19,16 +20,19 @@ const operationTypes = [
 export default function OperationsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const result = await fetchOperations({ pageIndex, pageSize, query });
+    const result = await fetchOperations({ pageIndex, pageSize, query, sort });
     setData(result.data);
     setPageCount(result.pageCount);
     setIsLoading(false);
   }, []);
+
+  React.useEffect(() => {
+    fetchData({ pageIndex: 0, pageSize: 10 });
+  }, [fetchData]);
 
   return (
     <div className="flex flex-col gap-8">

@@ -12,14 +12,14 @@ import type { Distribution } from "@/lib/definitions";
 export default function DistributionsPage() {
   const [data, setData] = React.useState<Distribution[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; }) => Promise<void>) | null>(null);
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; sort?: string }) => Promise<void>) | null>(null);
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
     setIsLoading(true);
     try {
-      const result = await fetchDistributions({ pageIndex, pageSize, query });
+      const result = await fetchDistributions({ pageIndex, pageSize, query, sort });
       setData(result.data);
       setPageCount(result.pageCount);
     } finally {
@@ -28,6 +28,10 @@ export default function DistributionsPage() {
   }, []);
 
   fetchDataRef.current = fetchData;
+  
+  React.useEffect(() => {
+    fetchData({ pageIndex: 0, pageSize: 10 });
+  }, [fetchData]);
 
   const handleSuccess = () => {
     if (fetchDataRef.current) {

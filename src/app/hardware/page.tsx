@@ -15,14 +15,14 @@ function HardwarePageContent() {
 
   const [data, setData] = React.useState<Item[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   
-  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; sort?: string; order?: string; }) => Promise<void>) | null>(null);
+  const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => Promise<void>) | null>(null);
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort, order }: { pageIndex: number; pageSize: number; query?: string; sort?: string; order?: string; }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     setIsLoading(true);
     try {
-      const result = await fetchItems("HARDWARE", { pageIndex, pageSize, query, sort, order });
+      const result = await fetchItems("HARDWARE", { pageIndex, pageSize, query, sort });
       setData(result.data);
       setPageCount(result.pageCount);
     }
@@ -30,6 +30,10 @@ function HardwarePageContent() {
       setIsLoading(false);
     }
   }, []);
+  
+  React.useEffect(() => {
+    fetchData({ pageIndex: 0, pageSize: 10, query: initialQuery });
+  }, [fetchData, initialQuery]);
 
   fetchDataRef.current = fetchData;
   

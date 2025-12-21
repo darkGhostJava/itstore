@@ -9,7 +9,7 @@ import { getItemsColumns } from "./items-columns";
 interface ItemsTableProps {
   data: Item[];
   pageCount: number;
-  fetchData: (options: { pageIndex: number; pageSize: number; query?: string; sort?: string; order?: string; }) => void;
+  fetchData: (options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => void;
   isLoading: boolean;
   initialQuery?: string;
   filterKey?: "serialNumber" | "designation";

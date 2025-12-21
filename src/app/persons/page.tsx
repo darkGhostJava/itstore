@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -12,15 +13,19 @@ import type { Person } from "@/lib/definitions";
 export default function PersonsPage() {
   const [data, setData] = React.useState<Person[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query }: { pageIndex: number; pageSize: number; query?: string; }) => {
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     setIsLoading(true);
-    const result = await fetchPersons({ pageIndex, pageSize, query });
+    const result = await fetchPersons({ pageIndex, pageSize, query, sort });
     setData(result.data);
     setPageCount(result.pageCount);
     setIsLoading(false);
   }, []);
+  
+  React.useEffect(() => {
+    fetchData({ pageIndex: 0, pageSize: 10 });
+  }, [fetchData]);
 
   return (
     <div className="flex flex-col gap-8">
