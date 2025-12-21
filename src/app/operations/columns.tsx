@@ -17,6 +17,12 @@ import { DataTableColumnHeader } from "@/components/data-table/data-table-column
 
 export const columns: ColumnDef<Operation>[] = [
   {
+    header: "#",
+    cell: ({ row }) => {
+      return row.index + 1;
+    },
+  },
+  {
     accessorKey: "type",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Type" />
