@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 export const columns: ColumnDef<Person>[] = [
   {
@@ -40,23 +41,33 @@ export const columns: ColumnDef<Person>[] = [
   },
   {
     accessorKey: "firstName",
-    header: "First Name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="First Name" />
+    ),
   },
   {
     accessorKey: "lastName",
-    header: "Last Name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last Name" />
+    ),
   },
   {
     accessorKey: "grade",
-    header: "Grade",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Grade" />
+    ),
   },
   {
     accessorKey: "matricule",
-    header: "Matricule",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Matricule" />
+    ),
   },
   {
     accessorKey: "structure.name",
-    header: "Structure",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Structure" />
+    ),
     cell: ({ row }) => row.original.structure?.name ?? "N/A",
   },
   {

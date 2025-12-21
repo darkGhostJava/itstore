@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import Link from "next/link";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 export const columns: ColumnDef<Article>[] = [
   {
@@ -23,15 +23,22 @@ export const columns: ColumnDef<Article>[] = [
   },
   {
     accessorKey: "model",
-    header: "Model",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Model" />
+    ),
   },
   {
     accessorKey: "designation",
-    header: "Designation",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Designation" />
+    ),
   },
   {
     header: "Quantity",
     accessorKey: "quantity",
+     header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Quantity" />
+    ),
   },
   {
     id: "actions",

@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -16,6 +17,7 @@ import { StatusBadge } from "./status-badge";
 import Link from "next/link";
 import { RepairItemDialog } from "@/app/reparations/repair-item-dialog";
 import { ReformItemDialog } from "@/app/reparations/reform-item-dialog";
+import { DataTableColumnHeader } from "../data-table/data-table-column-header";
 
 
 type ItemsColumnProps = {
@@ -31,6 +33,10 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
   },
   {
     header: "Article",
+    accessorKey: "article.model",
+     header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Article" />
+    ),
     cell: ({ row }) => {
       const { article } = row.original;
       return <Link href={`/articles/${article.id}`} className="hover:underline">{article.model}</Link>;
@@ -38,11 +44,15 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
   },
    {
     accessorKey: "article.designation",
-    header: "Designation",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Designation" />
+    ),
   },
   {
     accessorKey: "serialNumber",
-    header: "Serial Number",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Serial Number" />
+    ),
     cell: ({ row }) => {
         const item = row.original;
         return (
@@ -56,7 +66,9 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
     cell: ({ row }) => {
       const { status } = row.original;
       return <StatusBadge status={status} />;

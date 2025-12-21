@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -12,11 +13,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 export const columns: ColumnDef<Operation>[] = [
   {
     accessorKey: "date",
-    header: "Date",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date" />
+    ),
     cell: ({ row }) => format(new Date(row.original.date), "PPP"),
   },
   {
@@ -38,13 +42,16 @@ export const columns: ColumnDef<Operation>[] = [
   },
   {
     header: "User",
+     accessorKey: "user.name",
     cell: ({ row }) => {
       return row.original.user?.name || "Unknown";
     },
   },
   {
     accessorKey: "remarks",
-    header: "Remarks",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Remarks" />
+    ),
   },
   {
     id: "actions",

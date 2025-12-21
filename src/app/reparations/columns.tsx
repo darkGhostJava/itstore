@@ -17,6 +17,7 @@ import { MoreHorizontal } from "lucide-react";
 import { RepairItemDialog } from "./repair-item-dialog";
 import { ReformItemDialog } from "./reform-item-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 type ReparationColumnProps = {
   onSuccess: () => void;
@@ -25,6 +26,7 @@ type ReparationColumnProps = {
 export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): ColumnDef<Operation>[] => [
   {
     header: "Article",
+    accessorKey: "items[0].article.model",
     cell: ({ row }) => {
       const items = (row.original as any).items as Item[] | undefined;
       if (!items || items.length === 0) return "N/A";
@@ -34,6 +36,7 @@ export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
   },
   {
     header: "Serial Number",
+    accessorKey: "items[0].serialNumber",
      cell: ({ row }) => {
       const items = (row.original as any).items as Item[] | undefined;
       if (!items || items.length === 0) return "N/A";
@@ -42,21 +45,30 @@ export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
   },
   {
     accessorKey: "date",
-    header: "Date",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date" />
+    ),
     cell: ({ row }) => format(new Date(row.original.date), "PPP"),
   },
-    {
+  {
     accessorKey: "remarks",
-    header: "Remarks",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Remarks" />
+    ),
   },
   {
     header: "User",
+    accessorKey: "user.name",
     cell: ({ row }) => {
       return row.original.user?.name || "Unknown";
     },
   },
   {
     header: "Status",
+    accessorKey: "items[0].status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
     cell: ({ row }) => {
       const items = (row.original as any).items as Item[] | undefined;
       if (!items || items.length === 0) return "N/A";

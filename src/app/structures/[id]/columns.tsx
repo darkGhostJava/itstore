@@ -6,14 +6,21 @@ import { Item } from "@/lib/definitions";
 import { StatusBadge } from "@/components/shared/status-badge";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 export const columns: ColumnDef<Item>[] = [
   {
     accessorKey: "serialNumber",
-    header: "Serial Number",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Serial Number" />
+    ),
   },
   {
     header: "Article",
+    accessorKey: "article.model",
+     header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Article" />
+    ),
     cell: ({ row }) => {
         const article = row.original.article;
         return (
@@ -26,12 +33,16 @@ export const columns: ColumnDef<Item>[] = [
     }
   },
   {
-      accessorKey: "article.designation",
-      header: "Designation"
+    accessorKey: "article.designation",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Designation" />
+    ),
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
     cell: ({ row }) => <StatusBadge status={row.original.status} />,
   },
 ];

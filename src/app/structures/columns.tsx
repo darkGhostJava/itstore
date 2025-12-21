@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -14,15 +15,21 @@ import { MoreHorizontal } from "lucide-react";
 import { api } from "@/lib/api";
 import React from "react";
 import Link from "next/link";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 export const columns: ColumnDef<Structure>[] = [
   {
     accessorKey: "name",
-    header: "Name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
   },
   {
     header: "Chef",
     accessorFn: (row) => row.chef ? `${row.chef.firstName} ${row.chef.lastName}` : "N/A",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Chef" />
+    ),
   },
   {
     header: "Items",
