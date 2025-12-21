@@ -25,8 +25,8 @@ export const columns: ColumnDef<Structure>[] = [
     ),
   },
   {
-    header: "Chef",
-    accessorFn: (row) => row.chef ? `${row.chef.firstName} ${row.chef.lastName}` : "N/A",
+    id: "chef",
+    accessorFn: (row) => (row.chef ? `${row.chef.firstName} ${row.chef.lastName}` : "N/A"),
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Chef" />
     ),
