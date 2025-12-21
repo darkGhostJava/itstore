@@ -34,10 +34,6 @@ export function DataTableColumnHeader<TData, TValue>({
     return <div className={cn(className)}>{title}</div>
   }
   
-  const handleSort = (dir: 'asc' | 'desc') => {
-    column.toggleSorting(dir === 'desc');
-  }
-
   return (
     <div className={cn("flex items-center space-x-2", className)}>
       <DropdownMenu>

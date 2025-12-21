@@ -116,9 +116,17 @@ export function DataTable<TData, TValue>({
   }, [debouncedQuery, sorting, table, initialQuery]);
   
   React.useEffect(() => {
-    const sort = sorting.length > 0 ? `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}` : undefined;
-    fetchData({ pageIndex, pageSize, query: debouncedQuery, sort });
-  }, [fetchData, pageIndex, pageSize, debouncedQuery, sorting]);
+    let sortString: string | undefined = undefined;
+    if (sorting.length > 0) {
+      const sort = sorting[0];
+      const column = table.getColumn(sort.id);
+      // Use the custom sortKey if it exists, otherwise fall back to the column id
+      const sortKey = (column?.columnDef as any)?.sortKey || sort.id;
+      const direction = sort.desc ? 'desc' : 'asc';
+      sortString = `${sortKey},${direction}`;
+    }
+    fetchData({ pageIndex, pageSize, query: debouncedQuery, sort: sortString });
+  }, [fetchData, pageIndex, pageSize, debouncedQuery, sorting, table]);
 
 
   return (
