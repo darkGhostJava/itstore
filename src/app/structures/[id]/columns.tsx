@@ -22,6 +22,7 @@ export const columns: ColumnDef<Item>[] = [
     ),
   },
   {
+    id: "article.model",
     accessorKey: "article.model",
      header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Article" />
@@ -38,6 +39,7 @@ export const columns: ColumnDef<Item>[] = [
     }
   },
   {
+    id: "article.designation",
     accessorKey: "article.designation",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Designation" />

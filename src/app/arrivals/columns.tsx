@@ -30,9 +30,10 @@ export const columns: ColumnDef<Operation>[] = [
     cell: ({ row }) => format(new Date(row.original.date), "PPP"),
   },
   {
+    id: "items.article.model",
     accessorKey: "items[0].article.model",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" sortKey="items.article.model" />
+      <DataTableColumnHeader column={column} title="Article" />
     ),
     cell: ({ row }) => {
       // Assuming the backend returns items for an arrival operation
@@ -54,9 +55,10 @@ export const columns: ColumnDef<Operation>[] = [
     }
   },
   {
+    id: "user.name",
     accessorKey: "user.name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" sortKey="user.name" />
+      <DataTableColumnHeader column={column} title="User" />
     ),
     cell: ({ row }) => {
       return row.original.user?.name || "Unknown";

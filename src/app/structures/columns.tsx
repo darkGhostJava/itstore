@@ -31,10 +31,10 @@ export const columns: ColumnDef<Structure>[] = [
     ),
   },
   {
-    id: "chef",
+    id: "chef.firstName",
     accessorKey: "chef.firstName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Chef" sortKey="chef.firstName" />
+      <DataTableColumnHeader column={column} title="Chef" />
     ),
     accessorFn: (row) => (row.chef ? `${row.chef.firstName} ${row.chef.lastName}` : "N/A"),
   },

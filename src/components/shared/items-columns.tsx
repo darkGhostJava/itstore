@@ -32,9 +32,10 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
     },
   },
   {
+    id: "article.model",
     accessorKey: "article.model",
      header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" sortKey="article.model" />
+      <DataTableColumnHeader column={column} title="Article" />
     ),
     cell: ({ row }) => {
       const { article } = row.original;
@@ -42,9 +43,10 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
     },
   },
    {
+    id: "article.designation",
     accessorKey: "article.designation",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Designation" sortKey="article.designation" />
+      <DataTableColumnHeader column={column} title="Designation" />
     ),
   },
   {

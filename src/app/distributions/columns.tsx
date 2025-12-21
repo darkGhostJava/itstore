@@ -26,27 +26,30 @@ export const columns: ColumnDef<Distribution>[] = [
     },
   },
   {
+    id: "item.article.model",
     accessorKey: "item.article.model",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" sortKey="item.article.model" />
+      <DataTableColumnHeader column={column} title="Article" />
     ),
     cell: ({ row }) => {
       return row.original.item ? `${row.original.item.article.model} - ${row.original.item.article.designation}` : "N/A";
     },
   },
   {
+    id: "item.serialNumber",
     accessorKey: "item.serialNumber",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Serial Number" sortKey="item.serialNumber" />
+      <DataTableColumnHeader column={column} title="Serial Number" />
     ),
     cell: ({ row }) => {
       return row.original.item ? `${row.original.item.serialNumber}` : "N/A";
     },
   },
   {
+    id: "person.firstName",
     accessorKey: "person.firstName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Beneficiary" sortKey="person.firstName" />
+      <DataTableColumnHeader column={column} title="Beneficiary" />
     ),
     cell: ({ row }) => {
       return row.original.person ? `${row.original.person.firstName} ${row.original.person.lastName}` : "N/A";
@@ -66,9 +69,10 @@ export const columns: ColumnDef<Distribution>[] = [
     ),
   },
   {
+    id: "user.name",
     accessorKey: "user.name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" sortKey="user.name" />
+      <DataTableColumnHeader column={column} title="User" />
     ),
     cell: ({ row }) => {
       return row.original.user ? `${row.original.user.name}`: "N/A";

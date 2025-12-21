@@ -111,22 +111,19 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     // When query or sorting changes, reset to the first page
     if (debouncedQuery !== initialQuery || sorting.length > 0) {
-      table.setPageIndex(0);
+      setPagination(prev => ({ ...prev, pageIndex: 0 }));
     }
-  }, [debouncedQuery, sorting, table, initialQuery]);
+  }, [debouncedQuery, sorting, initialQuery]);
   
   React.useEffect(() => {
     let sortString: string | undefined = undefined;
     if (sorting.length > 0) {
       const sort = sorting[0];
-      const column = table.getColumn(sort.id);
-      // Use the custom sortKey if it exists, otherwise fall back to the column id
-      const sortKey = (column?.columnDef as any)?.sortKey || sort.id;
       const direction = sort.desc ? 'desc' : 'asc';
-      sortString = `${sortKey},${direction}`;
+      sortString = `${sort.id},${direction}`;
     }
     fetchData({ pageIndex, pageSize, query: debouncedQuery, sort: sortString });
-  }, [fetchData, pageIndex, pageSize, debouncedQuery, sorting, table]);
+  }, [fetchData, pageIndex, pageSize, debouncedQuery, sorting]);
 
 
   return (
