@@ -32,7 +32,7 @@ export const columns: ColumnDef<Operation>[] = [
   {
     accessorKey: "items[0].article.model",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" />
+      <DataTableColumnHeader column={column} title="Article" sortKey="items.article.model" />
     ),
     cell: ({ row }) => {
       // Assuming the backend returns items for an arrival operation
@@ -43,6 +43,7 @@ export const columns: ColumnDef<Operation>[] = [
     },
   },
   {
+    id: "count",
     accessorKey: "items.length",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Count" />
@@ -55,7 +56,7 @@ export const columns: ColumnDef<Operation>[] = [
   {
     accessorKey: "user.name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" />
+      <DataTableColumnHeader column={column} title="User" sortKey="user.name" />
     ),
     cell: ({ row }) => {
       return row.original.user?.name || "Unknown";

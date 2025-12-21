@@ -42,7 +42,7 @@ export const columns: ColumnDef<Operation>[] = [
   {
     accessorKey: "user.name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" />
+      <DataTableColumnHeader column={column} title="User" sortKey="user.name" />
     ),
     cell: ({ row }) => {
       return row.original.user?.name || "Unknown";
@@ -51,7 +51,7 @@ export const columns: ColumnDef<Operation>[] = [
   {
     accessorKey: "beneficiary.firstName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Beneficiary" />
+      <DataTableColumnHeader column={column} title="Beneficiary" sortKey="beneficiary.firstName" />
     ),
     cell: ({ row }) => {
       const person = row.original.beneficiary;

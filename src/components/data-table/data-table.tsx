@@ -110,8 +110,10 @@ export function DataTable<TData, TValue>({
 
   React.useEffect(() => {
     // When query or sorting changes, reset to the first page
-    table.setPageIndex(0);
-  }, [debouncedQuery, sorting, table]);
+    if (debouncedQuery !== initialQuery || sorting.length > 0) {
+      table.setPageIndex(0);
+    }
+  }, [debouncedQuery, sorting, table, initialQuery]);
   
   React.useEffect(() => {
     const sort = sorting.length > 0 ? `${sorting[0].id},${sorting[0].desc ? 'desc' : 'asc'}` : undefined;

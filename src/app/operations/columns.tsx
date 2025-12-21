@@ -4,13 +4,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Operation } from "@/lib/definitions";
 import { format } from "date-fns";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +44,7 @@ export const columns: ColumnDef<Operation>[] = [
   {
     accessorKey: "user.name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" />
+      <DataTableColumnHeader column={column} title="User" sortKey="user.name" />
     ),
     cell: ({ row }) => {
       return row.original.user?.name || "Unknown";
@@ -60,7 +53,7 @@ export const columns: ColumnDef<Operation>[] = [
   {
     accessorKey: "beneficiary.firstName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Beneficiary" />
+      <DataTableColumnHeader column={column} title="Beneficiary" sortKey="beneficiary.firstName" />
     ),
     cell: ({ row }) => {
       const person = row.original.beneficiary;

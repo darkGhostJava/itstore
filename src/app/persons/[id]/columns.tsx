@@ -22,9 +22,10 @@ export const columns: ColumnDef<Item>[] = [
     ),
   },
   {
+    id: 'article.model',
     accessorKey: "article.model",
      header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" />
+      <DataTableColumnHeader column={column} title="Article" sortKey="article.model" />
     ),
     cell: ({ row }) => {
         const article = row.original.article;
@@ -38,9 +39,10 @@ export const columns: ColumnDef<Item>[] = [
     }
   },
   {
+      id: 'article.designation',
       accessorKey: "article.designation",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Designation" />
+        <DataTableColumnHeader column={column} title="Designation" sortKey="article.designation" />
       ),
   },
   {

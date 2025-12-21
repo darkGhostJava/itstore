@@ -34,7 +34,7 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
   {
     accessorKey: "article.model",
      header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" />
+      <DataTableColumnHeader column={column} title="Article" sortKey="article.model" />
     ),
     cell: ({ row }) => {
       const { article } = row.original;
@@ -44,7 +44,7 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
    {
     accessorKey: "article.designation",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Designation" />
+      <DataTableColumnHeader column={column} title="Designation" sortKey="article.designation" />
     ),
   },
   {

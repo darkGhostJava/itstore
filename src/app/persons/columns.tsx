@@ -72,7 +72,7 @@ export const columns: ColumnDef<Person>[] = [
   {
     accessorKey: "structure.name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Structure" />
+      <DataTableColumnHeader column={column} title="Structure" sortKey="structure.name" />
     ),
     cell: ({ row }) => row.original.structure?.name ?? "N/A",
   },

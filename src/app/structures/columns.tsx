@@ -34,7 +34,7 @@ export const columns: ColumnDef<Structure>[] = [
     id: "chef",
     accessorKey: "chef.firstName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Chef" />
+      <DataTableColumnHeader column={column} title="Chef" sortKey="chef.firstName" />
     ),
     accessorFn: (row) => (row.chef ? `${row.chef.firstName} ${row.chef.lastName}` : "N/A"),
   },

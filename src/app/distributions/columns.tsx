@@ -28,7 +28,7 @@ export const columns: ColumnDef<Distribution>[] = [
   {
     accessorKey: "item.article.model",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" />
+      <DataTableColumnHeader column={column} title="Article" sortKey="item.article.model" />
     ),
     cell: ({ row }) => {
       return row.original.item ? `${row.original.item.article.model} - ${row.original.item.article.designation}` : "N/A";
@@ -37,7 +37,7 @@ export const columns: ColumnDef<Distribution>[] = [
   {
     accessorKey: "item.serialNumber",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Serial Number" />
+      <DataTableColumnHeader column={column} title="Serial Number" sortKey="item.serialNumber" />
     ),
     cell: ({ row }) => {
       return row.original.item ? `${row.original.item.serialNumber}` : "N/A";
@@ -46,7 +46,7 @@ export const columns: ColumnDef<Distribution>[] = [
   {
     accessorKey: "person.firstName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Beneficiary" />
+      <DataTableColumnHeader column={column} title="Beneficiary" sortKey="person.firstName" />
     ),
     cell: ({ row }) => {
       return row.original.person ? `${row.original.person.firstName} ${row.original.person.lastName}` : "N/A";
@@ -68,7 +68,7 @@ export const columns: ColumnDef<Distribution>[] = [
   {
     accessorKey: "user.name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" />
+      <DataTableColumnHeader column={column} title="User" sortKey="user.name" />
     ),
     cell: ({ row }) => {
       return row.original.user ? `${row.original.user.name}`: "N/A";
