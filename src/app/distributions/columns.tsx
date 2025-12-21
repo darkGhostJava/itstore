@@ -26,22 +26,28 @@ export const columns: ColumnDef<Distribution>[] = [
     },
   },
   {
-    header: "Article",
     accessorKey: "item.article.model",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Article" />
+    ),
     cell: ({ row }) => {
       return row.original.item ? `${row.original.item.article.model} - ${row.original.item.article.designation}` : "N/A";
     },
   },
   {
-    header: "Serial Number",
     accessorKey: "item.serialNumber",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Serial Number" />
+    ),
     cell: ({ row }) => {
       return row.original.item ? `${row.original.item.serialNumber}` : "N/A";
     },
   },
   {
-    header: "Beneficiary",
     accessorKey: "person.firstName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Beneficiary" />
+    ),
     cell: ({ row }) => {
       return row.original.person ? `${row.original.person.firstName} ${row.original.person.lastName}` : "N/A";
     },
@@ -60,8 +66,10 @@ export const columns: ColumnDef<Distribution>[] = [
     ),
   },
   {
-    header: "User",
     accessorKey: "user.name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="User" />
+    ),
     cell: ({ row }) => {
       return row.original.user ? `${row.original.user.name}`: "N/A";
     },

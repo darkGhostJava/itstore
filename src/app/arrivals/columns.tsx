@@ -30,7 +30,10 @@ export const columns: ColumnDef<Operation>[] = [
     cell: ({ row }) => format(new Date(row.original.date), "PPP"),
   },
   {
-    header: "Article",
+    accessorKey: "items[0].article.model",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Article" />
+    ),
     cell: ({ row }) => {
       // Assuming the backend returns items for an arrival operation
       const items = (row.original as any).items as Item[] | undefined;
@@ -40,15 +43,20 @@ export const columns: ColumnDef<Operation>[] = [
     },
   },
   {
-    header: "Count",
+    accessorKey: "items.length",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Count" />
+    ),
     cell: ({ row }) => {
        const items = (row.original as any).items as Item[] | undefined;
        return items?.length ?? 0;
     }
   },
   {
-    header: "User",
-     accessorKey: "user.name",
+    accessorKey: "user.name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="User" />
+    ),
     cell: ({ row }) => {
       return row.original.user?.name || "Unknown";
     },

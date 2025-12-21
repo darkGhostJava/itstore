@@ -34,7 +34,6 @@ export const columns: ColumnDef<Article>[] = [
     ),
   },
   {
-    header: "Quantity",
     accessorKey: "quantity",
      header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Quantity" />

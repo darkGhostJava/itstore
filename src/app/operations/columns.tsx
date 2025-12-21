@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -48,15 +49,19 @@ export const columns: ColumnDef<Operation>[] = [
     cell: ({ row }) => format(new Date(row.original.date), "PPP p"),
   },
   {
-    header: "User",
     accessorKey: "user.name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="User" />
+    ),
     cell: ({ row }) => {
       return row.original.user?.name || "Unknown";
     },
   },
   {
-    header: "Beneficiary",
     accessorKey: "beneficiary.firstName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Beneficiary" />
+    ),
     cell: ({ row }) => {
       const person = row.original.beneficiary;
       return person ? `${person.firstName} ${person.lastName}` : "N/A";
@@ -64,7 +69,9 @@ export const columns: ColumnDef<Operation>[] = [
   },
   {
     accessorKey: "remarks",
-    header: "Remarks",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Remarks" />
+    ),
   },
     {
     id: "actions",

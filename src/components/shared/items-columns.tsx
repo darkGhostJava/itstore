@@ -32,7 +32,6 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
     },
   },
   {
-    header: "Article",
     accessorKey: "article.model",
      header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Article" />
