@@ -42,7 +42,7 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
 export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pageIndex: number; pageSize: number; query?: string; }) => {
   const { pageIndex, pageSize, query } = options;
   
-  const response = await api.get<PaginatedResponse<Item>>(`/items/search/in-stock`, {
+  const response = await api.get<PaginatedResponse<Item>>(`/items/search`, {
     params: {
       page: pageIndex,
       size: pageSize,
@@ -352,13 +352,18 @@ export const fetchItemById = async (id: number): Promise<Item> => {
 
 export const fetchOperationsForItem = async (itemId: number, options: { pageIndex: number; pageSize: number; query?: string; }) => {
   const { pageIndex, pageSize, query } = options;
-  const response = await api.get<PaginatedResponse<Operation>>(`/operations/item/${itemId}`, {
+  console.log(itemId);
+  
+  const response = await api.get<PaginatedResponse<Operation>>(`/items/operations`, {
     params: {
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
+      itemId:itemId,
     },
   });
+  console.log(response.statusText);
+  
   return {
     data: response.data.content,
     pageCount: response.data.totalPages,
