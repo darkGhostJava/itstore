@@ -37,87 +37,90 @@ export function StructureTree({ structure, isLast = true }: StructureTreeProps) 
   const LinkComponent = canNavigate ? Link : 'span';
 
   const NodeContent = (
-    <div className="flex items-center gap-4">
-        {/* Main Content */}
-        <div className="flex-1 flex items-center p-2 rounded-md hover:bg-muted/50 transition-colors">
-        {!hasChildren && <div className="w-8 h-8"></div>}
+    <div className="flex items-center gap-2">
+      <div className="flex-1 flex items-center p-2 rounded-md hover:bg-muted/50 transition-colors group">
         
-        {hasChildren && (
-            <div className="h-8 w-8 flex items-center justify-center">
-                 <ChevronRight className={cn("h-5 w-5 transition-transform", isOpen && "rotate-90")} />
-                 <span className="sr-only">Toggle</span>
-            </div>
-        )}
+        {/* Toggle and Icon */}
+        <div className="h-8 w-8 flex items-center justify-center shrink-0">
+          {hasChildren ? (
+             <ChevronRight className={cn("h-5 w-5 transition-transform text-muted-foreground group-hover:text-foreground", isOpen && "rotate-90")} />
+          ) : (
+            <span className="w-5 h-5" /> // Placeholder for alignment
+          )}
+        </div>
+        
+        <Building className="h-5 w-5 text-muted-foreground mr-3 shrink-0" />
 
-        <div className="flex flex-col ml-2 flex-1">
-            <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-                <LinkComponent href={`/structures/${linkId}`} className={cn("font-semibold flex items-center gap-2", canNavigate && "hover:underline")}>
-                <Building className="h-4 w-4 text-muted-foreground" /> {structure.name}
-                </LinkComponent>
-                {structure.chef && (
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <User className="h-4 w-4" /> {structure.chef.firstName} {structure.chef.lastName}
-                </p>
+        {/* Text content */}
+        <div className="flex flex-col flex-1 truncate">
+          <LinkComponent href={`/structures/${linkId}`} className={cn("font-semibold truncate", canNavigate && "hover:underline")}>
+            {structure.name}
+          </LinkComponent>
+          {structure.chef && (
+            <p className="text-sm text-muted-foreground flex items-center gap-2 truncate">
+              <User className="h-4 w-4 shrink-0" /> {structure.chef.firstName} {structure.chef.lastName}
+            </p>
+          )}
+        </div>
+
+        {/* Badge and Actions */}
+        <div className="flex items-center gap-2 ml-4">
+          <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
+            <Package className="h-3 w-3" />
+            {structure.itemsCount ?? 0}
+          </Badge>
+           <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                {canNavigate && (
+                <DropdownMenuItem asChild>
+                    <Link href={`/structures/${linkId}`}>View Details</Link>
+                </DropdownMenuItem>
                 )}
-            </div>
-            <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="flex items-center gap-1">
-                    <Package className="h-3 w-3" />
-                    {structure.itemsCount ?? 0}
-                </Badge>
-            </div>
-            </div>
+                <DropdownMenuItem>Assign Chef</DropdownMenuItem>
+            </DropdownMenuContent>
+           </DropdownMenu>
         </div>
-        </div>
-
-        {/* Actions Menu */}
-        <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">Open menu</span>
-            </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            {canNavigate && (
-            <DropdownMenuItem asChild>
-                <Link href={`/structures/${linkId}`}>View Details</Link>
-            </DropdownMenuItem>
-            )}
-            <DropdownMenuItem>Assign Chef</DropdownMenuItem>
-        </DropdownMenuContent>
-        </DropdownMenu>
+      </div>
     </div>
   );
-  
-
-  if (!hasChildren) {
-      return <div className="relative">{NodeContent}</div>
-  }
 
   return (
     <Collapsible onOpenChange={setIsOpen} open={isOpen} className="relative">
-      <CollapsibleTrigger asChild>
-        {NodeContent}
-      </CollapsibleTrigger>
+      {hasChildren ? (
+        <CollapsibleTrigger asChild className="cursor-pointer">
+          {NodeContent}
+        </CollapsibleTrigger>
+      ) : (
+        NodeContent
+      )}
       
-      <CollapsibleContent asChild>
-        <div className="relative pl-10">
-            <div className="absolute left-[23px] top-0 h-full w-px bg-border -z-10"></div>
-            <div className="space-y-2 py-2">
-            {structure.children?.map((child, index) => (
-                <StructureTree 
-                key={child.id ?? index} 
-                structure={child} 
-                isLast={index === (structure.children?.length ?? 0) - 1} 
-                />
-            ))}
+      {hasChildren && (
+        <CollapsibleContent asChild>
+          <div className="relative pl-8">
+            {/* Vertical connector line */}
+            <div className="absolute left-[28px] top-0 h-full w-px bg-border -z-10"></div>
+            <div className="space-y-1 py-1">
+              {structure.children?.map((child, index) => (
+                <div key={child.id ?? index} className="relative">
+                  {/* Horizontal connector line */}
+                  <div className="absolute left-[28px] top-[22px] w-4 h-px bg-border -z-10"></div>
+                   <StructureTree 
+                    structure={child} 
+                    isLast={index === (structure.children?.length ?? 0) - 1} 
+                  />
+                </div>
+              ))}
             </div>
-        </div>
-      </CollapsibleContent>
+          </div>
+        </CollapsibleContent>
+      )}
     </Collapsible>
   );
 }
-
