@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -76,13 +75,13 @@ export default function StructuresPage() {
           <Skeleton className="h-16 w-full" />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
             {tree.length > 0 ? (
                 tree.map(structure => (
                     <StructureTree key={structure.id} structure={structure} />
                 ))
             ) : (
-                <p className="text-muted-foreground">No structures found.</p>
+                <p className="text-muted-foreground text-center p-8">No structures found.</p>
             )}
         </div>
       )}
