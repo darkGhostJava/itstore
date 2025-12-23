@@ -1,54 +1,28 @@
+
 "use client";
 
 import * as React from "react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { fetchAllStructures } from "@/lib/data";
+import { fetchStructureTree } from "@/lib/data";
 import type { Structure } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StructureTree } from "./structure-tree";
 
-// Helper function to build the tree
-const buildTree = (structures: Structure[]): Structure[] => {
-  const structureMap: Record<number, Structure & { children: Structure[] }> = {};
-  const tree: Structure[] = [];
-
-  // Initialize map and add a children array to each structure
-  structures.forEach(structure => {
-    structureMap[structure.id] = { ...structure, children: [] };
-  });
-
-  // Build the tree
-  structures.forEach(structure => {
-    if (structure.parentId) {
-      const parent = structureMap[structure.parentId];
-      if (parent) {
-        parent.children.push(structureMap[structure.id]);
-      }
-    } else {
-      tree.push(structureMap[structure.id]);
-    }
-  });
-
-  return tree;
-};
-
-
 export default function StructuresPage() {
-  const [tree, setTree] = React.useState<Structure[]>([]);
+  const [tree, setTree] = React.useState<Structure | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     const loadStructures = async () => {
       setIsLoading(true);
       try {
-        const allStructures = await fetchAllStructures();
-        const hierarchicalData = buildTree(allStructures);
-        setTree(hierarchicalData);
+        const structureTree = await fetchStructureTree();
+        setTree(structureTree);
       } catch (error) {
         console.error("Failed to load structures:", error);
-        setTree([]);
+        setTree(null);
       } finally {
         setIsLoading(false);
       }
@@ -76,13 +50,13 @@ export default function StructuresPage() {
         </div>
       ) : (
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-            {tree.length > 0 ? (
-                tree.map(structure => (
-                    <StructureTree key={structure.id} structure={structure} />
-                ))
-            ) : (
-                <p className="text-muted-foreground text-center p-8">No structures found.</p>
-            )}
+          {tree ? (
+            <StructureTree structure={tree} />
+          ) : (
+            <p className="text-muted-foreground text-center p-8">
+              No structures found.
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -15,9 +16,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronRight, MoreVertical, Building, User } from "lucide-react";
+import { ChevronRight, MoreVertical, Building, User, Package } from "lucide-react";
 import type { Structure } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface StructureTreeProps {
   structure: Structure & { children?: Structure[] };
@@ -27,6 +29,13 @@ interface StructureTreeProps {
 export function StructureTree({ structure, isLast = true }: StructureTreeProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const hasChildren = structure.children && structure.children.length > 0;
+
+  // Use a sensible default for id if it is null
+  const linkId = structure.id ?? '#';
+  const canNavigate = structure.id !== null;
+
+  const LinkComponent = canNavigate ? Link : 'span';
+
 
   return (
     <div className="relative">
@@ -43,15 +52,25 @@ export function StructureTree({ structure, isLast = true }: StructureTreeProps) 
           )}
           {!hasChildren && <div className="w-8 h-8"></div>}
 
-          <div className="flex flex-col ml-2">
-            <Link href={`/structures/${structure.id}`} className="font-semibold hover:underline flex items-center gap-2">
-              <Building className="h-4 w-4 text-muted-foreground" /> {structure.name}
-            </Link>
-            {structure.chef && (
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <User className="h-4 w-4" /> {structure.chef.firstName} {structure.chef.lastName}
-              </p>
-            )}
+          <div className="flex flex-col ml-2 flex-1">
+             <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <LinkComponent href={`/structures/${linkId}`} className={cn("font-semibold flex items-center gap-2", canNavigate && "hover:underline")}>
+                    <Building className="h-4 w-4 text-muted-foreground" /> {structure.name}
+                  </LinkComponent>
+                  {structure.chef && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      <User className="h-4 w-4" /> {structure.chef.firstName} {structure.chef.lastName}
+                    </p>
+                  )}
+                </div>
+                 <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                        <Package className="h-3 w-3" />
+                        {structure.itemsCount ?? 0}
+                    </Badge>
+                 </div>
+            </div>
           </div>
         </div>
 
@@ -65,9 +84,11 @@ export function StructureTree({ structure, isLast = true }: StructureTreeProps) 
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem asChild>
-              <Link href={`/structures/${structure.id}`}>View Details</Link>
-            </DropdownMenuItem>
+            {canNavigate && (
+              <DropdownMenuItem asChild>
+                <Link href={`/structures/${linkId}`}>View Details</Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem>Assign Chef</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -75,21 +96,23 @@ export function StructureTree({ structure, isLast = true }: StructureTreeProps) 
 
       {/* Children Content */}
       {hasChildren && (
-        <CollapsibleContent asChild>
-           <div className="relative pl-10">
-              {/* Vertical connecting line */}
-              <div className="absolute left-[23px] top-0 h-full w-px bg-border -z-10"></div>
-              <div className="space-y-2 py-2">
-                {structure.children?.map((child, index) => (
-                  <StructureTree 
-                    key={child.id} 
-                    structure={child} 
-                    isLast={index === (structure.children?.length ?? 0) - 1} 
-                  />
-                ))}
-              </div>
-           </div>
-        </CollapsibleContent>
+        <Collapsible onOpenChange={setIsOpen} open={isOpen}>
+          <CollapsibleContent asChild>
+            <div className="relative pl-10">
+                {/* Vertical connecting line */}
+                <div className="absolute left-[23px] top-0 h-full w-px bg-border -z-10"></div>
+                <div className="space-y-2 py-2">
+                  {structure.children?.map((child, index) => (
+                    <StructureTree 
+                      key={child.id ?? index} 
+                      structure={child} 
+                      isLast={index === (structure.children?.length ?? 0) - 1} 
+                    />
+                  ))}
+                </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
     </div>
   );

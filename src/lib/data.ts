@@ -185,6 +185,11 @@ export const fetchStructures = async (options: { pageIndex: number; pageSize: nu
   };
 };
 
+export const fetchStructureTree = async (): Promise<Structure> => {
+  const response = await api.get<Structure>("/structures/tree");
+  return response.data;
+};
+
 export const fetchAllStructures = async (): Promise<Structure[]> => {
   const response = await api.get<Structure[]>("/structures/all");
   return response.data;

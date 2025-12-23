@@ -29,6 +29,8 @@ export type Structure = {
   name: string;
   chef?: Person;
   parentId?: number;
+  children?: Structure[];
+  itemsCount?: number;
 };
 
 export type Operation = {
