@@ -16,7 +16,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronRight, MoreVertical, Building, User, Package } from "lucide-react";
+import { MoreVertical, Building, User, Package, ChevronRight } from "lucide-react";
 import type { Structure } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -27,111 +27,152 @@ interface StructureTreeProps {
   isRoot?: boolean;
 }
 
-export function StructureTree({ structure, isRoot = false }: StructureTreeProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+const NODE_SIZE = 160; // Width of a node
+const CHILD_ARC_RADIUS = 250; // Radius for children placement
+const CHILD_ANGLE_SPREAD = 120; // Max angle to spread children over in degrees
+
+export function StructureTree({ structure, isRoot = true }: StructureTreeProps) {
+  const [isOpen, setIsOpen] = React.useState(isRoot); // Keep root open by default
   const hasChildren = structure.children && structure.children.length > 0;
 
   const linkId = structure.id ?? '#';
   const canNavigate = structure.id !== null;
 
-  const LinkComponent = canNavigate ? Link : 'span';
+  const LinkComponent = canNavigate ? Link : 'div';
+  
+  const getChildPosition = (index: number, total: number) => {
+    const totalAngle = Math.min(CHILD_ANGLE_SPREAD, total * 45);
+    const startAngle = -totalAngle / 2;
+    const angleIncrement = total > 1 ? totalAngle / (total - 1) : 0;
+    const angle = startAngle + index * angleIncrement;
+    
+    const x = CHILD_ARC_RADIUS * Math.cos((angle - 90) * (Math.PI / 180));
+    const y = CHILD_ARC_RADIUS * Math.sin((angle - 90) * (Math.PI / 180));
 
-  const NodeContent = (
-      <div className={cn(
-        "flex items-center gap-2 p-2 rounded-lg bg-card hover:bg-muted/50 transition-colors group border w-full min-w-[280px]",
-        isOpen && "rounded-b-none"
-      )}>
-        {/* Toggle and Icon */}
-        <div className="flex items-center shrink-0">
-          {hasChildren ? (
-            <CollapsibleTrigger asChild className="cursor-pointer">
-              <div className="h-8 w-8 flex items-center justify-center">
-                 <motion.div animate={{ rotate: isOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronRight className={cn("h-5 w-5 transition-transform text-muted-foreground group-hover:text-foreground")} />
-                 </motion.div>
-              </div>
-            </CollapsibleTrigger>
-          ) : (
-            <span className="w-8 h-8" /> // Placeholder for alignment
-          )}
-        </div>
-
-        <Building className="h-5 w-5 text-muted-foreground mr-2 shrink-0" />
-
-        {/* Text content */}
-        <div className="flex flex-col flex-1 truncate">
-          <LinkComponent href={`/structures/${linkId}`} className={cn("font-semibold truncate", canNavigate && "hover:underline")}>
-            {structure.name}
-          </LinkComponent>
-          {structure.chef && (
-            <p className="text-sm text-muted-foreground flex items-center gap-2 truncate">
-              <User className="h-4 w-4 shrink-0" /> {structure.chef.firstName} {structure.chef.lastName}
-            </p>
-          )}
-        </div>
-
-        {/* Badge and Actions */}
-        <div className="flex items-center gap-2 ml-4">
-          <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
-            <Package className="h-3 w-3" />
-            {structure.itemsCount ?? 0}
-          </Badge>
-           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                {canNavigate && (
-                <DropdownMenuItem asChild>
-                    <Link href={`/structures/${linkId}`}>View Details</Link>
-                </DropdownMenuItem>
-                )}
-                <DropdownMenuItem>Assign Chef</DropdownMenuItem>
-            </DropdownMenuContent>
-           </DropdownMenu>
-        </div>
-      </div>
-  );
+    return { x, y: y + CHILD_ARC_RADIUS / 2 };
+  };
 
   return (
-    <Collapsible onOpenChange={setIsOpen} open={isOpen} className="relative flex items-start gap-6">
-      {/* Node */}
-      <div className="flex flex-col items-center">
-        {NodeContent}
-      </div>
+    <div className="relative flex flex-col items-center p-8">
+      {/* Node Content */}
+       <Collapsible asChild onOpenChange={setIsOpen} open={isOpen}>
+        <motion.div layout className="z-10">
+          <CollapsibleTrigger asChild disabled={!hasChildren} className={cn(hasChildren && "cursor-pointer")}>
+            <div className={cn(
+              "group flex flex-col items-center justify-center w-[160px] h-[100px] p-3 rounded-lg border bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-300",
+              isOpen && hasChildren && "border-primary shadow-primary/20",
+            )}>
+              <div className="flex items-center gap-2">
+                <Building className="h-5 w-5 text-primary" />
+                <LinkComponent href={`/structures/${linkId}`} className={cn("font-semibold truncate text-center", canNavigate && "hover:underline")}>
+                  {structure.name}
+                </LinkComponent>
+              </div>
+
+              {structure.chef && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1 truncate mt-1">
+                  <User className="h-3 w-3 shrink-0" /> {structure.chef.firstName} {structure.chef.lastName}
+                </p>
+              )}
+
+              <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
+                    <Package className="h-3 w-3" />
+                    {structure.itemsCount ?? 0}
+                  </Badge>
+                  {hasChildren && (
+                     <motion.div animate={{ rotate: isOpen ? 90 : 0 }} className="text-muted-foreground">
+                        <ChevronRight className="h-4 w-4" />
+                     </motion.div>
+                  )}
+              </div>
+               <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 shrink-0 opacity-50 group-hover:opacity-100">
+                      <MoreVertical className="h-4 w-4" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    {canNavigate && (
+                    <DropdownMenuItem asChild>
+                        <Link href={`/structures/${linkId}`}>View Details</Link>
+                    </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem>Assign Chef</DropdownMenuItem>
+                </DropdownMenuContent>
+               </DropdownMenu>
+            </div>
+          </CollapsibleTrigger>
+        </motion.div>
+      </Collapsible>
 
       {/* Children */}
-      <AnimatePresence initial={false}>
+      <AnimatePresence>
         {isOpen && hasChildren && (
-            <CollapsibleContent asChild forceMount className="relative">
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="flex flex-col gap-4 pl-10"
-                >
-                    {/* Vertical line connecting children */}
-                    <div className="absolute left-0 top-6 bottom-6 w-px bg-border -z-10"></div>
-                    
-                    {structure.children?.map((child, index) => (
-                        <div key={child.id ?? index} className="relative">
-                           {/* Horizontal line from parent to child */}
-                           <div className="absolute -left-10 top-6 h-px w-10 bg-border -z-10"></div>
-                           <StructureTree 
-                                structure={child} 
-                           />
-                        </div>
-                    ))}
-                </motion.div>
-            </CollapsibleContent>
+          <CollapsibleContent forceMount asChild>
+              <motion.div
+                layout
+                className="relative mt-12"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                  {/* SVG Connectors */}
+                  <svg className="absolute top-0 left-1/2 overflow-visible pointer-events-none">
+                      {structure.children?.map((_, index) => {
+                          const pos = getChildPosition(index, structure.children!.length);
+                          const startX = 0;
+                          const startY = -48; // from bottom of parent node
+                          const endX = pos.x;
+                          const endY = pos.y - NODE_SIZE/2 - 10;
+                          return (
+                              <motion.path
+                                  key={index}
+                                  d={`M ${startX} ${startY} C ${startX} ${startY + 60}, ${endX} ${endY - 60}, ${endX} ${endY}`}
+                                  fill="none"
+                                  stroke="hsl(var(--border))"
+                                  strokeWidth="1.5"
+                                  initial={{ pathLength: 0, opacity: 0 }}
+                                  animate={{ pathLength: 1, opacity: 1 }}
+                                  transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }}
+                              />
+                          );
+                      })}
+                  </svg>
+                  
+                  {/* Child Nodes */}
+                  <div className="relative flex justify-center items-start">
+                    {structure.children?.map((child, index) => {
+                      const pos = getChildPosition(index, structure.children!.length);
+                      return (
+                        <motion.div
+                            key={child.id ?? index}
+                            className="absolute"
+                            style={{
+                                top: `${pos.y - NODE_SIZE / 2}px`,
+                                left: `${pos.x - NODE_SIZE / 2}px`,
+                            }}
+                             initial={{ opacity: 0, y: -20 }}
+                             animate={{ opacity: 1, y: 0 }}
+                             transition={{ duration: 0.3, delay: 0.1 * index }}
+                        >
+                            <StructureTree 
+                                structure={child}
+                                isRoot={false}
+                            />
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+              </motion.div>
+          </CollapsibleContent>
         )}
       </AnimatePresence>
-    </Collapsible>
+    </div>
   );
 }
 
+    

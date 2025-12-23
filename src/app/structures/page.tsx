@@ -41,24 +41,30 @@ export default function StructuresPage() {
           </Button>
         }
       />
-      {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full ml-8" />
-          <Skeleton className="h-16 w-full" />
-        </div>
-      ) : (
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-          {tree ? (
-            <StructureTree structure={tree} />
-          ) : (
-            <p className="text-muted-foreground text-center p-8">
-              No structures found.
-            </p>
-          )}
-        </div>
-      )}
+      <div className="w-full min-h-[600px] flex items-center justify-center overflow-auto p-4">
+        {isLoading ? (
+          <div className="flex flex-col items-center gap-8">
+            <Skeleton className="h-24 w-40 rounded-lg" />
+            <div className="flex gap-16">
+              <Skeleton className="h-24 w-40 rounded-lg" />
+              <Skeleton className="h-24 w-40 rounded-lg" />
+              <Skeleton className="h-24 w-40 rounded-lg" />
+            </div>
+          </div>
+        ) : (
+          <div className="p-4">
+            {tree ? (
+              <StructureTree structure={tree} />
+            ) : (
+              <p className="text-muted-foreground text-center p-8">
+                No structures found.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+    
