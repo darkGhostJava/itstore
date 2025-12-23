@@ -53,9 +53,9 @@ export function StructureTree({ structure, isRoot = true }: StructureTreeProps) 
   };
 
   return (
-    <div className="relative flex flex-col items-center p-8">
-      {/* Node Content */}
-       <Collapsible asChild onOpenChange={setIsOpen} open={isOpen}>
+    <Collapsible asChild onOpenChange={setIsOpen} open={isOpen}>
+      <div className="relative flex flex-col items-center p-8">
+        {/* Node Content */}
         <motion.div layout className="z-10">
           <CollapsibleTrigger asChild disabled={!hasChildren} className={cn(hasChildren && "cursor-pointer")}>
             <div className={cn(
@@ -106,73 +106,71 @@ export function StructureTree({ structure, isRoot = true }: StructureTreeProps) 
             </div>
           </CollapsibleTrigger>
         </motion.div>
-      </Collapsible>
 
-      {/* Children */}
-      <AnimatePresence>
-        {isOpen && hasChildren && (
-          <CollapsibleContent forceMount asChild>
-              <motion.div
-                layout
-                className="relative mt-12"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              >
-                  {/* SVG Connectors */}
-                  <svg className="absolute top-0 left-1/2 overflow-visible pointer-events-none">
-                      {structure.children?.map((_, index) => {
-                          const pos = getChildPosition(index, structure.children!.length);
-                          const startX = 0;
-                          const startY = -48; // from bottom of parent node
-                          const endX = pos.x;
-                          const endY = pos.y - NODE_SIZE/2 - 10;
-                          return (
-                              <motion.path
-                                  key={index}
-                                  d={`M ${startX} ${startY} C ${startX} ${startY + 60}, ${endX} ${endY - 60}, ${endX} ${endY}`}
-                                  fill="none"
-                                  stroke="hsl(var(--border))"
-                                  strokeWidth="1.5"
-                                  initial={{ pathLength: 0, opacity: 0 }}
-                                  animate={{ pathLength: 1, opacity: 1 }}
-                                  transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }}
+        {/* Children */}
+        <AnimatePresence>
+          {isOpen && hasChildren && (
+            <CollapsibleContent forceMount asChild>
+                <motion.div
+                  layout
+                  className="relative mt-12"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                    {/* SVG Connectors */}
+                    <svg className="absolute top-0 left-1/2 overflow-visible pointer-events-none">
+                        {structure.children?.map((_, index) => {
+                            const pos = getChildPosition(index, structure.children!.length);
+                            const startX = 0;
+                            const startY = -48; // from bottom of parent node
+                            const endX = pos.x;
+                            const endY = pos.y - NODE_SIZE/2 - 10;
+                            return (
+                                <motion.path
+                                    key={index}
+                                    d={`M ${startX} ${startY} C ${startX} ${startY + 60}, ${endX} ${endY - 60}, ${endX} ${endY}`}
+                                    fill="none"
+                                    stroke="hsl(var(--border))"
+                                    strokeWidth="1.5"
+                                    initial={{ pathLength: 0, opacity: 0 }}
+                                    animate={{ pathLength: 1, opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }}
+                                />
+                            );
+                        })}
+                    </svg>
+                    
+                    {/* Child Nodes */}
+                    <div className="relative flex justify-center items-start">
+                      {structure.children?.map((child, index) => {
+                        const pos = getChildPosition(index, structure.children!.length);
+                        return (
+                          <motion.div
+                              key={child.id ?? index}
+                              className="absolute"
+                              style={{
+                                  top: `${pos.y - NODE_SIZE / 2}px`,
+                                  left: `${pos.x - NODE_SIZE / 2}px`,
+                              }}
+                               initial={{ opacity: 0, y: -20 }}
+                               animate={{ opacity: 1, y: 0 }}
+                               transition={{ duration: 0.3, delay: 0.1 * index }}
+                          >
+                              <StructureTree 
+                                  structure={child}
+                                  isRoot={false}
                               />
-                          );
+                          </motion.div>
+                        )
                       })}
-                  </svg>
-                  
-                  {/* Child Nodes */}
-                  <div className="relative flex justify-center items-start">
-                    {structure.children?.map((child, index) => {
-                      const pos = getChildPosition(index, structure.children!.length);
-                      return (
-                        <motion.div
-                            key={child.id ?? index}
-                            className="absolute"
-                            style={{
-                                top: `${pos.y - NODE_SIZE / 2}px`,
-                                left: `${pos.x - NODE_SIZE / 2}px`,
-                            }}
-                             initial={{ opacity: 0, y: -20 }}
-                             animate={{ opacity: 1, y: 0 }}
-                             transition={{ duration: 0.3, delay: 0.1 * index }}
-                        >
-                            <StructureTree 
-                                structure={child}
-                                isRoot={false}
-                            />
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-              </motion.div>
-          </CollapsibleContent>
-        )}
-      </AnimatePresence>
-    </div>
+                    </div>
+                </motion.div>
+            </CollapsibleContent>
+          )}
+        </AnimatePresence>
+      </div>
+    </Collapsible>
   );
 }
-
-    
