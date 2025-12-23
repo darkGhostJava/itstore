@@ -108,7 +108,7 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   {canNavigate && (
                   <DropdownMenuItem asChild>
-                      <Link href={`/structures/${linkId}`}>View Details</Link>
+                      <Link href={`/structures/${linkId}`}>View Items</Link>
                   </DropdownMenuItem>
                   )}
                   <DropdownMenuItem>Assign Chef</DropdownMenuItem>
