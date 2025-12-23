@@ -106,12 +106,12 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuItem>Assign Chef</DropdownMenuItem>
                   {canNavigate && (
                   <DropdownMenuItem asChild>
                       <Link href={`/structures/${linkId}`}>View Details</Link>
                   </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem>Assign Chef</DropdownMenuItem>
               </DropdownMenuContent>
              </DropdownMenu>
           </div>
