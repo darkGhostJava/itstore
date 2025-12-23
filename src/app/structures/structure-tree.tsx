@@ -15,7 +15,7 @@ import type { Structure } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 interface StructureTreeProps {
   structure: Structure & { children?: Structure[] };
@@ -53,9 +53,9 @@ export function StructureTree({ structure, onBack }: StructureTreeProps) {
     return { x, y: y + CHILD_ARC_RADIUS / 2 };
   };
 
-  const Node = ({ s, onNodeClick, onBackClick }: { s: Structure, onNodeClick?: () => void, onBackClick?: () => void }) => {
+  const Node = ({ s, onNodeClick, onBackClick, level = 0 }: { s: Structure, onNodeClick?: () => void, onBackClick?: () => void, level?: number }) => {
     const hasChildren = s.children && s.children.length > 0;
-    const key = `${s.id}-${s.name}`;
+    const key = `${s.id ?? `L${level}`}-${s.name}`;
 
     return (
        <motion.div layout className="z-10 relative" key={key}>
@@ -170,7 +170,7 @@ export function StructureTree({ structure, onBack }: StructureTreeProps) {
                              animate={{ opacity: 1, y: 0 }}
                              transition={{ duration: 0.3, delay: 0.1 * index }}
                         >
-                            <Node s={child} onNodeClick={() => handleNodeClick(index)} />
+                            <Node s={child} onNodeClick={() => handleNodeClick(index)} level={index + 1}/>
                         </motion.div>
                       )
                     })}
