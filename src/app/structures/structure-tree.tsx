@@ -59,8 +59,8 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
   };
 
   const Node = ({ s, onNodeClick, onBackClick }: { s: Structure, onNodeClick?: () => void, onBackClick?: () => void }) => {
-    const linkId = s.id ?? '#';
-    const canNavigate = s.id !== null;
+    const linkId = s.id;
+    const canNavigate = linkId !== null && linkId !== undefined;
     const LinkComponent = canNavigate ? Link : 'div';
     const hasChildren = s.children && s.children.length > 0;
 
@@ -107,11 +107,9 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
               <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuItem>Assign Chef</DropdownMenuItem>
-                  {canNavigate && (
-                  <DropdownMenuItem asChild>
-                      <Link href={`/structures/${linkId}`}>View Details</Link>
+                  <DropdownMenuItem asChild disabled={!canNavigate}>
+                      <Link href={canNavigate ? `/structures/${linkId}` : '#'}>View Details</Link>
                   </DropdownMenuItem>
-                  )}
               </DropdownMenuContent>
              </DropdownMenu>
           </div>
@@ -170,7 +168,7 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
                       const pos = getChildPosition(index, structure.children!.length);
                       return (
                         <motion.div
-                            key={child.id ?? index}
+                            key={child.id ?? `${structure.id}-${index}`}
                             className="absolute"
                             style={{
                                 top: `${pos.y - NODE_SIZE / 2}px`,
