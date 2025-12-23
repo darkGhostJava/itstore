@@ -27,7 +27,7 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
       size: pageSize,
       query: query || undefined,
       type: type || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
 
@@ -49,7 +49,7 @@ export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pag
       size: pageSize,
       query: query || undefined,
       type: type,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
   
@@ -126,7 +126,7 @@ export const fetchOperations = async (options: { pageIndex: number; pageSize: nu
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
   return {
@@ -147,7 +147,7 @@ export const fetchPersons = async (options: { pageIndex: number; pageSize: numbe
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
 
@@ -172,7 +172,7 @@ export const fetchStructures = async (options: { pageIndex: number; pageSize: nu
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
 
@@ -184,6 +184,11 @@ export const fetchStructures = async (options: { pageIndex: number; pageSize: nu
     totalElements: response.data.totalElements,
   };
 };
+
+export const fetchAllStructures = async (): Promise<Structure[]> => {
+  const response = await api.get<Structure[]>("/structures/all");
+  return response.data;
+}
 
 export const fetchStructureById = async (id: number): Promise<Structure> => {
     const response = await api.get<Structure>(`/structures/${id}`);
@@ -197,7 +202,7 @@ export const fetchItemsForArticle = async (articleId: number, options: { pageInd
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
   return {
@@ -218,7 +223,7 @@ export const fetchItemsForPerson = async (personId: number, options: { pageIndex
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
   return {
@@ -234,7 +239,7 @@ export const fetchItemsForStructure = async (structureId: number, options: { pag
         page: pageIndex,
         size: pageSize,
         query: query || undefined,
-        sort: sort || 'id,asc',
+        sort: sort,
         },
     });
     return {
@@ -250,7 +255,7 @@ export const fetchArrivals = async (options: { pageIndex: number; pageSize: numb
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
   return {
@@ -266,7 +271,7 @@ export const fetchDistributions = async (options: { pageIndex: number; pageSize:
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
 
@@ -283,7 +288,7 @@ export const fetchReparations = async (options: { pageIndex: number; pageSize: n
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
   return {
@@ -371,7 +376,7 @@ export const fetchOperationsForItem = async (itemId: number, options: { pageInde
       size: pageSize,
       query: query || undefined,
       itemId:itemId,
-      sort: sort || 'id,asc',
+      sort: sort,
     },
   });
   console.log(response.statusText);
