@@ -24,35 +24,39 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface StructureTreeProps {
   structure: Structure & { children?: Structure[] };
-  isLast?: boolean;
+  isRoot?: boolean;
 }
 
-export function StructureTree({ structure, isLast = true }: StructureTreeProps) {
+export function StructureTree({ structure, isRoot = false }: StructureTreeProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const hasChildren = structure.children && structure.children.length > 0;
 
-  // Use a sensible default for id if it is null
   const linkId = structure.id ?? '#';
   const canNavigate = structure.id !== null;
 
   const LinkComponent = canNavigate ? Link : 'span';
 
   const NodeContent = (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 flex items-center p-2 rounded-md hover:bg-muted/50 transition-colors group">
-        
+      <div className={cn(
+        "flex items-center gap-2 p-2 rounded-lg bg-card hover:bg-muted/50 transition-colors group border w-full min-w-[280px]",
+        isOpen && "rounded-b-none"
+      )}>
         {/* Toggle and Icon */}
-        <div className="h-8 w-8 flex items-center justify-center shrink-0">
+        <div className="flex items-center shrink-0">
           {hasChildren ? (
-             <motion.div animate={{ rotate: isOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
-                <ChevronRight className={cn("h-5 w-5 transition-transform text-muted-foreground group-hover:text-foreground")} />
-             </motion.div>
+            <CollapsibleTrigger asChild className="cursor-pointer">
+              <div className="h-8 w-8 flex items-center justify-center">
+                 <motion.div animate={{ rotate: isOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronRight className={cn("h-5 w-5 transition-transform text-muted-foreground group-hover:text-foreground")} />
+                 </motion.div>
+              </div>
+            </CollapsibleTrigger>
           ) : (
-            <span className="w-5 h-5" /> // Placeholder for alignment
+            <span className="w-8 h-8" /> // Placeholder for alignment
           )}
         </div>
-        
-        <Building className="h-5 w-5 text-muted-foreground mr-3 shrink-0" />
+
+        <Building className="h-5 w-5 text-muted-foreground mr-2 shrink-0" />
 
         {/* Text content */}
         <div className="flex flex-col flex-1 truncate">
@@ -91,45 +95,38 @@ export function StructureTree({ structure, isLast = true }: StructureTreeProps) 
            </DropdownMenu>
         </div>
       </div>
-    </div>
   );
 
   return (
-    <Collapsible onOpenChange={setIsOpen} open={isOpen} className="relative">
-      {hasChildren ? (
-        <CollapsibleTrigger asChild className="cursor-pointer">
-          {NodeContent}
-        </CollapsibleTrigger>
-      ) : (
-        NodeContent
-      )}
-      
+    <Collapsible onOpenChange={setIsOpen} open={isOpen} className="relative flex items-start gap-6">
+      {/* Node */}
+      <div className="flex flex-col items-center">
+        {NodeContent}
+      </div>
+
+      {/* Children */}
       <AnimatePresence initial={false}>
         {isOpen && hasChildren && (
-            <CollapsibleContent asChild forceMount>
+            <CollapsibleContent asChild forceMount className="relative">
                 <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="overflow-hidden"
+                    className="flex flex-col gap-4 pl-10"
                 >
-                    <div className="relative pl-8 pt-1">
-                        {/* Vertical connector line */}
-                        <div className="absolute left-[28px] top-0 h-full w-px bg-border -z-10"></div>
-                        <div className="space-y-1">
-                        {structure.children?.map((child, index) => (
-                            <div key={child.id ?? index} className="relative">
-                            {/* Horizontal connector line */}
-                            <div className="absolute left-[-12px] top-[22px] w-4 h-px bg-border -z-10"></div>
-                            <StructureTree 
+                    {/* Vertical line connecting children */}
+                    <div className="absolute left-0 top-6 bottom-6 w-px bg-border -z-10"></div>
+                    
+                    {structure.children?.map((child, index) => (
+                        <div key={child.id ?? index} className="relative">
+                           {/* Horizontal line from parent to child */}
+                           <div className="absolute -left-10 top-6 h-px w-10 bg-border -z-10"></div>
+                           <StructureTree 
                                 structure={child} 
-                                isLast={index === (structure.children?.length ?? 0) - 1} 
-                            />
-                            </div>
-                        ))}
+                           />
                         </div>
-                    </div>
+                    ))}
                 </motion.div>
             </CollapsibleContent>
         )}
@@ -137,3 +134,4 @@ export function StructureTree({ structure, isLast = true }: StructureTreeProps) 
     </Collapsible>
   );
 }
+
