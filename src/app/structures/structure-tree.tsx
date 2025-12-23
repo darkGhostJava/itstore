@@ -28,8 +28,8 @@ interface StructureTreeProps {
 }
 
 const NODE_SIZE = 160; // Width of a node
-const CHILD_ARC_RADIUS = 250; // Radius for children placement
-const CHILD_ANGLE_SPREAD = 120; // Max angle to spread children over in degrees
+const CHILD_ARC_RADIUS = 300; // Radius for children placement, increased from 250
+const CHILD_ANGLE_SPREAD = 160; // Max angle to spread children over in degrees, increased from 120
 
 export function StructureTree({ structure, isRoot = true }: StructureTreeProps) {
   const [isOpen, setIsOpen] = React.useState(isRoot); // Keep root open by default
