@@ -4,23 +4,18 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Building, User, Package, ChevronRight, ArrowLeft } from "lucide-react";
+import { MoreVertical, Building, User, Package, ArrowLeft } from "lucide-react";
 import type { Structure } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "../ui/button";
 
 interface StructureTreeProps {
   structure: Structure & { children?: Structure[] };
@@ -30,9 +25,9 @@ interface StructureTreeProps {
 
 const NODE_SIZE = 160; // Width of a node
 const CHILD_ARC_RADIUS = 450;
-const CHILD_ANGLE_SPREAD = 180; 
+const CHILD_ANGLE_SPREAD = 180;
 
-export function StructureTree({ structure, isRoot = true, onBack }: StructureTreeProps) {
+export function StructureTree({ structure, onBack }: StructureTreeProps) {
   const [activeChildIndex, setActiveChildIndex] = React.useState<number | null>(null);
 
   const hasChildren = structure.children && structure.children.length > 0;
@@ -59,13 +54,11 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
   };
 
   const Node = ({ s, onNodeClick, onBackClick }: { s: Structure, onNodeClick?: () => void, onBackClick?: () => void }) => {
-    const linkId = s.id;
-    const canNavigate = linkId !== null && linkId !== undefined;
-    const LinkComponent = canNavigate ? Link : 'div';
     const hasChildren = s.children && s.children.length > 0;
+    const key = `${s.id}-${s.name}`;
 
     return (
-       <motion.div layout className="z-10 relative">
+       <motion.div layout className="z-10 relative" key={key}>
           {onBackClick && (
             <Button variant="ghost" size="icon" onClick={onBackClick} className="absolute -top-12 left-1/2 -translate-x-1/2">
               <ArrowLeft className="h-4 w-4" />
@@ -79,9 +72,9 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
             )}>
             <div className="flex items-center gap-2">
               <Building className="h-5 w-5 text-primary" />
-              <LinkComponent href={`/structures/${linkId}`} className={cn("font-semibold truncate text-center", canNavigate && "hover:underline")}>
+              <div className={cn("font-semibold truncate text-center")}>
                 {s.name}
-              </LinkComponent>
+              </div>
             </div>
 
             {s.chef && (
@@ -95,7 +88,6 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
                   <Package className="h-3 w-3" />
                   {s.itemsCount ?? 0}
                 </Badge>
-                {hasChildren && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
             </div>
              <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -107,8 +99,8 @@ export function StructureTree({ structure, isRoot = true, onBack }: StructureTre
               <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuItem>Assign Chef</DropdownMenuItem>
-                  <DropdownMenuItem asChild disabled={!canNavigate}>
-                      <Link href={canNavigate ? `/structures/${linkId}` : '#'}>View Details</Link>
+                  <DropdownMenuItem asChild>
+                      <Link href={`/structures/${s.id}`}>View Details</Link>
                   </DropdownMenuItem>
               </DropdownMenuContent>
              </DropdownMenu>
