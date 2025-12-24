@@ -9,6 +9,7 @@ import { fetchOperations } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
 import { DataTableFacetedFilter } from "@/components/data-table/data-table-faceted-filter";
 import { useTranslation } from "react-i18next";
+import { History } from "lucide-react";
 
 export default function OperationsPage() {
   const { t } = useTranslation('common');
@@ -55,6 +56,12 @@ export default function OperationsPage() {
             title={t('type')}
             options={operationTypes}
           />
+        }
+        emptyStateMessage={
+            <div className="flex flex-col items-center justify-center space-y-2">
+                <History className="h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No operations have been logged yet.</p>
+            </div>
         }
       />
     </div>

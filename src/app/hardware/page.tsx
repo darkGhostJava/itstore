@@ -56,6 +56,7 @@ function HardwarePageContent() {
         }
       />
       <ItemsTable
+        itemType="HARDWARE"
         data={data}
         pageCount={pageCount}
         fetchData={fetchData}

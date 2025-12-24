@@ -9,6 +9,7 @@ import { fetchReparations } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
 import { AddReparation } from "./add-reparation";
 import { useTranslation } from "react-i18next";
+import { Wrench } from "lucide-react";
 
 export default function ReparationsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
@@ -59,6 +60,12 @@ export default function ReparationsPage() {
         isLoading={isLoading}
         filterKey="serial number" 
         filterPlaceholder={t('filter_by_serial_number_placeholder')}
+        emptyStateMessage={
+            <div className="flex flex-col items-center justify-center space-y-2">
+                <Wrench className="h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No items currently under repair.</p>
+            </div>
+        }
       />
     </div>
   );

@@ -10,6 +10,7 @@ import { fetchArticles } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { AddArticle } from "../articles/add-article";
 import { useTranslation } from "react-i18next";
+import { Printer } from "lucide-react";
 
 function ConsumablesPageContent() {
   const searchParams = useSearchParams();
@@ -67,6 +68,12 @@ function ConsumablesPageContent() {
         filterKey="designation"
         filterPlaceholder={t('filter_by_designation_placeholder')}
         initialQuery={initialQuery}
+        emptyStateMessage={
+            <div className="flex flex-col items-center justify-center space-y-2">
+                <Printer className="h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No consumables found.</p>
+            </div>
+        }
       />
     </div>
   );

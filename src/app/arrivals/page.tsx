@@ -9,6 +9,7 @@ import { fetchArrivals } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
 import { AddArrival } from "./add-arrival";
 import { useTranslation } from "react-i18next";
+import { Truck } from "lucide-react";
 
 export default function ArrivalsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
@@ -58,6 +59,12 @@ export default function ArrivalsPage() {
         isLoading={isLoading}
         filterKey="remarks" 
         filterPlaceholder={t('filter_by_remarks_placeholder')}
+        emptyStateMessage={
+            <div className="flex flex-col items-center justify-center space-y-2">
+                <Truck className="h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No arrivals have been recorded yet.</p>
+            </div>
+        }
       />
     </div>
   );

@@ -9,6 +9,7 @@ import { fetchDistributions } from "@/lib/data";
 import { AddDistribution } from "./add-distribution";
 import type { Distribution } from "@/lib/definitions";
 import { useTranslation } from "react-i18next";
+import { ArrowRightLeft } from "lucide-react";
 
 export default function DistributionsPage() {
   const [data, setData] = React.useState<Distribution[]>([]);
@@ -58,6 +59,12 @@ export default function DistributionsPage() {
         isLoading={isLoading}
         filterKey="serial number" 
         filterPlaceholder={t('filter_by_serial_number_placeholder')}
+        emptyStateMessage={
+            <div className="flex flex-col items-center justify-center space-y-2">
+                <ArrowRightLeft className="h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No distributions have been made yet.</p>
+            </div>
+        }
       />
     </div>
   );

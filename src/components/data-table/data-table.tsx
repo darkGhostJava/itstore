@@ -17,6 +17,7 @@ import {
   useReactTable,
   PaginationState,
 } from "@tanstack/react-table"
+import { Loader2 } from "lucide-react";
 
 import {
   Table,
@@ -29,8 +30,8 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
-import { Skeleton } from "../ui/skeleton"
 import { useDebounce } from "@/hooks/use-debounce"
+import { cn } from "@/lib/utils"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -42,6 +43,7 @@ interface DataTableProps<TData, TValue> {
   filterPlaceholder?: string
   facetedFilters?: React.ReactNode
   initialQuery?: string;
+  emptyStateMessage?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -54,6 +56,7 @@ export function DataTable<TData, TValue>({
   filterPlaceholder,
   facetedFilters,
   initialQuery = "",
+  emptyStateMessage = "No data available."
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -136,7 +139,12 @@ export function DataTable<TData, TValue>({
         query={query}
         onQueryChange={setQuery}
       />
-      <div className="rounded-md border">
+      <div className="rounded-md border relative">
+         {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -156,19 +164,8 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: pageSize || 10 }).map((_, i) => (
-                <TableRow key={i}>
-                  {columns.map((column, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-6" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : table.getRowModel().rows?.length ? (
-
+          <TableBody className={cn(isLoading && "opacity-50")}>
+            {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -190,7 +187,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No data available.
+                  {emptyStateMessage}
                 </TableCell>
               </TableRow>
             )}
