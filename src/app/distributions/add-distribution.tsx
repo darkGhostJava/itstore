@@ -374,6 +374,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                     id={`serial-search-${index}`}
                                     placeholder={t('search_add_serial_placeholder')}
                                     onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
+                                    onBlur={() => setTimeout(() => setSerials(prev => ({ ...prev, [index]: [] })), 150)}
                                   />
                                   {currentSerials.length > 0 && (
                                     <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-48 overflow-y-auto">
@@ -381,7 +382,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                         <div
                                           key={serial.id}
                                           className="p-2 cursor-pointer hover:bg-muted"
-                                          onClick={() => handleSelectSerial(serial, index)}
+                                          onMouseDown={() => handleSelectSerial(serial, index)}
                                         >
                                           {serial.serialNumber}
                                         </div>
@@ -515,5 +516,4 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     </Dialog>
   );
 }
-
     
