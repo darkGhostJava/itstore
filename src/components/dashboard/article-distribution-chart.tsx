@@ -68,9 +68,9 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0] && data.activePayload[0].payload) {
       const payload = data.activePayload[0].payload;
-      if (payload.name) {
+      if (payload.rawName) {
         const queryKey = type === 'hardware' ? 'designation' : 'designation';
-        router.push(`${linkHref}?query=${encodeURIComponent(payload.name)}`);
+        router.push(`${linkHref}?query=${encodeURIComponent(payload.rawName)}`);
       }
     }
   };

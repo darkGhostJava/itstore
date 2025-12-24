@@ -65,7 +65,7 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
       {designations.map((stat) => (
         <Link
           key={stat.rawTitle}
-          href={`${linkHref}?query=${encodeURIComponent(stat.title)}`}
+          href={`${linkHref}?query=${encodeURIComponent(stat.rawTitle)}`}
           className="hover:shadow-lg transition-shadow rounded-lg"
         >
           <Card className="flex flex-col h-full">
