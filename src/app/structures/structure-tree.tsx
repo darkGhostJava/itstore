@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Building, User, Package, ArrowLeft } from "lucide-react";
+import { MoreVertical, Building, User, HardDrive, Printer, ArrowLeft } from "lucide-react";
 import type { Structure } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +67,7 @@ export function StructureTree({ structure, onBack }: StructureTreeProps) {
           <div
             onClick={onNodeClick}
             className={cn(
-                "group flex flex-col items-center justify-center w-[160px] h-[100px] p-3 rounded-lg border bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-300",
+                "group flex flex-col items-center justify-center w-[160px] h-auto p-3 rounded-lg border bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-300",
                 hasChildren && "cursor-pointer"
             )}>
             <div className="flex items-center gap-2">
@@ -83,10 +83,14 @@ export function StructureTree({ structure, onBack }: StructureTreeProps) {
               </p>
             )}
 
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
                 <Badge variant="secondary" className="flex items-center gap-1 shrink-0">
-                  <Package className="h-3 w-3" />
-                  {s.itemsCount ?? 0}
+                  <HardDrive className="h-3 w-3" />
+                  {s.materielCount ?? 0}
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1 shrink-0">
+                  <Printer className="h-3 w-3" />
+                  {s.consCount ?? 0}
                 </Badge>
             </div>
              <DropdownMenu>

@@ -30,7 +30,8 @@ export type Structure = {
   chef?: Person;
   parentId?: number;
   children?: Structure[];
-  itemsCount?: number;
+  materielCount?: number;
+  consCount?: number;
 };
 
 export type Operation = {
