@@ -1,18 +1,29 @@
 
 {
   "categories": [
-    "Laptop",
-    "Desktop",
-    "Monitor",
-    "Printer",
-    "Scanner",
-    "Networking",
-    "Storage",
-    "Accessory",
-    "Software",
-    "Toner",
-    "Ink Cartridge",
-    "Paper",
-    "Other"
+        "LAPTOP",
+        "PRINTER",
+        "SCREEN",
+        "PC",
+        "WORK_STATION",
+        "INVERTER",
+        "SCANNER",
+        "SERVER",
+        "DATA_SHOW",
+        "WEB_CAM",
+        "MULTIMEDIA",
+        "BAC",
+        "TONER",
+        "PHOTO_CONDUCTOR",
+        "CD_DVD",
+        "STORAGE_SUPPORT",
+        "COVER_CD_DVD",
+        "PAPER",
+        "CARTRIDGE",
+        "CABLE",
+        "INK_FILM",
+        "OTHER",
+        "KEYBOARD",
+        "MOUSE"
   ]
 }
