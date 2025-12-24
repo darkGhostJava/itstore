@@ -5,7 +5,7 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/data-table/data-table";
-import { columns } from "./columns";
+import { ConsumablesColumns } from "./columns";
 import { fetchArticles } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { AddArticle } from "../articles/add-article";
@@ -15,6 +15,7 @@ function ConsumablesPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
   const { t } = useTranslation("common");
+  const columns = ConsumablesColumns();
 
   const [data, setData] = React.useState<Article[]>([]);
   const [pageCount, setPageCount] = React.useState(0);

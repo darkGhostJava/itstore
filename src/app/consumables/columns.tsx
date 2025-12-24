@@ -13,51 +13,57 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { useTranslation } from "react-i18next";
 
-export const columns: ColumnDef<Article>[] = [
-  {
-    header: "#",
-    cell: ({ row }) => {
-      return row.index + 1;
-    },
-  },
-  {
-    accessorKey: "model",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Model" />
-    ),
-  },
-  {
-    accessorKey: "designation",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Designation" />
-    ),
-  },
-  {
-    accessorKey: "quantity",
-     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Quantity" />
-    ),
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const article = row.original;
+export const ConsumablesColumns = () => {
+  const { t } = useTranslation('common');
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Edit Article</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+  const columns: ColumnDef<Article>[] = [
+    {
+      header: "#",
+      cell: ({ row }) => {
+        return row.index + 1;
+      },
     },
-  },
-];
+    {
+      accessorKey: "model",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('model')} />
+      ),
+    },
+    {
+      accessorKey: "designation",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('designation')} />
+      ),
+    },
+    {
+      accessorKey: "quantity",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('quantity')} />
+      ),
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const article = row.original;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">{t('open_menu')}</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+              <DropdownMenuItem>Edit Article</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+  return columns;
+};
