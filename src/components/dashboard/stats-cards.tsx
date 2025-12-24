@@ -1,7 +1,8 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Boxes, ArrowRightLeft, Wrench, Building, ArchiveX } from "lucide-react";
+import { Package, Boxes, ArrowRightLeft, Wrench, ShieldCheck, ArchiveX } from "lucide-react";
 import { getStats } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { Stats } from "@/lib/definitions";
@@ -28,8 +29,8 @@ export function StatsCards() {
     { title: "Items in Stock", value: statsData.itemsInStock, icon: Boxes },
     { title: "Distributed Items", value: statsData.distributedItems, icon: ArrowRightLeft },
     { title: "Under Repair", value: statsData.underRepair, icon: Wrench },
-    { title: "Reformed", value: statsData.reformedCount, icon: ArchiveX },
-    { title: "Structures", value: statsData.structuresCount, icon: Building },
+    { title: "Repaired", value: statsData.repaired, icon: ShieldCheck },
+    { title: "Reformed", value: statsData.reformed, icon: ArchiveX },
   ];
 
   return (
