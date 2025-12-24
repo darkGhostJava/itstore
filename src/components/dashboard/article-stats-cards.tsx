@@ -36,8 +36,9 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
 
   if (!statsData) return <ArticleStatsCardsSkeleton />;
 
-  const designations = Object.entries(statsData).map(([title, value]) => ({
-    title,
+  const designations = Object.entries(statsData).map(([rawTitle, value]) => ({
+    rawTitle,
+    title: t(`category_${rawTitle.toLowerCase()}` as any, rawTitle.replace(/_/g, " ")),
     value,
     icon: type === "hardware" ? HardDrive : Printer,
   }));
@@ -63,7 +64,7 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
       {designations.map((stat) => (
         <Link
-          key={stat.title}
+          key={stat.rawTitle}
           href={`${linkHref}?query=${encodeURIComponent(stat.title)}`}
           className="hover:shadow-lg transition-shadow rounded-lg"
         >
