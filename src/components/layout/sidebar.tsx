@@ -14,6 +14,8 @@ import {
   Workflow,
   HardDrive,
   Printer,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -26,7 +28,12 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "../ui/button";
 
-export function Sidebar() {
+interface SidebarProps {
+  isExpanded: boolean;
+  setIsExpanded: (expanded: boolean) => void;
+}
+
+export function Sidebar({ isExpanded, setIsExpanded }: SidebarProps) {
   const { t } = useTranslation('common');
 
   const navItems = [
@@ -42,19 +49,43 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
-      <nav className="flex flex-col items-center gap-4 px-2 sm:py-5">
+    <aside className={cn(
+        "fixed inset-y-0 left-0 z-10 hidden flex-col border-r bg-background sm:flex transition-[width] duration-300 ease-in-out",
+        isExpanded ? "w-64" : "w-14"
+      )}>
+      <nav className="flex flex-col items-center gap-4 px-2 sm:py-5 flex-1">
         <Link
           href="/"
-          className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
+          className={cn(
+              "group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base",
+               isExpanded && "self-start mb-4 mx-2"
+            )}
         >
           <Workflow className="h-4 w-4 transition-all group-hover:scale-110" />
-          <span className="sr-only">{t('app_title')}</span>
+          <span className={cn("sr-only", isExpanded && "!not-sr-only !ml-2 !text-lg !font-bold")}>{t('app_title')}</span>
         </Link>
         <TooltipProvider>
           {navItems.map((item) => (
-            <SidebarNavItem key={item.href} {...item} />
+            <SidebarNavItem key={item.href} {...item} isExpanded={isExpanded} />
           ))}
+        </TooltipProvider>
+      </nav>
+       <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className={cn("h-10 w-10 transition-all duration-300 ease-in-out", isExpanded && "w-full")}
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                <span className="sr-only">{isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}</span>
+              </Button>
+            </TooltipTrigger>
+            {!isExpanded && <TooltipContent side="right">{isExpanded ? 'Collapse' : 'Expand'}</TooltipContent>}
+          </Tooltip>
         </TooltipProvider>
       </nav>
     </aside>
@@ -65,10 +96,12 @@ function SidebarNavItem({
   href,
   label,
   icon: Icon,
+  isExpanded,
 }: {
   href: string;
   label: string;
   icon: React.ElementType;
+  isExpanded: boolean;
 }) {
   const pathname = usePathname();
   const isActive =
@@ -80,22 +113,19 @@ function SidebarNavItem({
         <Button
           asChild
           variant={isActive ? "secondary" : "ghost"}
-          size="icon"
           className={cn(
-            "rounded-lg",
-            isActive &&
-              "text-primary"
+            "rounded-lg justify-start h-10 transition-all duration-300 ease-in-out",
+             isExpanded ? "w-full" : "w-10",
+            isActive && "text-primary"
           )}
         >
           <Link href={href}>
-            <Icon className="h-5 w-5" />
-            <span className="sr-only">{label}</span>
+            <Icon className={cn("h-5 w-5", isExpanded && "mr-4 ml-1")} />
+            <span className={cn("sr-only", isExpanded && "not-sr-only")}>{label}</span>
           </Link>
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="right">{label}</TooltipContent>
+      {!isExpanded && <TooltipContent side="right">{label}</TooltipContent>}
     </Tooltip>
   );
 }
-
-    

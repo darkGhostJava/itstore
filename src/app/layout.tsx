@@ -10,8 +10,11 @@ import { KeycloakProvider } from "@/components/providers/keycloak-provider";
 import "@/lib/i18n";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/lib/i18n";
+import { useState } from "react";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
   return (
     <html lang="en" suppressHydrationWarning>
 
@@ -26,8 +29,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               disableTransitionOnChange
             >
               <div className="relative flex min-h-screen w-full">
-                <Sidebar />
-                <div className="flex flex-1 flex-col sm:pl-14">
+                <Sidebar isExpanded={isSidebarExpanded} setIsExpanded={setIsSidebarExpanded} />
+                <div className={cn(
+                    "flex flex-1 flex-col transition-[margin-left] duration-300 ease-in-out",
+                    isSidebarExpanded ? "sm:ml-64" : "sm:ml-14"
+                  )}>
                   <Header />
                   <main className="flex-1 p-4 sm:p-6 md:p-8">
                     {children}
