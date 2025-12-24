@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -6,12 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import type { Distribution } from "@/lib/definitions";
 import { Download } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface DownloadAttestationProps {
   distribution: Distribution;
 }
 
 export function DownloadAttestation({ distribution }: DownloadAttestationProps) {
+  const { t } = useTranslation('common');
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -49,15 +52,15 @@ export function DownloadAttestation({ distribution }: DownloadAttestationProps) 
       if (error.response && (error.response.status === 404 || error.response.status === 400)) {
         toast({
           variant: "destructive",
-          title: "Attestation Not Found",
-          description: "The attestation for this distribution has not been uploaded yet.",
+          title: t('attestation_not_found_toast_title'),
+          description: t('attestation_not_found_toast_desc'),
         });
       } else {
         console.error("Download failed:", error);
         toast({
           variant: "destructive",
-          title: "Download Failed",
-          description: "There was a problem downloading the attestation file.",
+          title: t('download_failed_toast_title'),
+          description: t('download_failed_toast_desc'),
         });
       }
     } finally {
@@ -73,7 +76,7 @@ export function DownloadAttestation({ distribution }: DownloadAttestationProps) 
     >
       <div onClick={handleDownload} className="flex items-center cursor-pointer">
         <Download className="mr-2 h-4 w-4" />
-        {isDownloading ? "Downloading..." : "Download Attestation"}
+        {isDownloading ? t('downloading') : t('download_attestation')}
       </div>
     </DropdownMenuItem>
   );

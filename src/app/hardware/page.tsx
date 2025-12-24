@@ -8,10 +8,12 @@ import { fetchItems } from "@/lib/data";
 import type { Item } from "@/lib/definitions";
 import { ItemsTable } from "@/components/shared/items-table";
 import { AddArticle } from "../articles/add-article";
+import { useTranslation } from "react-i18next";
 
 function HardwarePageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
+  const { t } = useTranslation("common");
 
   const [data, setData] = React.useState<Item[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
@@ -48,7 +50,7 @@ function HardwarePageContent() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Hardware"
+        title={t('hardware')}
         actions={
           <AddArticle onSuccess={handleSuccess} />
         }

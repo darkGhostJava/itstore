@@ -8,11 +8,13 @@ import { getReparationColumns } from "./columns";
 import { fetchReparations } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
 import { AddReparation } from "./add-reparation";
+import { useTranslation } from "react-i18next";
 
 export default function ReparationsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { t } = useTranslation('common');
 
   const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; sort?:string; }) => Promise<void>) | null>(null);
 
@@ -44,7 +46,7 @@ export default function ReparationsPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Repairs"
+        title={t('reparations')}
         actions={
           <AddReparation onSuccess={handleSuccess} />
         }
@@ -56,7 +58,7 @@ export default function ReparationsPage() {
         fetchData={fetchData}
         isLoading={isLoading}
         filterKey="serial number" 
-        filterPlaceholder="Filter by serial number..."
+        filterPlaceholder={t('filter_by_serial_number_placeholder')}
       />
     </div>
   );

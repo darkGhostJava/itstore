@@ -5,6 +5,7 @@ import * as React from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import { type Item } from "@/lib/definitions";
 import { getItemsColumns } from "./items-columns";
+import { useTranslation } from "react-i18next";
 
 interface ItemsTableProps {
   data: Item[];
@@ -16,6 +17,7 @@ interface ItemsTableProps {
 }
 
 export function ItemsTable({ data, pageCount, fetchData, isLoading, initialQuery, filterKey = "serialNumber" }: ItemsTableProps) {
+  const { t } = useTranslation("common");
 
   const handleSuccess = React.useCallback(() => {
     // Refetch data for the current view
@@ -25,6 +27,8 @@ export function ItemsTable({ data, pageCount, fetchData, isLoading, initialQuery
   }, [fetchData]);
 
   const columns = React.useMemo(() => getItemsColumns({ onSuccess: handleSuccess }), [handleSuccess]);
+  
+  const placeholder = filterKey === 'serialNumber' ? t('filter_by_serial_number_placeholder') : t('filter_by_designation_placeholder');
 
   return (
       <DataTable
@@ -34,7 +38,7 @@ export function ItemsTable({ data, pageCount, fetchData, isLoading, initialQuery
         fetchData={fetchData}
         isLoading={isLoading}
         filterKey={filterKey}
-        filterPlaceholder={`Filter by ${filterKey}...`}
+        filterPlaceholder={placeholder}
         initialQuery={initialQuery}
       />
   );

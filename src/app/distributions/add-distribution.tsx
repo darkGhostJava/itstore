@@ -45,19 +45,20 @@ import { Article, Item, Person, Structure } from "@/lib/definitions";
 import { api } from "@/lib/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 const articleDistributionSchema = z.object({
-  article: z.any().refine(val => val, { message: "Please select an article." }),
+  article: z.any().refine(val => val, { message: "article_is_required" }),
   serialNumbers: z.array(z.string()).optional(),
   quantity: z.number().optional(),
 });
 
 const distributionFormSchema = z.object({
-  structureId: z.string().min(1, "Please select a direction."),
-  subDirectionId: z.string().min(1, "Please select a sub direction."),
-  beneficiaryId: z.string().min(1, "Please select a beneficiary."),
+  structureId: z.string().min(1, "direction_is_required"),
+  subDirectionId: z.string().min(1, "subdirection_is_required"),
+  beneficiaryId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().optional(),
-  articles: z.array(articleDistributionSchema).min(1, "Please add at least one article."),
+  articles: z.array(articleDistributionSchema).min(1, "at_least_one_article_is_required"),
 });
 
 type DistributionFormValues = z.infer<typeof distributionFormSchema>;
@@ -76,6 +77,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const [serials, setSerials] = useState<Record<number, Item[]>>({});
   const [loading, setLoading] = useState(false);
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
+  const { t } = useTranslation('common');
 
 
   const form = useForm<DistributionFormValues>({
@@ -177,8 +179,8 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
 
 
       toast({
-        title: "Distribution Added",
-        description: "Distribution recorded and documents downloaded successfully.",
+        title: t('distribution_added_toast_title'),
+        description: t('distribution_added_toast_desc'),
       });
 
       form.reset();
@@ -188,8 +190,8 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     } catch (error) {
       console.error("Error adding distribution:", error);
       toast({
-        title: "Error",
-        description: "Failed to add distribution.",
+        title: t('error'),
+        description: t('add_distribution_error'),
         variant: "destructive",
       });
     } finally {
@@ -230,15 +232,15 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Distribution
+          {t('add_distribution')}
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add New Distribution</DialogTitle>
+          <DialogTitle>{t('add_new_distribution')}</DialogTitle>
           <DialogDescription>
-            Record a new distribution of items. Select a beneficiary then add articles.
+            {t('add_new_distribution_desc')}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-6">
@@ -251,11 +253,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   name="structureId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Structure</FormLabel>
+                      <FormLabel>{t('structure')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a structure" />
+                            <SelectValue placeholder={t('select_structure_placeholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -266,7 +268,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
+                      <FormMessage>{form.formState.errors.structureId && t(form.formState.errors.structureId.message as string)}</FormMessage>
                     </FormItem>
                   )}
                 />
@@ -276,7 +278,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   name="subDirectionId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sub Direction</FormLabel>
+                      <FormLabel>{t('sub_direction')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -284,7 +286,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a sub direction" />
+                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -295,7 +297,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
+                      <FormMessage>{form.formState.errors.subDirectionId && t(form.formState.errors.subDirectionId.message as string)}</FormMessage>
                     </FormItem>
                   )}
                 />
@@ -306,7 +308,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                 name="beneficiaryId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Beneficiary</FormLabel>
+                    <FormLabel>{t('beneficiary')}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -314,7 +316,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a beneficiary" />
+                          <SelectValue placeholder={t('select_beneficiary_placeholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -325,13 +327,13 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage>{form.formState.errors.beneficiaryId && t(form.formState.errors.beneficiaryId.message as string)}</FormMessage>
                   </FormItem>
                 )}
               />
 
               <div className="space-y-4">
-                <FormLabel>Articles to Distribute</FormLabel>
+                <FormLabel>{t('articles_to_distribute')}</FormLabel>
                 <div className="space-y-4">
                   {fields.map((field, index) => {
                     const articleType = form.getValues(`articles.${index}.article.type`);
@@ -345,7 +347,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
                           <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
-                            {articleType}
+                            {t(articleType.toLowerCase() as "hardware" | "consumable")}
                           </Badge>
                         </div>
 
@@ -355,11 +357,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                             name={`articles.${index}.serialNumbers`}
                             render={({ field: serialField }) => (
                               <FormItem>
-                                <FormLabel>Serial Numbers</FormLabel>
+                                <FormLabel>{t('serial_numbers')}</FormLabel>
                                 <div className="relative">
                                   <Input
                                     id={`serial-search-${index}`}
-                                    placeholder="Search and add serial numbers..."
+                                    placeholder={t('search_add_serial_placeholder')}
                                     onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
                                   />
                                   {currentSerials.length > 0 && (
@@ -405,12 +407,12 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                             name={`articles.${index}.quantity`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Quantity</FormLabel>
+                                <FormLabel>{t('quantity')}</FormLabel>
                                 <FormControl>
                                   <Input
                                     type="number"
                                     min={1}
-                                    placeholder="Enter quantity"
+                                    placeholder={t('enter_quantity_placeholder')}
                                     {...field}
                                     onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
                                   />
@@ -432,17 +434,17 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                       onValueChange={(value: "ALL" | "HARDWARE" | "CONSUMABLE") => setSearchArticleType(value)}
                     >
                       <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Select Type" />
+                        <SelectValue placeholder={t('select_type_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ALL">All Types</SelectItem>
-                        <SelectItem value="HARDWARE">Hardware</SelectItem>
-                        <SelectItem value="CONSUMABLE">Consumable</SelectItem>
+                        <SelectItem value="ALL">{t('all_types')}</SelectItem>
+                        <SelectItem value="HARDWARE">{t('hardware')}</SelectItem>
+                        <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input
                       id="article-search"
-                      placeholder="Search for an article to add..."
+                      placeholder={t('search_article_to_add_placeholder')}
                       onChange={(e) => handleArticleSearch(e.target.value)}
                       onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
                       className="flex-1"
@@ -461,9 +463,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                             if (articleInput) (articleInput as HTMLInputElement).value = '';
                           }}
                         >
-                          {article.model} ({article.type})
+                          {article.model} ({t(article.type.toLowerCase() as "hardware" | "consumable")})
                           <span className="text-sm text-muted-foreground ml-2">
-                             (In Stock: {article.quantity})
+                             ({t('in_stock')}: {article.quantity})
                           </span>
                         </div>
                       ))}
@@ -471,7 +473,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   )}
                 </div>
                 <FormMessage>
-                  {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && form.formState.errors.articles.message}
+                  {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && t(form.formState.errors.articles.message)}
                 </FormMessage>
               </div>
 
@@ -481,9 +483,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                 name="remarks"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Remarks</FormLabel>
+                    <FormLabel>{t('remarks')}</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Add any relevant remarks..." {...field} />
+                      <Textarea placeholder={t('add_remarks_placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -492,7 +494,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
 
               <DialogFooter>
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : "Save Distribution"}
+                  {loading ? t('saving') : t('save_distribution')}
                 </Button>
               </DialogFooter>
             </form>

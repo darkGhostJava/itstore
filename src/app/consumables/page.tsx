@@ -9,10 +9,12 @@ import { columns } from "./columns";
 import { fetchArticles } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { AddArticle } from "../articles/add-article";
+import { useTranslation } from "react-i18next";
 
 function ConsumablesPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
+  const { t } = useTranslation("common");
 
   const [data, setData] = React.useState<Article[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
@@ -50,7 +52,7 @@ function ConsumablesPageContent() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Consumables"
+        title={t('consumables')}
         actions={
           <AddArticle onSuccess={handleSuccess} />
         }
@@ -62,7 +64,7 @@ function ConsumablesPageContent() {
         fetchData={fetchData}
         isLoading={isLoading}
         filterKey="designation"
-        filterPlaceholder="Filter by designation..."
+        filterPlaceholder={t('filter_by_designation_placeholder')}
         initialQuery={initialQuery}
       />
     </div>

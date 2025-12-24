@@ -35,12 +35,13 @@ import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import categories from "@/lib/article-categories.json";
+import { useTranslation } from "react-i18next";
 
 const formSchema = z.object({
-  model: z.string().min(1, "Model is required."),
-  designation: z.string().min(1, "Designation is required."),
+  model: z.string().min(1, "model_is_required"),
+  designation: z.string().min(1, "designation_is_required"),
   type: z.enum(["HARDWARE", "CONSUMABLE"]),
-  category: z.string().min(1, "Category is required."),
+  category: z.string().min(1, "category_is_required"),
 });
 
 interface AddArticleProps {
@@ -51,6 +52,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,16 +69,16 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
     try {
       await api.post("/articles", values);
       toast({
-        title: "Article Added",
-        description: `${values.model} has been added to the articles list.`,
+        title: t('article_added_toast_title'),
+        description: t('article_added_toast_desc', { model: values.model }),
       });
       setOpen(false);
       form.reset();
       onSuccess?.(); // Trigger refresh
     } catch (error) {
        toast({
-        title: "Error",
-        description: "Failed to add article.",
+        title: t('error'),
+        description: t('add_article_error'),
         variant: "destructive",
       });
     } finally {
@@ -89,14 +91,14 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Article
+          {t('add_article')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Article</DialogTitle>
+          <DialogTitle>{t('add_new_article')}</DialogTitle>
           <DialogDescription>
-            Enter the details for the new article.
+            {t('add_new_article_desc')}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -106,11 +108,11 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
               name="model"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Model</FormLabel>
+                  <FormLabel>{t('model')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Dell Latitude 7490" {...field} />
+                    <Input placeholder={t('model_placeholder')} {...field} />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage>{form.formState.errors.model && t(form.formState.errors.model.message as string)}</FormMessage>
                 </FormItem>
               )}
             />
@@ -120,11 +122,11 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
               name="designation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Designation</FormLabel>
+                  <FormLabel>{t('designation')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Laptop" {...field} />
+                    <Input placeholder={t('designation_placeholder')} {...field} />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage>{form.formState.errors.designation && t(form.formState.errors.designation.message as string)}</FormMessage>
                 </FormItem>
               )}
             />
@@ -134,16 +136,16 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Type</FormLabel>
+                  <FormLabel>{t('type')}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a type" />
+                        <SelectValue placeholder={t('select_type_placeholder')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="HARDWARE">Hardware</SelectItem>
-                      <SelectItem value="CONSUMABLE">Consumable</SelectItem>
+                      <SelectItem value="HARDWARE">{t('hardware')}</SelectItem>
+                      <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -156,29 +158,29 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>{t('category')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder={t('select_category_placeholder')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {categories.categories.map((category) => (
                         <SelectItem key={category} value={category}>
-                          {category}
+                          {t(`category_${category.toLowerCase().replace(' ', '_')}` as any)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
+                   <FormMessage>{form.formState.errors.category && t(form.formState.errors.category.message as string)}</FormMessage>
                 </FormItem>
               )}
             />
 
             <DialogFooter>
               <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Save Article"}
+                {loading ? t('saving') : t('save_article')}
               </Button>
             </DialogFooter>
           </form>

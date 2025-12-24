@@ -7,12 +7,14 @@ import { getArticlesInStockCons, getArticlesInStockMateriel } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 interface ArticleStatsCardsProps {
   type: "hardware" | "consumable";
 }
 
 export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
+  const { t } = useTranslation('common');
   const [statsData, setStatsData] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
@@ -46,11 +48,11 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No In-Stock {type === 'hardware' ? 'Hardware' : 'Consumables'}</CardTitle>
+          <CardTitle>{t('no_in_stock_items_title', { context: type })}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            There are currently no items in stock for this category.
+            {t('no_in_stock_items_desc')}
           </p>
         </CardContent>
       </Card>

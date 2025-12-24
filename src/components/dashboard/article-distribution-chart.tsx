@@ -22,6 +22,7 @@ import { getArticlesInStockCons, getArticlesInStockMateriel } from "@/lib/data";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 interface ArticleDistributionChartProps {
   type: "hardware" | "consumable";
@@ -29,12 +30,13 @@ interface ArticleDistributionChartProps {
 
 export function ArticleDistributionChart({ type }: ArticleDistributionChartProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation('common');
   const router = useRouter();
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const title = type === "hardware" ? "Hardware Inventory" : "Consumable Inventory";
-  const description = type === 'hardware' ? "In-stock hardware count by designation" : "In-stock consumable count by designation";
+  const title = type === "hardware" ? t('in_stock_hardware') : t('in_stock_consumables');
+  const description = type === 'hardware' ? t('in_stock_hardware_desc') : t('in_stock_consumables_desc');
   const linkHref = type === 'hardware' ? '/hardware' : '/consumables';
 
   useEffect(() => {

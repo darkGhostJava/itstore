@@ -331,7 +331,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                   )}
                 </div>
                 <FormMessage>
-                  {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && form.formState.errors.articles.message}
+                  {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && t(form.formState.errors.articles.message)}
                 </FormMessage>
               </div>
 
@@ -361,5 +361,3 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
     </Dialog>
   );
 }
-
-    
