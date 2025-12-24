@@ -40,6 +40,7 @@ import { api } from "@/lib/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
+import { ErrorSummary } from "@/components/shared/error-summary";
 
 const articleArrivalSchema = z.object({
   article: z.any().refine(val => val, { message: "Please select an article." }),
@@ -135,6 +136,13 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
       setSearchedArticles([]);
     }
   };
+  
+  const handleArticleSelect = (article: Article) => {
+    append({ article: article, serialNumbers: [], quantity: 1 });
+    setSearchedArticles([]);
+    const articleInput = document.getElementById('article-search');
+    if (articleInput) (articleInput as HTMLInputElement).value = '';
+  }
 
   const handleAddSerialNumber = (index: number) => {
     const newSerial = serialNumberInputs[index]?.trim();
@@ -185,6 +193,11 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
         <ScrollArea className="max-h-[70vh] pr-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              
+               {form.formState.isSubmitted && !form.formState.isValid && (
+                <ErrorSummary errors={form.formState.errors} />
+              )}
+
               <FormField
                 control={form.control}
                 name="budget"
@@ -317,12 +330,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                         <div
                           key={article.id}
                           className="p-2 cursor-pointer hover:bg-muted"
-                          onMouseDown={() => {
-                            append({ article: article, serialNumbers: [], quantity: 1 });
-                            setSearchedArticles([]);
-                            const articleInput = document.getElementById('article-search');
-                            if (articleInput) (articleInput as HTMLInputElement).value = '';
-                          }}
+                          onMouseDown={() => handleArticleSelect(article)}
                         >
                           {article.model} ({t(article.type.toLowerCase() as "hardware" | "consumable")})
                         </div>
