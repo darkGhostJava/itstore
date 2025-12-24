@@ -4,6 +4,7 @@ export type Article = {
   model: string;
   designation: string;
   type: "HARDWARE" | "CONSUMABLE";
+  category: string;
   quantity: number;
 };
 

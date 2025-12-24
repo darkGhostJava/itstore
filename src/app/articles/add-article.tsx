@@ -34,11 +34,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import categories from "@/lib/article-categories.json";
 
 const formSchema = z.object({
   model: z.string().min(1, "Model is required."),
   designation: z.string().min(1, "Designation is required."),
   type: z.enum(["HARDWARE", "CONSUMABLE"]),
+  category: z.string().min(1, "Category is required."),
 });
 
 interface AddArticleProps {
@@ -56,6 +58,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
       model: "",
       designation: "",
       type: "HARDWARE",
+      category: "",
     },
   });
 
@@ -148,6 +151,31 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
               )}
             />
             
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <DialogFooter>
               <Button type="submit" disabled={loading}>
                 {loading ? "Saving..." : "Save Article"}
