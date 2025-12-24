@@ -18,13 +18,16 @@ import Link from "next/link";
 import { RepairItemDialog } from "@/app/reparations/repair-item-dialog";
 import { ReformItemDialog } from "@/app/reparations/reform-item-dialog";
 import { DataTableColumnHeader } from "../data-table/data-table-column-header";
+import { useTranslation } from "react-i18next";
 
 
 type ItemsColumnProps = {
   onSuccess: () => void;
 }
 
-export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item>[] => [
+export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item>[] => {
+    const { t } = useTranslation('common');
+    return [
   {
     header: "#",
     cell: ({ row }) => {
@@ -35,7 +38,7 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
     id: "article.model",
     accessorKey: "article.model",
      header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" />
+      <DataTableColumnHeader column={column} title={t('article')} />
     ),
     cell: ({ row }) => {
       const { article } = row.original;
@@ -46,13 +49,18 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
     id: "article.designation",
     accessorKey: "article.designation",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Designation" />
+      <DataTableColumnHeader column={column} title={t('designation')} />
     ),
+     cell: ({ row }) => {
+        const designation = row.original.article.designation;
+        const translationKey = `category_${designation.toLowerCase().replace(/ /g, "_")}` as any;
+        return t(translationKey, designation);
+      }
   },
   {
     accessorKey: "serialNumber",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Serial Number" />
+      <DataTableColumnHeader column={column} title={t('serial_number')} />
     ),
     cell: ({ row }) => {
         const item = row.original;
@@ -68,7 +76,7 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
   {
     accessorKey: "status",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title={t('status', 'Status')} />
     ),
     cell: ({ row }) => {
       const { status } = row.original;
@@ -86,14 +94,14 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t('open_menu')}</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link href={`/items/${item.id}`}>View History</Link>
+              <Link href={`/items/${item.id}`}>{t('view_history', 'View History')}</Link>
             </DropdownMenuItem>
              {isUnderRepair && (
               <>
@@ -107,4 +115,4 @@ export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item
       );
     },
   },
-];
+]};

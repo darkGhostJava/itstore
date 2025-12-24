@@ -153,5 +153,7 @@
     "distribution": "Distribution",
     "reparation": "Reparation",
     "reversement": "Reversement",
-    "reforme": "Reforme"
+    "reforme": "Reforme",
+    "status": "Status",
+    "view_history": "View History"
 }

@@ -36,6 +36,11 @@ export const ConsumablesColumns = () => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('designation')} />
       ),
+      cell: ({ row }) => {
+        const designation = row.getValue("designation") as string;
+        const translationKey = `category_${designation.toLowerCase().replace(/ /g, "_")}` as any;
+        return t(translationKey, designation);
+      }
     },
     {
       accessorKey: "quantity",
