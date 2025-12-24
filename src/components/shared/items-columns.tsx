@@ -18,15 +18,15 @@ import Link from "next/link";
 import { RepairItemDialog } from "@/app/reparations/repair-item-dialog";
 import { ReformItemDialog } from "@/app/reparations/reform-item-dialog";
 import { DataTableColumnHeader } from "../data-table/data-table-column-header";
-import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 
 
 type ItemsColumnProps = {
   onSuccess: () => void;
+  t: TFunction<"common", undefined>;
 }
 
-export const getItemsColumns = ({ onSuccess }: ItemsColumnProps): ColumnDef<Item>[] => {
-    const { t } = useTranslation('common');
+export const getItemsColumns = ({ onSuccess, t }: ItemsColumnProps): ColumnDef<Item>[] => {
     return [
   {
     header: "#",

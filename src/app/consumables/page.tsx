@@ -15,7 +15,7 @@ function ConsumablesPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
   const { t } = useTranslation("common");
-  const columns = ConsumablesColumns();
+  const columns = React.useMemo(() => ConsumablesColumns(t), [t]);
 
   const [data, setData] = React.useState<Article[]>([]);
   const [pageCount, setPageCount] = React.useState(0);

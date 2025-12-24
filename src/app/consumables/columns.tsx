@@ -13,12 +13,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 
-export const ConsumablesColumns = () => {
-  const { t } = useTranslation('common');
-
-  const columns: ColumnDef<Article>[] = [
+export const ConsumablesColumns = (t: TFunction): ColumnDef<Article>[] => {
+  return [
     {
       header: "#",
       cell: ({ row }) => {
@@ -70,5 +68,4 @@ export const ConsumablesColumns = () => {
       },
     },
   ];
-  return columns;
 };

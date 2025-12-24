@@ -62,6 +62,7 @@ function HardwarePageContent() {
         isLoading={isLoading}
         initialQuery={initialQuery}
         filterKey="designation"
+        t={t}
       />
     </div>
   );
