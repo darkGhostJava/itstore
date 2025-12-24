@@ -8,9 +8,11 @@ import { Skeleton } from "../ui/skeleton";
 import { Stats } from "@/lib/definitions";
 
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function StatsCards() {
   const [statsData, setStatsData] = useState<Stats | null>(null);
+  const { t } = useTranslation('common');
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -25,12 +27,12 @@ export function StatsCards() {
   if (!statsData) return <StatsCardsSkeleton />;
 
   const stats = [
-    { title: "Total Articles", value: statsData.totalArticles, icon: Package },
-    { title: "Items in Stock", value: statsData.itemsInStock, icon: Boxes },
-    { title: "Distributed Items", value: statsData.distributedItems, icon: ArrowRightLeft },
-    { title: "Under Repair", value: statsData.underRepair, icon: Wrench },
-    { title: "Repaired", value: statsData.repaired, icon: ShieldCheck },
-    { title: "Reformed", value: statsData.reformed, icon: ArchiveX },
+    { title: t("total_articles"), value: statsData.totalArticles, icon: Package },
+    { title: t("items_in_stock"), value: statsData.itemsInStock, icon: Boxes },
+    { title: t("distributed_items"), value: statsData.distributedItems, icon: ArrowRightLeft },
+    { title: t("under_repair"), value: statsData.underRepair, icon: Wrench },
+    { title: t("repaired"), value: statsData.repaired, icon: ShieldCheck },
+    { title: t("reformed"), value: statsData.reformed, icon: ArchiveX },
   ];
 
   return (

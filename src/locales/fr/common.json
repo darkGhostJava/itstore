@@ -1,0 +1,16 @@
+{
+    "dashboard": "Tableau de Bord",
+    "total_articles": "Articles Totaux",
+    "items_in_stock": "Articles en Stock",
+    "distributed_items": "Articles Distribués",
+    "under_repair": "En Réparation",
+    "repaired": "Réparés",
+    "reformed": "Réformés",
+    "in_stock_hardware": "Matériel en Stock",
+    "in_stock_consumables": "Consommables en Stock",
+    "operations_overview": "Aperçu des Opérations",
+    "recent_operations": "Opérations Récentes",
+    "no_recent_operations": "Aucune opération récente trouvée.",
+    "by_user": "par {{user}}",
+    "no_remarks": "Aucune remarque"
+}

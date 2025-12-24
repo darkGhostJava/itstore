@@ -14,13 +14,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ThemeToggle } from "./theme-toggle";
 import { useKeycloak } from "@react-keycloak/web";
+import { useTranslation } from "react-i18next";
+import { Globe } from "lucide-react";
 
 export function UserNav() {
   const { keycloak } = useKeycloak();
+  const { i18n } = useTranslation();
 
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-1");
 
@@ -28,6 +35,10 @@ export function UserNav() {
     keycloak?.logout({
       redirectUri: window.location.origin, // redirect back to your frontend
     });
+  };
+  
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
   };
 
   return (
@@ -52,11 +63,27 @@ export function UserNav() {
             </p>
           </div>
         </DropdownMenuLabel>
+        
+        <DropdownMenuSeparator />
 
+        <DropdownMenuGroup>
+           <DropdownMenuItem>
+              <ThemeToggle />
+            </DropdownMenuItem>
+             <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                    <Globe className="mr-2 h-4 w-4" />
+                    <span>Language</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                        <DropdownMenuItem onClick={() => changeLanguage('en')}>English</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => changeLanguage('fr')}>Français</DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+            </DropdownMenuSub>
+        </DropdownMenuGroup>
 
-        <DropdownMenuItem>
-          <ThemeToggle />
-        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 

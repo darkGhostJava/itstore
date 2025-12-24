@@ -14,10 +14,12 @@ import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "../ui/skeleton";
 import type { Operation } from "@/lib/definitions";
 import { Badge } from "../ui/badge";
+import { useTranslation } from "react-i18next";
 
 export function RecentOperations() {
   const [operations, setOperations] = React.useState<Operation[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { t } = useTranslation('common');
 
   React.useEffect(() => {
     const getRecentOperations = async () => {
@@ -44,11 +46,11 @@ export function RecentOperations() {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Recent Operations</CardTitle>
+        <CardTitle>{t('recent_operations')}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-8">
         {operations.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No recent operations found.</p>
+          <p className="text-sm text-muted-foreground">{t('no_recent_operations')}</p>
         ) : (
           operations.map((op) => {
             const user = op.user;
@@ -76,9 +78,9 @@ export function RecentOperations() {
                       op.type === "REPARATION" ? "destructive" :
                       "outline"
                     }>{op.type}</Badge>
-                    <span className="text-muted-foreground truncate max-w-[200px]">{op.remarks || 'No remarks'}</span>
+                    <span className="text-muted-foreground truncate max-w-[200px]">{op.remarks || t('no_remarks')}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">by {userName}</p>
+                  <p className="text-sm text-muted-foreground">{t('by_user', { user: userName })}</p>
                 </div>
                 <div className="ml-auto text-sm text-muted-foreground whitespace-nowrap">
                   {formatDistanceToNow(new Date(op.date), { addSuffix: true })}
@@ -93,10 +95,11 @@ export function RecentOperations() {
 }
 
 export function RecentOperationsSkeleton() {
+    const { t } = useTranslation('common');
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Recent Operations</CardTitle>
+                <CardTitle>{t('recent_operations')}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-8">
                 {Array.from({ length: 5 }).map((_, i) => (

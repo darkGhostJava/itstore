@@ -1,0 +1,16 @@
+{
+    "dashboard": "Dashboard",
+    "total_articles": "Total Articles",
+    "items_in_stock": "Items in Stock",
+    "distributed_items": "Distributed Items",
+    "under_repair": "Under Repair",
+    "repaired": "Repaired",
+    "reformed": "Reformed",
+    "in_stock_hardware": "In-Stock Hardware",
+    "in_stock_consumables": "In-Stock Consumables",
+    "operations_overview": "Operations Overview",
+    "recent_operations": "Recent Operations",
+    "no_recent_operations": "No recent operations found.",
+    "by_user": "by {{user}}",
+    "no_remarks": "No remarks"
+}

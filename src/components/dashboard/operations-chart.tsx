@@ -17,6 +17,7 @@ import { fetchAllOperations } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
 import { useTheme } from "next-themes";
 import { Skeleton } from "../ui/skeleton";
+import { useTranslation } from "react-i18next";
 
 // Define colors for each operation type
 const getPath = (x: number, y: number, width: number, height: number) => {
@@ -35,6 +36,7 @@ const TriangleBar = (props: any) => {
 
 export function OperationsChart() {
   const { theme } = useTheme();
+  const { t } = useTranslation('common');
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,7 +79,7 @@ export function OperationsChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Operations Overview</CardTitle>
+        <CardTitle>{t('operations_overview')}</CardTitle>
       </CardHeader>
       <CardContent className="pl-2">
         <ResponsiveContainer width="100%" height={350}>
@@ -116,10 +118,11 @@ export function OperationsChart() {
 }
 
 export function OperationsChartSkeleton() {
+    const { t } = useTranslation('common');
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Operations Overview</CardTitle>
+        <CardTitle>{t('operations_overview')}</CardTitle>
       </CardHeader>
       <CardContent>
         <Skeleton className="h-[350px] w-full" />
