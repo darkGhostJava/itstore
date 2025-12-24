@@ -48,7 +48,8 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
 
         const data = Object.entries(designationCounts)
           .map(([name, value]) => ({
-            name,
+            rawName: name,
+            name: t(`category_${name.toLowerCase()}` as any, name.replace(/_/g, " ")),
             value,
           }))
           .sort((a, b) => b.value - a.value); 
@@ -62,7 +63,7 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
       }
     };
     getData();
-  }, [type]);
+  }, [type, t]);
 
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0] && data.activePayload[0].payload) {
