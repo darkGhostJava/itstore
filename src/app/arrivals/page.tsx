@@ -4,15 +4,18 @@
 import * as React from "react";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/data-table/data-table";
-import { columns } from "./columns";
+import { useArrivalsColumns } from "./columns";
 import { fetchArrivals } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
 import { AddArrival } from "./add-arrival";
+import { useTranslation } from "react-i18next";
 
 export default function ArrivalsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { t } = useTranslation('common');
+  const columns = useArrivalsColumns();
   
   const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => Promise<void>) | null>(null);
 
@@ -42,7 +45,7 @@ export default function ArrivalsPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title="Arrivals"
+        title={t('arrivals')}
         actions={
           <AddArrival onSuccess={handleSuccess} />
         }
@@ -54,8 +57,10 @@ export default function ArrivalsPage() {
         fetchData={fetchData}
         isLoading={isLoading}
         filterKey="remarks" 
-        filterPlaceholder="Filter by remarks..."
+        filterPlaceholder={t('filter_by_remarks_placeholder')}
       />
     </div>
   );
 }
+
+    

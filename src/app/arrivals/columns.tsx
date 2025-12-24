@@ -14,79 +14,88 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { useTranslation } from "react-i18next";
 
-export const columns: ColumnDef<Operation>[] = [
-  {
-    header: "#",
-    cell: ({ row }) => {
-      return row.index + 1;
+export const useArrivalsColumns = () => {
+  const { t } = useTranslation('common');
+
+  const columns: ColumnDef<Operation>[] = [
+    {
+      header: "#",
+      cell: ({ row }) => {
+        return row.index + 1;
+      },
     },
-  },
-  {
-    accessorKey: "date",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date" />
-    ),
-    cell: ({ row }) => format(new Date(row.original.date), "PPP"),
-  },
-  {
-    id: "items.article.model",
-    accessorKey: "items[0].article.model",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Article" />
-    ),
-    cell: ({ row }) => {
-      // Assuming the backend returns items for an arrival operation
-      const items = (row.original as any).items as Item[] | undefined;
-      if (!items || items.length === 0) return "N/A";
-      const article = items[0].article;
-      return article ? `${article.model} - ${article.designation}` : "N/A";
+    {
+      accessorKey: "date",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('date')} />
+      ),
+      cell: ({ row }) => format(new Date(row.original.date), "PPP"),
     },
-  },
-  {
-    id: "count",
-    accessorKey: "items.length",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Count" />
-    ),
-    cell: ({ row }) => {
-       const items = (row.original as any).items as Item[] | undefined;
-       return items?.length ?? 0;
-    }
-  },
-  {
-    id: "user.name",
-    accessorKey: "user.name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" />
-    ),
-    cell: ({ row }) => {
-      return row.original.user?.name || "Unknown";
+    {
+      id: "items.article.model",
+      accessorKey: "items[0].article.model",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('article')} />
+      ),
+      cell: ({ row }) => {
+        // Assuming the backend returns items for an arrival operation
+        const items = (row.original as any).items as Item[] | undefined;
+        if (!items || items.length === 0) return "N/A";
+        const article = items[0].article;
+        return article ? `${article.model} - ${article.designation}` : "N/A";
+      },
     },
-  },
-  {
-    accessorKey: "remarks",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Remarks" />
-    ),
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>View Details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+    {
+      id: "count",
+      accessorKey: "items.length",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('count')} />
+      ),
+      cell: ({ row }) => {
+        const items = (row.original as any).items as Item[] | undefined;
+        return items?.length ?? 0;
+      }
     },
-  },
-];
+    {
+      id: "user.name",
+      accessorKey: "user.name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('user')} />
+      ),
+      cell: ({ row }) => {
+        return row.original.user?.name || t('unknown');
+      },
+    },
+    {
+      accessorKey: "remarks",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('remarks')} />
+      ),
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">{t('open_menu')}</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+              <DropdownMenuItem>{t('view_details')}</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
+  return columns;
+};
+
+    

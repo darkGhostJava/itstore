@@ -1,9 +1,9 @@
+
 "use client";
 
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
 } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,6 @@ import {
   DropdownMenuPortal,
   DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ThemeToggle } from "./theme-toggle";
 import { useKeycloak } from "@react-keycloak/web";
 import { useTranslation } from "react-i18next";
@@ -27,9 +26,7 @@ import { Globe } from "lucide-react";
 
 export function UserNav() {
   const { keycloak } = useKeycloak();
-  const { i18n } = useTranslation();
-
-  const userAvatar = PlaceHolderImages.find((img) => img.id === "user-1");
+  const { i18n, t } = useTranslation('common');
 
   const handleLogout = () => {
     keycloak?.logout({
@@ -46,8 +43,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-         
-            <AvatarFallback>User</AvatarFallback>
+            <AvatarFallback>{keycloak?.tokenParsed?.preferred_username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -56,7 +52,7 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {keycloak?.tokenParsed?.preferred_username || "User"}
+              {keycloak?.tokenParsed?.name || keycloak?.tokenParsed?.preferred_username || "User"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {keycloak?.tokenParsed?.email || "example@email"}
@@ -73,7 +69,7 @@ export function UserNav() {
              <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                     <Globe className="mr-2 h-4 w-4" />
-                    <span>Language</span>
+                    <span>{t('language')}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                     <DropdownMenuSubContent>
@@ -88,9 +84,11 @@ export function UserNav() {
         <DropdownMenuSeparator />
 
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-          Log out
+          {t('log_out')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
+
+    

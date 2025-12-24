@@ -39,6 +39,7 @@ import { Article } from "@/lib/definitions";
 import { api } from "@/lib/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 const articleArrivalSchema = z.object({
   article: z.any().refine(val => val, { message: "Please select an article." }),
@@ -65,6 +66,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
   const [loading, setLoading] = useState(false);
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
   const [serialNumberInputs, setSerialNumberInputs] = useState<Record<number, string>>({});
+  const { t } = useTranslation('common');
 
   const form = useForm<ArrivalFormValues>({
     resolver: zodResolver(arrivalFormSchema),
@@ -105,8 +107,8 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
       await api.post("/arrivals", payload);
 
       toast({
-        title: "Arrival Added",
-        description: "The new arrival has been recorded successfully.",
+        title: t('arrival_added_toast_title'),
+        description: t('arrival_added_toast_desc'),
       });
 
       form.reset();
@@ -116,8 +118,8 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
     } catch (error) {
       console.error("Error adding arrival:", error);
       toast({
-        title: "Error",
-        description: "Failed to add arrival.",
+        title: t('error'),
+        description: t('add_arrival_error'),
         variant: "destructive",
       });
     } finally {
@@ -148,8 +150,8 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
         setSerialNumberInputs(prev => ({ ...prev, [index]: '' }));
     } else {
         toast({
-            title: "Duplicate Serial Number",
-            description: "This serial number has already been added.",
+            title: t('duplicate_serial_toast_title'),
+            description: t('duplicate_serial_toast_desc'),
             variant: "destructive"
         });
     }
@@ -169,15 +171,15 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Arrival
+          {t('add_arrival')}
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add New Arrival</DialogTitle>
+          <DialogTitle>{t('add_new_arrival')}</DialogTitle>
           <DialogDescription>
-            Record a new arrival of items. Add one or more articles.
+            {t('add_arrival_desc')}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-6">
@@ -188,17 +190,17 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                 name="budget"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Budget</FormLabel>
+                    <FormLabel>{t('budget')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a budget type" />
+                          <SelectValue placeholder={t('select_budget_placeholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="COOPERATION">Budget de coopération</SelectItem>
-                        <SelectItem value="MDN">Budget Mdn</SelectItem>
-                        <SelectItem value="PRESIDENCE">Présidence</SelectItem>
+                        <SelectItem value="COOPERATION">{t('budget_cooperation')}</SelectItem>
+                        <SelectItem value="MDN">{t('budget_mdn')}</SelectItem>
+                        <SelectItem value="PRESIDENCE">{t('budget_presidence')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -207,7 +209,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
               />
 
               <div className="space-y-4">
-                <FormLabel>Arrived Articles</FormLabel>
+                <FormLabel>{t('arrived_articles')}</FormLabel>
                 <div className="space-y-4">
                   {fields.map((field, index) => {
                     const articleType = form.getValues(`articles.${index}.article.type`);
@@ -221,13 +223,13 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
                           <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
-                            {articleType}
+                            {t(articleType.toLowerCase() as "hardware" | "consumable")}
                           </Badge>
                         </div>
 
                         {articleType === 'HARDWARE' && (
                           <FormItem>
-                            <FormLabel>Serial Numbers</FormLabel>
+                            <FormLabel>{t('serial_numbers')}</FormLabel>
                             <div className="flex gap-2">
                               <Input
                                 value={serialNumberInputs[index] || ''}
@@ -238,9 +240,9 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                                     handleAddSerialNumber(index);
                                   }
                                 }}
-                                placeholder="Enter serial number..."
+                                placeholder={t('enter_serial_number_placeholder')}
                               />
-                              <Button type="button" onClick={() => handleAddSerialNumber(index)}>Add</Button>
+                              <Button type="button" onClick={() => handleAddSerialNumber(index)}>{t('add')}</Button>
                             </div>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {addedSerials?.map((sn) => (
@@ -266,12 +268,12 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                             name={`articles.${index}.quantity`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Quantity</FormLabel>
+                                <FormLabel>{t('quantity')}</FormLabel>
                                 <FormControl>
                                   <Input
                                     type="number"
                                     min={1}
-                                    placeholder="Enter quantity"
+                                    placeholder={t('enter_quantity_placeholder')}
                                     {...field}
                                     onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
                                   />
@@ -293,17 +295,17 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                       onValueChange={(value: "ALL" | "HARDWARE" | "CONSUMABLE") => setSearchArticleType(value)}
                     >
                       <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Select Type" />
+                        <SelectValue placeholder={t('select_type_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ALL">All Types</SelectItem>
-                        <SelectItem value="HARDWARE">Hardware</SelectItem>
-                        <SelectItem value="CONSUMABLE">Consumable</SelectItem>
+                        <SelectItem value="ALL">{t('all_types')}</SelectItem>
+                        <SelectItem value="HARDWARE">{t('hardware')}</SelectItem>
+                        <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input
                       id="article-search"
-                      placeholder="Search for an article to add..."
+                      placeholder={t('search_article_placeholder')}
                       onChange={(e) => handleArticleSearch(e.target.value)}
                       onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
                       className="flex-1"
@@ -322,7 +324,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                             if (articleInput) (articleInput as HTMLInputElement).value = '';
                           }}
                         >
-                          {article.model} ({article.type})
+                          {article.model} ({t(article.type.toLowerCase() as "hardware" | "consumable")})
                         </div>
                       ))}
                     </div>
@@ -338,9 +340,9 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                 name="remarks"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Remarks</FormLabel>
+                    <FormLabel>{t('remarks')}</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Add any relevant remarks..." {...field} />
+                      <Textarea placeholder={t('add_remarks_placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -349,7 +351,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
 
               <DialogFooter>
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : "Save Arrival"}
+                  {loading ? t('saving') : t('save_arrival')}
                 </Button>
               </DialogFooter>
             </form>
@@ -359,3 +361,5 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
     </Dialog>
   );
 }
+
+    
