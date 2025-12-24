@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { useTranslation } from "react-i18next";
+
+const TranslatedHeader = ({ column, titleKey }: { column: any, titleKey: string }) => {
+  const { t } = useTranslation('common');
+  return <DataTableColumnHeader column={column} title={t(titleKey)} />;
+};
 
 export const columns: ColumnDef<Operation>[] = [
   {
@@ -18,9 +24,7 @@ export const columns: ColumnDef<Operation>[] = [
   },
   {
     accessorKey: "type",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Type" />
-    ),
+    header: ({ column }) => <TranslatedHeader column={column} titleKey="type" />,
     cell: ({ row }) => {
       const type = row.original.type;
       let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
@@ -36,25 +40,20 @@ export const columns: ColumnDef<Operation>[] = [
   },
   {
     accessorKey: "date",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Date" />
-    ),
+    header: ({ column }) => <TranslatedHeader column={column} titleKey="date" />,
     cell: ({ row }) => format(new Date(row.original.date), "PPP p"),
   },
   {
     accessorKey: "user.name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User" sortKey="user.name" />
-    ),
+    header: ({ column }) => <TranslatedHeader column={column} titleKey="user" />,
     cell: ({ row }) => {
-      return row.original.user?.name || "Unknown";
+      const { t } = useTranslation('common');
+      return row.original.user?.name || t('unknown');
     },
   },
   {
     accessorKey: "beneficiary.firstName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Beneficiary" sortKey="beneficiary.firstName" />
-    ),
+    header: ({ column }) => <TranslatedHeader column={column} titleKey="beneficiary" />,
     cell: ({ row }) => {
       const person = row.original.beneficiary;
       return person ? `${person.firstName} ${person.lastName}` : "N/A";
@@ -62,9 +61,7 @@ export const columns: ColumnDef<Operation>[] = [
   },
   {
     accessorKey: "remarks",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Remarks" />
-    ),
+    header: ({ column }) => <TranslatedHeader column={column} titleKey="remarks" />,
   },
     {
     id: "actions",

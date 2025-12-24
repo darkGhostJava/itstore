@@ -136,5 +136,11 @@
     "in_stock_consumables_desc": "Nombre de consommables en stock par désignation",
     "no_in_stock_items_title_hardware": "Aucun Matériel en Stock",
     "no_in_stock_items_title_consumable": "Aucun Consommable en Stock",
-    "no_in_stock_items_desc": "Il n'y a actuellement aucun article en stock pour cette catégorie."
+    "no_in_stock_items_desc": "Il n'y a actuellement aucun article en stock pour cette catégorie.",
+    "operations_log": "Journal des Opérations",
+    "arrival": "Arrivage",
+    "distribution": "Distribution",
+    "reparation": "Réparation",
+    "reversement": "Reversement",
+    "reforme": "Réforme"
 }
