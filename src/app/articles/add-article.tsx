@@ -168,7 +168,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
                     <SelectContent>
                       {categories.categories.map((category) => (
                         <SelectItem key={category} value={category}>
-                          {t(`category_${category.toLowerCase().replace(' ', '_')}` as any)}
+                          {t(`category_${category.toLowerCase()}` as any)}
                         </SelectItem>
                       ))}
                     </SelectContent>
