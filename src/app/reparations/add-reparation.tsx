@@ -15,6 +15,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -240,6 +241,11 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                           ))}
                         </SelectContent>
                       </Select>
+                       {!selectedStructureId && (
+                        <FormDescription>
+                          Please select a structure first.
+                        </FormDescription>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -270,6 +276,11 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                           ))}
                         </SelectContent>
                       </Select>
+                      {!selectedSubDirectionId && (
+                        <FormDescription>
+                            Please select a sub-direction first.
+                        </FormDescription>
+                     )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -341,7 +352,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       </div>
                     )}
                   </div>
-                  {!selectedPersonId && <p className="text-xs text-muted-foreground">Please select a person to search for their items.</p>}
+                  {!selectedPersonId && <FormDescription>Please select a person to search for their items.</FormDescription>}
                   <FormMessage>
                     {form.formState.errors.reparations && typeof form.formState.errors.reparations.message === 'string' && form.formState.errors.reparations.message}
                   </FormMessage>
@@ -359,3 +370,5 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
     </Dialog>
   );
 }
+
+    

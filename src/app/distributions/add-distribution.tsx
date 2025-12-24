@@ -15,6 +15,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -297,6 +298,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           ))}
                         </SelectContent>
                       </Select>
+                       {!selectedStructureId && (
+                        <FormDescription>
+                          Please select a structure first.
+                        </FormDescription>
+                      )}
                       <FormMessage>{form.formState.errors.subDirectionId && t(form.formState.errors.subDirectionId.message as string)}</FormMessage>
                     </FormItem>
                   )}
@@ -327,6 +333,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         ))}
                       </SelectContent>
                     </Select>
+                     {!selectedSubDirectionId && (
+                        <FormDescription>
+                            Please select a sub-direction first.
+                        </FormDescription>
+                     )}
                     <FormMessage>{form.formState.errors.beneficiaryId && t(form.formState.errors.beneficiaryId.message as string)}</FormMessage>
                   </FormItem>
                 )}
@@ -504,3 +515,5 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     </Dialog>
   );
 }
+
+    
