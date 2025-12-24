@@ -16,7 +16,7 @@ export default function Loading() {
           </div>
         </nav>
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
-           <Skeleton className="h-10 w-10" />
+           <Skeleton className="h-10 w-10 rounded-lg" />
         </nav>
       </div>
 
