@@ -3,6 +3,7 @@
 
 import { useKeycloak } from "@react-keycloak/web";
 import { useEffect } from "react";
+import Loading from "@/app/loading";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { keycloak, initialized } = useKeycloak();
@@ -16,7 +17,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   // Show a loader while Keycloak is initializing
   if (!initialized || !keycloak?.authenticated) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return <Loading />;
   }
 
   // If authenticated, render the page

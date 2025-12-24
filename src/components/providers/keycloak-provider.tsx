@@ -3,6 +3,7 @@
 import { ReactKeycloakProvider } from "@react-keycloak/web";
 import keycloak from "@/lib/keycloak";
 import { useState, useEffect } from "react";
+import Loading from "@/app/loading";
 // Removed usePathname import as it is not strictly necessary for this logic
 
 // Use a custom flag to track if initialization has begun
@@ -38,7 +39,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
 
 
   // IMPORTANT: The provider must only render when running on the client (after useEffect)
-  if (!isClient || !redirectUri) return <div>Loading Keycloak...</div>;
+  if (!isClient || !redirectUri) return <Loading />;
 
   return (
     <ReactKeycloakProvider
@@ -52,7 +53,7 @@ export function KeycloakProvider({ children }: { children: React.ReactNode }) {
       }}
       onEvent={(event, error) => console.log("Keycloak event", event, error)}
       onTokens={(tokens) => console.log("Tokens updated", tokens)}
-      LoadingComponent={<div>Loading Keycloak...</div>}
+      LoadingComponent={<Loading />}
     >
       {children}
     </ReactKeycloakProvider>
