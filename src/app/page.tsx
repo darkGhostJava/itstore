@@ -10,6 +10,7 @@ import { ArticleDistributionChart, ArticleDistributionChartSkeleton } from "@/co
 import { ArticleStatsCards } from "@/components/dashboard/article-stats-cards";
 import AuthGuard from "@/components/providers/auth-guard";
 import { useTranslation } from "react-i18next";
+import { StructureDistributionCharts, StructureDistributionChartsSkeleton } from "@/components/dashboard/structure-distribution-charts";
 
 export default function DashboardPage() {
   const { t } = useTranslation('common');
@@ -31,6 +32,10 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-semibold tracking-tight">{t('in_stock_consumables')}</h2>
           <ArticleStatsCards type="consumable" />
         </div>
+
+        <Suspense fallback={<StructureDistributionChartsSkeleton />}>
+            <StructureDistributionCharts />
+        </Suspense>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <Suspense fallback={<ArticleDistributionChartSkeleton />}>

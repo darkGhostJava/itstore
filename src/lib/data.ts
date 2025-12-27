@@ -1,4 +1,5 @@
 
+
 import { api } from './api';
 import type { Article, Item, Person, Structure, Operation, Distribution, Stats } from './definitions';
 
@@ -391,3 +392,8 @@ export const fetchOperationsForItem = async (itemId: number, options: { pageInde
     pageCount: response.data.totalPages,
   };
 }
+
+export const getStructureDistributionStats = async (): Promise<Record<string, Record<string, number>>> => {
+  const response = await api.get("/structures/distribution");
+  return response.data;
+};
