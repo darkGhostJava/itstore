@@ -64,13 +64,11 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
       try {
         const params: { from?: string; to?: string } = {};
         if (dateRange?.from) {
-          // Format to 'yyyy-MM-dd'T'HH:mm:ss' which is parseable by LocalDateTime
-          params.from = format(dateRange.from, "yyyy-MM-dd'T'HH:mm:ss");
+          params.from = format(dateRange.from, "yyyy-MM-dd'T'00:00:00");
         }
         if (dateRange?.to) {
-          // Add one day to the 'to' date to make the range inclusive and format
           const inclusiveToDate = add(dateRange.to, { days: 1 });
-          params.to = format(inclusiveToDate, "yyyy-MM-dd'T'HH:mm:ss");
+          params.to = format(inclusiveToDate, "yyyy-MM-dd'T'00:00:00");
         }
         const data = await getStructureDistributionStats(params);
         setRawData(data);
@@ -171,12 +169,12 @@ export function StructureDistributionChartsSkeleton() {
   return (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i}>
+          <Card key={i} className="flex flex-col">
             <CardHeader>
               <Skeleton className="h-6 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 pb-0">
               <Skeleton className="mx-auto aspect-square w-full rounded-lg" />
             </CardContent>
           </Card>
