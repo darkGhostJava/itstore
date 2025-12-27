@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -64,11 +65,10 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
       try {
         const params: { from?: string; to?: string } = {};
         if (dateRange?.from) {
-          params.from = format(dateRange.from, "yyyy-MM-dd'T'00:00:00");
+          params.from = format(dateRange.from, "yyyy-MM-dd'T'HH:mm:ss");
         }
         if (dateRange?.to) {
-          const inclusiveToDate = add(dateRange.to, { days: 1 });
-          params.to = format(inclusiveToDate, "yyyy-MM-dd'T'00:00:00");
+          params.to = format(add(dateRange.to, { days: 1 }), "yyyy-MM-dd'T'HH:mm:ss");
         }
         const data = await getStructureDistributionStats(params);
         setRawData(data);
@@ -175,7 +175,9 @@ export function StructureDistributionChartsSkeleton() {
               <Skeleton className="h-4 w-1/2" />
             </CardHeader>
             <CardContent className="flex-1 pb-0">
-              <Skeleton className="mx-auto aspect-square w-full rounded-lg" />
+              <div className="mx-auto aspect-square h-full w-full">
+                <Skeleton className="h-full w-full" />
+              </div>
             </CardContent>
           </Card>
         ))}
