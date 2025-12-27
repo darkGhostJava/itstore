@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Pie, PieChart, Cell, Tooltip, Legend } from "recharts";
+import { Pie, PieChart, Cell, Tooltip, Legend, LegendProps } from "recharts";
 import {
   Card,
   CardContent,
@@ -29,6 +29,24 @@ const CHART_COLORS = {
   light: ["#90CAF9", "#80CBC4", "#FFE082", "#F48FB1", "#CE93D8", "#BCAAA4", "#B0BEC5", "#FFAB91"],
   dark: ["#1E88E5", "#00897B", "#FFB300", "#D81B60", "#8E24AA", "#6D4C41", "#546E7A", "#F4511E"],
 };
+
+const CustomLegend = (props: LegendProps) => {
+    const { payload } = props;
+    if (!payload) return null;
+
+    return (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-4 text-sm text-muted-foreground">
+            {payload.map((entry, index) => (
+                <div key={`item-${index}`} className="flex items-center gap-2 truncate">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                    <span>{entry.value}</span>
+                    <span className="ml-auto font-medium text-foreground">{entry.payload?.value}</span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 
 export function StructureDistributionWrapper() {
   const { t } = useTranslation("common");
@@ -134,7 +152,7 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
                             {t('total_distributed_items', 'Total distributed items: {{count}}', { count: totalItems })}
                         </CardDescription>
                         </CardHeader>
-                        <CardContent className="flex-1 flex items-center justify-center pb-0">
+                        <CardContent className="flex-1 flex flex-col items-center justify-center pb-4">
                         {totalItems > 0 ? (
                             <PieChart width={250} height={250}>
                                 <Tooltip
@@ -143,12 +161,12 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
                                         border: '1px solid #334155'
                                     }}
                                 />
-                                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} labelLine={false} paddingAngle={2}>
                                 {chartData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                                 ))}
                                 </Pie>
-                                <Legend />
+                                <Legend content={<CustomLegend />} />
                             </PieChart>
                         ) : (
                             <div className="flex h-full items-center justify-center text-center p-4">
@@ -174,10 +192,16 @@ export function StructureDistributionChartsSkeleton() {
             {Array.from({ length: 3 }).map((_, i) => (
                 <CarouselItem key={i} className="md:basis-1/2 lg:basis-1/3">
                     <div className="p-1">
-                        <Card className="flex flex-col aspect-square items-center justify-center p-6">
+                        <Card className="flex flex-col aspect-[1/1.1] items-center justify-center p-6">
                             <Skeleton className="h-6 w-3/4 mb-2" />
                             <Skeleton className="h-4 w-1/2 mb-4" />
                             <Skeleton className="w-40 h-40 rounded-full" />
+                             <div className="w-full mt-4 grid grid-cols-2 gap-2">
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-full" />
+                            </div>
                         </Card>
                     </div>
                 </CarouselItem>
