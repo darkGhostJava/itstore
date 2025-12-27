@@ -155,5 +155,10 @@
     "reversement": "Reversement",
     "reforme": "Réforme",
     "status": "Statut",
-    "view_history": "Voir l'historique"
+    "view_history": "Voir l'historique",
+    "structure_distribution_title": "Distribution par Structure",
+    "structure_distribution_desc": "Distribution d'articles dans les différentes structures.",
+    "no_distribution_data": "Aucune donnée de distribution disponible pour la période sélectionnée.",
+    "total_distributed_items": "Total des articles distribués : {{count}}",
+    "no_items_for_structure": "Aucun article distribué à cette structure."
 }

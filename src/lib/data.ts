@@ -393,7 +393,7 @@ export const fetchOperationsForItem = async (itemId: number, options: { pageInde
   };
 }
 
-export const getStructureDistributionStats = async (): Promise<Record<string, Record<string, number>>> => {
-  const response = await api.get("/structures/distribution");
+export const getStructureDistributionStats = async (params: { from?: string; to?: string }): Promise<Record<string, Record<string, number>>> => {
+  const response = await api.get("/structures/distribution", { params });
   return response.data;
 };

@@ -10,7 +10,7 @@ import { ArticleDistributionChart, ArticleDistributionChartSkeleton } from "@/co
 import { ArticleStatsCards } from "@/components/dashboard/article-stats-cards";
 import AuthGuard from "@/components/providers/auth-guard";
 import { useTranslation } from "react-i18next";
-import { StructureDistributionCharts, StructureDistributionChartsSkeleton } from "@/components/dashboard/structure-distribution-charts";
+import { StructureDistributionWrapper } from "@/components/dashboard/structure-distribution-charts";
 
 export default function DashboardPage() {
   const { t } = useTranslation('common');
@@ -33,8 +33,17 @@ export default function DashboardPage() {
           <ArticleStatsCards type="consumable" />
         </div>
 
-        <Suspense fallback={<StructureDistributionChartsSkeleton />}>
-            <StructureDistributionCharts />
+        <Suspense fallback={<>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold tracking-tight">Distribution by Structure</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="h-64 w-full bg-muted rounded-lg" />
+            <div className="h-64 w-full bg-muted rounded-lg" />
+            <div className="h-64 w-full bg-muted rounded-lg" />
+          </div>
+        </>}>
+            <StructureDistributionWrapper />
         </Suspense>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">

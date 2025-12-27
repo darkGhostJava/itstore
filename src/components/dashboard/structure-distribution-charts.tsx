@@ -21,14 +21,36 @@ import { getStructureDistributionStats } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
+import { DateRangePicker } from "@/components/shared/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { add, formatISO, startOfMonth, subMonths } from "date-fns";
 
 const CHART_COLORS = {
   light: ["#90CAF9", "#80CBC4", "#FFE082", "#F48FB1", "#CE93D8", "#BCAAA4", "#B0BEC5", "#FFAB91"],
   dark: ["#1E88E5", "#00897B", "#FFB300", "#D81B60", "#8E24AA", "#6D4C41", "#546E7A", "#F4511E"],
 };
 
+export function StructureDistributionWrapper() {
+  const { t } = useTranslation("common");
 
-export function StructureDistributionCharts() {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfMonth(subMonths(new Date(), 1)),
+    to: new Date(),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl font-semibold tracking-tight">{t('structure_distribution_title', 'Distribution by Structure')}</h2>
+        <DateRangePicker date={dateRange} setDate={setDateRange} />
+      </div>
+      <StructureDistributionCharts dateRange={dateRange} />
+    </div>
+  );
+}
+
+
+export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRange }) {
   const { t } = useTranslation("common");
   const { theme } = useTheme();
   const [rawData, setRawData] = useState<Record<string, Record<string, number>>>({});
@@ -40,7 +62,15 @@ export function StructureDistributionCharts() {
     const getData = async () => {
       setLoading(true);
       try {
-        const data = await getStructureDistributionStats();
+        const params: { from?: string; to?: string } = {};
+        if (dateRange?.from) {
+          params.from = formatISO(dateRange.from);
+        }
+        if (dateRange?.to) {
+          // Add one day to the 'to' date to make the range inclusive
+          params.to = formatISO(add(dateRange.to, { days: 1 }));
+        }
+        const data = await getStructureDistributionStats(params);
         setRawData(data);
       } catch (error) {
         console.error("Failed to fetch structure distribution stats:", error);
@@ -50,7 +80,7 @@ export function StructureDistributionCharts() {
       }
     };
     getData();
-  }, []);
+  }, [dateRange]);
 
   const structureCharts = useMemo(() => {
     return Object.entries(rawData).map(([structureName, distribution]) => {
@@ -91,15 +121,13 @@ export function StructureDistributionCharts() {
           <CardDescription>{t('structure_distribution_desc', 'Article distribution across different structures.')}</CardDescription>
         </CardHeader>
         <CardContent>
-            <p className="text-muted-foreground text-center py-12">{t('no_distribution_data', 'No distribution data available.')}</p>
+            <p className="text-muted-foreground text-center py-12">{t('no_distribution_data', 'No distribution data available for the selected period.')}</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold tracking-tight">{t('structure_distribution_title', 'Distribution by Structure')}</h2>
        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {structureCharts.map(({ structureName, chartData, chartConfig, totalItems }) => (
           <Card key={structureName} className="flex flex-col">
@@ -134,15 +162,11 @@ export function StructureDistributionCharts() {
           </Card>
         ))}
       </div>
-    </div>
   );
 }
 
 export function StructureDistributionChartsSkeleton() {
-  const { t } = useTranslation('common');
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold tracking-tight">{t('structure_distribution_title', 'Distribution by Structure')}</h2>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i}>
@@ -156,6 +180,5 @@ export function StructureDistributionChartsSkeleton() {
           </Card>
         ))}
       </div>
-    </div>
   );
 }
