@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { DateRange } from "react-day-picker";
-import { add, formatISO, startOfMonth, subMonths } from "date-fns";
+import { add, format, startOfMonth, subMonths } from "date-fns";
 
 const CHART_COLORS = {
   light: ["#90CAF9", "#80CBC4", "#FFE082", "#F48FB1", "#CE93D8", "#BCAAA4", "#B0BEC5", "#FFAB91"],
@@ -64,11 +64,13 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
       try {
         const params: { from?: string; to?: string } = {};
         if (dateRange?.from) {
-          params.from = formatISO(dateRange.from);
+          // Format to 'yyyy-MM-dd'T'HH:mm:ss' which is parseable by LocalDateTime
+          params.from = format(dateRange.from, "yyyy-MM-dd'T'HH:mm:ss");
         }
         if (dateRange?.to) {
-          // Add one day to the 'to' date to make the range inclusive
-          params.to = formatISO(add(dateRange.to, { days: 1 }));
+          // Add one day to the 'to' date to make the range inclusive and format
+          const inclusiveToDate = add(dateRange.to, { days: 1 });
+          params.to = format(inclusiveToDate, "yyyy-MM-dd'T'HH:mm:ss");
         }
         const data = await getStructureDistributionStats(params);
         setRawData(data);
