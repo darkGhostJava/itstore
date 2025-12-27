@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -18,6 +17,13 @@ import {
   ChartLegendContent,
   ChartConfig,
 } from "@/components/ui/chart";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { getStructureDistributionStats } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { useTranslation } from "react-i18next";
@@ -128,59 +134,75 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
   }
 
   return (
-       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {structureCharts.map(({ structureName, chartData, chartConfig, totalItems }) => (
-          <Card key={structureName} className="flex flex-col">
-            <CardHeader>
-              <CardTitle>{structureName}</CardTitle>
-              <CardDescription>
-                {t('total_distributed_items', 'Total distributed items: {{count}}', { count: totalItems })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 pb-0">
-              {totalItems > 0 ? (
-                <ChartContainer
-                  config={chartConfig}
-                  className="mx-auto aspect-square h-full w-full"
-                >
-                  <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                    <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} label>
-                       {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                        ))}
-                    </Pie>
-                    <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-                  </PieChart>
-                </ChartContainer>
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                    <p className="text-muted-foreground">{t('no_items_for_structure', 'No items distributed to this structure.')}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+       <Carousel
+        opts={{
+            align: "start",
+            loop: structureCharts.length > 3,
+        }}
+        className="w-full"
+        >
+        <CarouselContent>
+            {structureCharts.map(({ structureName, chartData, chartConfig, totalItems }) => (
+                <CarouselItem key={structureName} className="md:basis-1/2 lg:basis-1/3">
+                    <Card className="flex flex-col h-full">
+                        <CardHeader>
+                        <CardTitle>{structureName}</CardTitle>
+                        <CardDescription>
+                            {t('total_distributed_items', 'Total distributed items: {{count}}', { count: totalItems })}
+                        </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-1 flex items-center justify-center pb-0">
+                        {totalItems > 0 ? (
+                            <ChartContainer
+                            config={chartConfig}
+                            className="mx-auto aspect-square max-h-[250px]"
+                            >
+                            <PieChart>
+                                <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+                                <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} label>
+                                {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                ))}
+                                </Pie>
+                                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+                            </PieChart>
+                            </ChartContainer>
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-center p-4">
+                                <p className="text-muted-foreground">{t('no_items_for_structure', 'No items distributed to this structure.')}</p>
+                            </div>
+                        )}
+                        </CardContent>
+                    </Card>
+                </CarouselItem>
+            ))}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+        </Carousel>
   );
 }
 
 export function StructureDistributionChartsSkeleton() {
   return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="flex flex-col">
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardHeader>
-            <CardContent className="flex-1 pb-0">
-              <div className="mx-auto aspect-square h-full w-full">
-                <Skeleton className="h-full w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="relative w-full">
+        <Carousel>
+            <CarouselContent>
+            {Array.from({ length: 3 }).map((_, i) => (
+                <CarouselItem key={i} className="md:basis-1/2 lg:basis-1/3">
+                    <div className="p-1">
+                        <Card className="flex flex-col aspect-square items-center justify-center p-6">
+                            <Skeleton className="h-6 w-3/4 mb-2" />
+                            <Skeleton className="h-4 w-1/2 mb-4" />
+                            <Skeleton className="w-40 h-40 rounded-full" />
+                        </Card>
+                    </div>
+                </CarouselItem>
+            ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+        </Carousel>
       </div>
   );
 }
