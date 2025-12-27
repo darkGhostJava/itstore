@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Pie, PieChart, Cell } from "recharts";
+import { Pie, PieChart, Cell, Tooltip, Legend } from "recharts";
 import {
   Card,
   CardContent,
@@ -9,14 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-  ChartConfig,
-} from "@/components/ui/chart";
 import {
   Carousel,
   CarouselContent,
@@ -93,27 +86,17 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
       const chartData = Object.entries(distribution).map(([name, value]) => ({
         name: t(`category_${name.toLowerCase().replace(/ /g, "_")}` as any, name),
         value: value,
-        fill: "var(--color-fill)",
       }));
       
-      const chartConfig = chartData.reduce((acc, entry, index) => {
-        acc[entry.name] = {
-          label: entry.name,
-          color: colors[index % colors.length],
-        };
-        return acc;
-      }, {} as ChartConfig);
-
       const totalItems = chartData.reduce((sum, item) => sum + item.value, 0);
 
       return {
         structureName,
         chartData,
-        chartConfig,
         totalItems,
       };
     });
-  }, [rawData, t, colors]);
+  }, [rawData, t]);
 
   if (loading) {
     return <StructureDistributionChartsSkeleton />;
@@ -142,7 +125,7 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
         className="w-full"
         >
         <CarouselContent>
-            {structureCharts.map(({ structureName, chartData, chartConfig, totalItems }) => (
+            {structureCharts.map(({ structureName, chartData, totalItems }) => (
                 <CarouselItem key={structureName} className="md:basis-1/2 lg:basis-1/3">
                     <Card className="flex flex-col h-full">
                         <CardHeader>
@@ -153,20 +136,20 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
                         </CardHeader>
                         <CardContent className="flex-1 flex items-center justify-center pb-0">
                         {totalItems > 0 ? (
-                            <ChartContainer
-                            config={chartConfig}
-                            className="mx-auto aspect-square max-h-[250px]"
-                            >
-                            <PieChart>
-                                <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                                <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} label>
+                            <PieChart width={250} height={250}>
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
+                                        border: '1px solid #334155'
+                                    }}
+                                />
+                                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
                                 {chartData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                                 ))}
                                 </Pie>
-                                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+                                <Legend />
                             </PieChart>
-                            </ChartContainer>
                         ) : (
                             <div className="flex h-full items-center justify-center text-center p-4">
                                 <p className="text-muted-foreground">{t('no_items_for_structure', 'No items distributed to this structure.')}</p>
