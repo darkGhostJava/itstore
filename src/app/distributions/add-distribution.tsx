@@ -113,8 +113,8 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   // Fetch sub-directions and persons when a main direction is selected
   useEffect(() => {
     const fetchSubAndPersons = async () => {
-      form.resetField("subDirectionId");
-      form.resetField("beneficiaryId");
+      form.setValue("subDirectionId", "", { shouldValidate: true });
+      form.setValue("beneficiaryId", "", { shouldValidate: true });
       setSubDirections([]);
       setPersons([]);
 
@@ -135,7 +135,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   // If a sub-direction is selected, filter the persons list
   useEffect(() => {
     const fetchPersonsForSub = async () => {
-        form.resetField("beneficiaryId");
+        form.setValue("beneficiaryId", "", { shouldValidate: true });
         // Don't clear persons, just refetch if needed
         if (selectedSubDirectionId) {
             const subDirIdNum = parseInt(selectedSubDirectionId);
@@ -296,7 +296,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                       <FormLabel>{t('sub_direction')} (Optional)</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value}
+                        value={field.value ?? ""}
                         disabled={!selectedStructureId || subDirections.length === 0}
                       >
                         <FormControl>
