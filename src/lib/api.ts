@@ -2,7 +2,7 @@ import axios from "axios";
 import keycloak from "@/lib/keycloak";
 
 export const api = axios.create({
-  baseURL: "/api",
+  baseURL: "https://materiel.dg.dse:8081/api",
   headers: {
     "Content-Type": "application/json",
   },
