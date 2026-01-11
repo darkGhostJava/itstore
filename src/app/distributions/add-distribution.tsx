@@ -136,16 +136,18 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   useEffect(() => {
     const fetchPersonsForSub = async () => {
         form.setValue("beneficiaryId", "", { shouldValidate: true });
-        // Don't clear persons, just refetch if needed
-        if (selectedSubDirectionId) {
+        
+        if (selectedSubDirectionId && selectedSubDirectionId !== "ALL_PERSONNEL") {
             const subDirIdNum = parseInt(selectedSubDirectionId);
             const personRes = await getPersonsByIdStructure(subDirIdNum);
             setPersons(personRes.data || []);
         } else if (selectedStructureId) {
-            // If sub-direction is cleared, fall back to persons of main direction
+            // If sub-direction is cleared or set to 'all', fall back to persons of main direction
             const dirIdNum = parseInt(selectedStructureId);
             const personRes = await getPersonsByIdStructure(dirIdNum);
             setPersons(personRes.data || []);
+        } else {
+             setPersons([]);
         }
     };
     fetchPersonsForSub();
@@ -305,7 +307,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                           <SelectItem value="">All Personnel in Direction</SelectItem>
+                           <SelectItem value="ALL_PERSONNEL">All Personnel in Direction</SelectItem>
                           {subDirections.map((sub) => (
                             <SelectItem key={sub.id} value={sub.id.toString()}>
                               {sub.name}
