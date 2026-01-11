@@ -29,10 +29,10 @@ export type Structure = {
   id: number;
   name: string;
   chef?: Person;
-  parentId?: number;
   children?: Structure[];
   materielCount?: number;
   consCount?: number;
+  parent?: Structure;
 };
 
 export type Operation = {

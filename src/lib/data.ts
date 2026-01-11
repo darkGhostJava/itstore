@@ -40,6 +40,23 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
     totalElements: response.data.totalElements,
   };
 };
+export const fetchItemsInStock = async ( options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
+  const { pageIndex, pageSize, query, sort } = options;
+  
+  const response = await api.get<PaginatedResponse<Article>>(`/items/search/in-stock`, {
+    params: {
+      page: pageIndex,
+      size: pageSize,
+      query: query || undefined,
+      sort: sort,
+    },
+  });
+  
+  return {
+    data: response.data.content as Article[],
+    pageCount: response.data.totalPages,
+  };
+}
 
 export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
   const { pageIndex, pageSize, query, sort } = options;
@@ -151,6 +168,8 @@ export const fetchPersons = async (options: { pageIndex: number; pageSize: numbe
       sort: sort,
     },
   });
+  console.log("ssssss",response.data);
+  
 
   return {
     data: response.data.content as Person[],
@@ -394,6 +413,6 @@ export const fetchOperationsForItem = async (itemId: number, options: { pageInde
 }
 
 export const getStructureDistributionStats = async (params: { from?: string; to?: string }): Promise<Record<string, Record<string, number>>> => {
-  const response = await api.get("/structures/distribution", { params });
+  const response = await api.get("stats/structures/distribution", { params });
   return response.data;
 };

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/data-table/data-table";
 import { ConsumablesColumns } from "./columns";
-import { fetchArticles } from "@/lib/data";
+import { fetchArticles, fetchItemsInStock } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { AddArticle } from "../articles/add-article";
 import { useTranslation } from "react-i18next";
@@ -27,7 +27,7 @@ function ConsumablesPageContent() {
   const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     setIsLoading(true);
     try {
-      const result = await fetchArticles({ pageIndex, pageSize, query, type: 'CONSUMABLE', sort });
+      const result = await fetchItemsInStock({ pageIndex, pageSize, query, sort });
       setData(result.data);
       setPageCount(result.pageCount);
     }
