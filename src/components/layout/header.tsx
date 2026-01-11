@@ -12,6 +12,7 @@ import {
   Workflow,
   HardDrive,
   Boxes,
+  Printer,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -29,6 +30,7 @@ export function Header() {
   const mobileNavItems = [
     { href: "/", label: t("dashboard"), icon: LayoutDashboard },
     { href: "/hardware", label: t("hardware"), icon: HardDrive },
+    { href: "/consumables", label: t("consumable"), icon: Printer },
     { href: "/stock", label: t("stock", "Stock"), icon: Boxes },
     { href: "/arrivals", label: t("arrivals"), icon: Truck },
     { href: "/distributions", label: t("distributions"), icon: ArrowRightLeft },
