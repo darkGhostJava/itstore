@@ -56,7 +56,7 @@ const articleDistributionSchema = z.object({
 
 const distributionFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
-  subDirectionId: z.string().min(1, "subdirection_is_required"),
+  subDirectionId: z.string().optional(), // No longer required
   beneficiaryId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleDistributionSchema).min(1, "at_least_one_article_is_required"),
@@ -110,33 +110,47 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const selectedStructureId = form.watch("structureId");
   const selectedSubDirectionId = form.watch("subDirectionId");
 
-  // Fetch sub-directions when structure changes
+  // Fetch sub-directions and persons when a main direction is selected
   useEffect(() => {
-    const fetchSubDirections = async () => {
+    const fetchSubAndPersons = async () => {
       form.resetField("subDirectionId");
       form.resetField("beneficiaryId");
       setSubDirections([]);
       setPersons([]);
+
       if (selectedStructureId) {
-        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId));
-        setSubDirections(res.data || []);
+        const structureIdNum = parseInt(selectedStructureId);
+        // Fetch sub-directions
+        const subRes = await getSubDirectionsOfDirection(structureIdNum);
+        setSubDirections(subRes.data || []);
+
+        // Also fetch persons for the main direction
+        const personRes = await getPersonsByIdStructure(structureIdNum);
+        setPersons(personRes.data || []);
       }
     };
-    fetchSubDirections();
+    fetchSubAndPersons();
   }, [selectedStructureId, form]);
 
-  // Fetch beneficiaries when sub-direction changes
+  // If a sub-direction is selected, filter the persons list
   useEffect(() => {
-    const fetchPersons = async () => {
-      form.resetField("beneficiaryId");
-      setPersons([]);
-      if (selectedSubDirectionId) {
-        const res = await getPersonsByIdStructure(parseInt(selectedSubDirectionId));
-        setPersons(res.data || []);
-      }
+    const fetchPersonsForSub = async () => {
+        form.resetField("beneficiaryId");
+        // Don't clear persons, just refetch if needed
+        if (selectedSubDirectionId) {
+            const subDirIdNum = parseInt(selectedSubDirectionId);
+            const personRes = await getPersonsByIdStructure(subDirIdNum);
+            setPersons(personRes.data || []);
+        } else if (selectedStructureId) {
+            // If sub-direction is cleared, fall back to persons of main direction
+            const dirIdNum = parseInt(selectedStructureId);
+            const personRes = await getPersonsByIdStructure(dirIdNum);
+            setPersons(personRes.data || []);
+        }
     };
-    fetchPersons();
-  }, [selectedSubDirectionId, form]);
+    fetchPersonsForSub();
+  }, [selectedSubDirectionId, selectedStructureId, form]);
+
 
   // Submit handler
   async function onSubmit(values: DistributionFormValues) {
@@ -279,7 +293,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   name="subDirectionId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('sub_direction')}</FormLabel>
+                      <FormLabel>{t('sub_direction')} (Optional)</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -291,6 +305,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                           <SelectItem value="">All Personnel in Direction</SelectItem>
                           {subDirections.map((sub) => (
                             <SelectItem key={sub.id} value={sub.id.toString()}>
                               {sub.name}
@@ -318,7 +333,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
-                      disabled={!selectedSubDirectionId || persons.length === 0}
+                      disabled={!selectedStructureId || persons.length === 0}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -333,9 +348,14 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                     {!selectedSubDirectionId && (
+                     {persons.length === 0 && selectedStructureId && (
                         <FormDescription>
-                            Please select a sub-direction first.
+                            No personnel found for the selected structure.
+                        </FormDescription>
+                     )}
+                     {!selectedStructureId && (
+                        <FormDescription>
+                            Please select a direction first.
                         </FormDescription>
                      )}
                     <FormMessage>{form.formState.errors.beneficiaryId && t(form.formState.errors.beneficiaryId.message as string)}</FormMessage>
@@ -516,4 +536,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     </Dialog>
   );
 }
+    
+
     
