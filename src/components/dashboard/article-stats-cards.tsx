@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { HardDrive, Printer } from "lucide-react";
+import { HardDrive, Boxes } from "lucide-react";
 import { getArticlesInStockCons, getArticlesInStockMateriel } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
@@ -40,10 +40,10 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
     rawTitle,
     title: t(`category_${rawTitle.toLowerCase()}` as any, rawTitle.replace(/_/g, " ")),
     value,
-    icon: type === "hardware" ? HardDrive : Printer,
+    icon: type === "hardware" ? HardDrive : Boxes,
   }));
 
-  const linkHref = type === 'hardware' ? '/hardware' : '/consumables';
+  const linkHref = type === 'hardware' ? '/hardware' : '/stock';
 
   if (designations.length === 0) {
     return (

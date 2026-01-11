@@ -14,8 +14,9 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { TFunction } from "i18next";
+import { Badge } from "@/components/ui/badge";
 
-export const ConsumablesColumns = (t: TFunction): ColumnDef<Article>[] => {
+export const StockColumns = (t: TFunction): ColumnDef<Article>[] => {
   return [
     {
       header: "#",
@@ -38,6 +39,16 @@ export const ConsumablesColumns = (t: TFunction): ColumnDef<Article>[] => {
         const designation = row.getValue("designation") as string;
         const translationKey = `category_${designation.toLowerCase().replace(/ /g, "_")}` as any;
         return t(translationKey, designation);
+      }
+    },
+     {
+      accessorKey: "type",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('type')} />
+      ),
+      cell: ({row}) => {
+        const type = row.original.type;
+        return <Badge variant={type === "HARDWARE" ? "default" : "secondary"}>{t(type.toLowerCase() as "hardware" | "consumable")}</Badge>
       }
     },
     {

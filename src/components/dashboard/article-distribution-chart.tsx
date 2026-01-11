@@ -37,7 +37,7 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
 
   const title = type === "hardware" ? t('in_stock_hardware') : t('in_stock_consumables');
   const description = type === 'hardware' ? t('in_stock_hardware_desc') : t('in_stock_consumables_desc');
-  const linkHref = type === 'hardware' ? '/hardware' : '/consumables';
+  const linkHref = type === 'hardware' ? '/hardware' : '/stock';
 
   useEffect(() => {
     const getData = async () => {

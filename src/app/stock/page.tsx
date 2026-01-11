@@ -5,18 +5,18 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/data-table/data-table";
-import { ConsumablesColumns } from "./columns";
+import { StockColumns } from "./columns";
 import { fetchArticles, fetchItemsInStock } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { AddArticle } from "../articles/add-article";
 import { useTranslation } from "react-i18next";
-import { Printer } from "lucide-react";
+import { Boxes } from "lucide-react";
 
-function ConsumablesPageContent() {
+function StockPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
   const { t } = useTranslation("common");
-  const columns = React.useMemo(() => ConsumablesColumns(t), [t]);
+  const columns = React.useMemo(() => StockColumns(t), [t]);
 
   const [data, setData] = React.useState<Article[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
@@ -54,7 +54,7 @@ function ConsumablesPageContent() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
-        title={t('consumables')}
+        title={t('stock', 'Stock')}
         actions={
           <AddArticle onSuccess={handleSuccess} />
         }
@@ -70,8 +70,8 @@ function ConsumablesPageContent() {
         initialQuery={initialQuery}
         emptyStateMessage={
             <div className="flex flex-col items-center justify-center space-y-2">
-                <Printer className="h-12 w-12 text-muted-foreground" />
-                <p className="text-muted-foreground">No consumables found.</p>
+                <Boxes className="h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No items found in stock.</p>
             </div>
         }
       />
@@ -80,10 +80,10 @@ function ConsumablesPageContent() {
 }
 
 
-export default function ConsumablesPage() {
+export default function StockPage() {
   return (
     <React.Suspense fallback={<div>Loading...</div>}>
-      <ConsumablesPageContent />
+      <StockPageContent />
     </React.Suspense>
   )
 }
