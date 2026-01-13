@@ -56,7 +56,7 @@ const articleDistributionSchema = z.object({
 
 const distributionFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
-  subDirectionId: z.string().optional(), // No longer required
+  subDirectionId: z.string().optional(),
   beneficiaryId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleDistributionSchema).min(1, "at_least_one_article_is_required"),
@@ -108,13 +108,12 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
 
   // Fetch sub-directions and persons when a main direction is selected
   useEffect(() => {
     const fetchSubAndPersons = async () => {
-      form.setValue("subDirectionId", "", { shouldValidate: true });
-      form.setValue("beneficiaryId", "", { shouldValidate: true });
+      form.setValue("subDirectionId", "");
+      form.setValue("beneficiaryId", "");
       setSubDirections([]);
       setPersons([]);
 
@@ -131,27 +130,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     };
     fetchSubAndPersons();
   }, [selectedStructureId, form]);
-
-  // If a sub-direction is selected, filter the persons list
-  useEffect(() => {
-    const fetchPersonsForSub = async () => {
-        form.setValue("beneficiaryId", "", { shouldValidate: true });
-        
-        if (selectedSubDirectionId && selectedSubDirectionId !== "ALL_PERSONNEL") {
-            const subDirIdNum = parseInt(selectedSubDirectionId);
-            const personRes = await getPersonsByIdStructure(subDirIdNum);
-            setPersons(personRes.data || []);
-        } else if (selectedStructureId) {
-            // If sub-direction is cleared or set to 'all', fall back to persons of main direction
-            const dirIdNum = parseInt(selectedStructureId);
-            const personRes = await getPersonsByIdStructure(dirIdNum);
-            setPersons(personRes.data || []);
-        } else {
-             setPersons([]);
-        }
-    };
-    fetchPersonsForSub();
-  }, [selectedSubDirectionId, selectedStructureId, form]);
 
 
   // Submit handler
@@ -545,4 +523,5 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
