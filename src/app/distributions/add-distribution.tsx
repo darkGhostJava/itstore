@@ -169,12 +169,16 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         }
       });
 
+      const isSubDirectionSelected = values.subDirectionId && values.subDirectionId !== "ALL_PERSONNEL";
+      const subDirectionId = isSubDirectionSelected ? parseInt(values.subDirectionId!) : null;
+
       const payload = {
         personId: parseInt(values.beneficiaryId),
         remarks: values.remarks,
         userId: 1, // Assuming a logged-in user
         hardwares,
         consumables,
+        subDirectionId: subDirectionId,
       };
 
       const response = await api.post("/distributions", payload, {
@@ -541,3 +545,4 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
