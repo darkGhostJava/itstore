@@ -134,7 +134,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       if (personSearch.length > 2 && selectedStructureId) {
         const searchStructureId = selectedSubDirectionId && selectedSubDirectionId !== "ALL_PERSONNEL" ? selectedSubDirectionId : selectedStructureId;
         const res = await searchPersons(personSearch, searchStructureId);
-        setPersons(res.data);
+        setPersons(res.data || []);
       } else {
         setPersons([]);
       }
