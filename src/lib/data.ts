@@ -180,7 +180,7 @@ export const fetchPersons = async (options: { pageIndex: number; pageSize: numbe
 };
 
 export const searchPersons = async (query: string, structureId: string) => {
-  const response = await api.get<Person[]>("/persons/search", {
+  const response = await api.get<Person[]>("/persons/searchInStructure", {
     params: {
       query: query,
       structureId: structureId,
