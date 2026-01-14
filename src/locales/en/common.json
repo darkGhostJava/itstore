@@ -159,5 +159,9 @@
     "structure_distribution_desc": "Article distribution across different structures.",
     "no_distribution_data": "No distribution data available for the selected period.",
     "total_distributed_items": "Total distributed items: {{count}}",
-    "no_items_for_structure": "No items distributed to this structure."
+    "no_items_for_structure": "No items distributed to this structure.",
+    "search_person_placeholder": "Search person...",
+    "no_person_found": "No person found."
 }
+
+    

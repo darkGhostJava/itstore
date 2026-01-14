@@ -30,16 +30,16 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, Check, ChevronsUpDown } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   getAllDirections,
   getSubDirectionsOfDirection,
-  getPersonsByIdStructure,
   searchArticles,
   searchItemsBySerialNumber,
+  searchPersons,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Article, Item, Person, Structure } from "@/lib/definitions";
@@ -47,6 +47,9 @@ import { api } from "@/lib/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 const articleDistributionSchema = z.object({
   article: z.any().refine(val => val, { message: "article_is_required" }),
@@ -78,6 +81,8 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const [serials, setSerials] = useState<Record<number, Item[]>>({});
   const [loading, setLoading] = useState(false);
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
+  const [personSearch, setPersonSearch] = useState("");
+  const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
   const { t } = useTranslation('common');
 
 
@@ -108,28 +113,31 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
 
-  // Fetch sub-directions and persons when a main direction is selected
   useEffect(() => {
-    const fetchSubAndPersons = async () => {
-      form.setValue("subDirectionId", "");
-      form.setValue("beneficiaryId", "");
+    const fetchSubDirections = async () => {
+      form.resetField("subDirectionId");
       setSubDirections([]);
-      setPersons([]);
-
       if (selectedStructureId) {
-        const structureIdNum = parseInt(selectedStructureId);
-        // Fetch sub-directions
-        const subRes = await getSubDirectionsOfDirection(structureIdNum);
-        setSubDirections(subRes.data || []);
-
-        // Also fetch persons for the main direction
-        const personRes = await getPersonsByIdStructure(structureIdNum);
-        setPersons(personRes.data || []);
+        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId));
+        setSubDirections(res.data || []);
       }
     };
-    fetchSubAndPersons();
+    fetchSubDirections();
   }, [selectedStructureId, form]);
+
+  useEffect(() => {
+    const fetchPersons = async () => {
+      form.resetField("beneficiaryId");
+      setPersons([]);
+      if (personSearch.length > 2) {
+          const res = await searchPersons(personSearch);
+          setPersons(res.data);
+      }
+    };
+    fetchPersons();
+  }, [personSearch, form]);
 
 
   // Submit handler
@@ -308,40 +316,66 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                 />
               </div>
 
-              <FormField
+               <FormField
                 control={form.control}
                 name="beneficiaryId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>{t('beneficiary')}</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={!selectedStructureId || persons.length === 0}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('select_beneficiary_placeholder')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {persons.map((person) => (
-                          <SelectItem key={person.id} value={person.id.toString()}>
-                            {person.firstName} {person.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                     {persons.length === 0 && selectedStructureId && (
-                        <FormDescription>
-                            No personnel found for the selected structure.
-                        </FormDescription>
-                     )}
-                     {!selectedStructureId && (
-                        <FormDescription>
-                            Please select a direction first.
-                        </FormDescription>
-                     )}
+                    <Popover open={isPersonPopoverOpen} onOpenChange={setPersonPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value
+                              ? persons.find(
+                                  (person) => person.id.toString() === field.value
+                                )?.firstName + " " + persons.find(
+                                  (person) => person.id.toString() === field.value
+                                )?.lastName
+                              : t('select_beneficiary_placeholder')}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder={t('search_person_placeholder', 'Search person...')}
+                            onValueChange={setPersonSearch}
+                          />
+                          <CommandEmpty>{t('no_person_found', 'No person found.')}</CommandEmpty>
+                          <CommandGroup>
+                            {persons.map((person) => (
+                              <CommandItem
+                                value={`${person.firstName} ${person.lastName}`}
+                                key={person.id}
+                                onSelect={() => {
+                                  form.setValue("beneficiaryId", person.id.toString());
+                                  setPersonPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    person.id.toString() === field.value
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {person.firstName} {person.lastName}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage>{form.formState.errors.beneficiaryId && t(form.formState.errors.beneficiaryId.message as string)}</FormMessage>
                   </FormItem>
                 )}
@@ -525,3 +559,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
 
+
+
+    

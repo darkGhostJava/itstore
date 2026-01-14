@@ -180,6 +180,17 @@ export const fetchPersons = async (options: { pageIndex: number; pageSize: numbe
   };
 };
 
+export const searchPersons = async (query: string) => {
+  const response = await api.get<Person[]>("/persons/search", {
+    params: {
+      query: query
+    }
+  });
+  return {
+    data: response.data as Person[],
+  };
+}
+
 export const fetchPersonById = async (id: number): Promise<Person> => {
   const response = await api.get<Person>(`/persons/${id}`);
   return response.data;
@@ -416,3 +427,5 @@ export const getStructureDistributionStats = async (params: { from?: string; to?
   const response = await api.get("stats/structures/distribution", { params });
   return response.data;
 };
+
+    
