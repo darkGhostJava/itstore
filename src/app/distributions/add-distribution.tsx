@@ -97,7 +97,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "articles",
   });
@@ -140,7 +140,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       }
     };
 
-    // This timeout prevents excessive API calls while the user is typing
     const debounce = setTimeout(() => {
         fetchPersons();
     }, 300);
@@ -236,11 +235,24 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const handleSelectSerial = (serial: Item, fieldIndex: number) => {
     const currentSerials = form.getValues(`articles.${fieldIndex}.serialNumbers`) || [];
     if (!currentSerials.includes(serial.serialNumber)) {
-      form.setValue(`articles.${fieldIndex}.serialNumbers`, [...currentSerials, serial.serialNumber]);
+        const field = fields[fieldIndex];
+        update(fieldIndex, {
+            ...field,
+            serialNumbers: [...currentSerials, serial.serialNumber]
+        });
     }
     setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
-    const serialInput = document.getElementById(`serial-search-${index}`);
+    const serialInput = document.getElementById(`serial-search-${fieldIndex}`);
     if (serialInput) (serialInput as HTMLInputElement).value = '';
+  };
+  
+    const handleRemoveSerialNumber = (articleIndex: number, serialToRemove: string) => {
+    const currentSerials = form.getValues(`articles.${articleIndex}.serialNumbers`) || [];
+    const field = fields[articleIndex];
+    update(articleIndex, {
+        ...field,
+        serialNumbers: currentSerials.filter(sn => sn !== serialToRemove)
+    });
   };
 
   return (
@@ -400,6 +412,8 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   {fields.map((field, index) => {
                     const articleType = form.getValues(`articles.${index}.article.type`);
                     const currentSerials = serials[index] || [];
+                    const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
+
                     return (
                       <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
                         <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
@@ -414,13 +428,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </div>
 
                         {articleType === 'HARDWARE' && (
-                          <FormField
-                            control={form.control}
-                            name={`articles.${index}.serialNumbers`}
-                            render={({ field: serialField }) => (
-                              <FormItem>
-                                <FormLabel>{t('serial_numbers')}</FormLabel>
-                                <div className="relative">
+                          <FormItem>
+                            <FormLabel>{t('serial_numbers')}</FormLabel>
+                             <div className="relative">
                                   <Input
                                     id={`serial-search-${index}`}
                                     placeholder={t('search_add_serial_placeholder')}
@@ -441,27 +451,22 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                     </div>
                                   )}
                                 </div>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  {serialField.value?.map((sn) => (
-                                    <span
-                                      key={sn}
-                                      className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1"
-                                    >
-                                      {sn}
-                                      <button
-                                        type="button"
-                                        className="text-destructive hover:text-red-500"
-                                        onClick={() => serialField.onChange(serialField.value?.filter((v) => v !== sn))}
-                                      >
-                                        &times;
-                                      </button>
-                                    </span>
-                                  ))}
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {addedSerials?.map((sn) => (
+                                <Badge key={sn} variant="secondary" className="flex items-center gap-1">
+                                  {sn}
+                                  <button
+                                    type="button"
+                                    className="ml-1 rounded-full text-destructive hover:text-red-500"
+                                    onClick={() => handleRemoveSerialNumber(index, sn)}
+                                  >
+                                    &times;
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
                         )}
 
                         {articleType === 'CONSUMABLE' && (
@@ -570,4 +575,3 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
-
