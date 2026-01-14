@@ -36,7 +36,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   getAllDirections,
-  getSubDirectionsOfDirection,
   searchArticles,
   searchItemsBySerialNumber,
   searchPersons,
@@ -60,7 +59,6 @@ const articleDistributionSchema = z.object({
 
 const distributionFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
-  subDirectionId: z.string().optional(),
   beneficiaryId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleDistributionSchema).min(1, "at_least_one_article_is_required"),
@@ -77,7 +75,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const { toast } = useToast();
   const [searchedArticles, setSearchedArticles] = useState<Article[]>([]);
   const [directions, setDirections] = useState<Structure[]>([]);
-  const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
   const [serials, setSerials] = useState<Record<number, Item[]>>({});
   const [loading, setLoading] = useState(false);
@@ -91,7 +88,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     resolver: zodResolver(distributionFormSchema),
     defaultValues: {
       structureId: "",
-      subDirectionId: "",
       beneficiaryId: "",
       remarks: "",
       articles: [],
@@ -114,37 +110,27 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
 
   useEffect(() => {
-    const fetchSubDirections = async () => {
-      form.resetField("subDirectionId");
-      form.resetField("beneficiaryId");
-      setSubDirections([]);
-      setPersons([]);
-      if (selectedStructureId) {
-        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId));
-        setSubDirections(res.data || []);
-      }
-    };
-    fetchSubDirections();
+    // Reset beneficiary when structure changes
+    form.resetField("beneficiaryId");
+    setPersons([]);
   }, [selectedStructureId, form]);
 
  useEffect(() => {
     const fetchPersons = async () => {
-      const structureId = selectedSubDirectionId || selectedStructureId;
-      if (!structureId) {
+      if (!selectedStructureId) {
         setPersons([]);
         return;
       }
       
       if (personSearch.length === 0) {
         // If search is empty, get all persons for the structure
-        const personsRes = await getPersonsByIdStructure(parseInt(structureId));
+        const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId));
         setPersons(personsRes || []);
       } else {
         // Otherwise, perform a search
-        const res = await searchPersons(personSearch, structureId);
+        const res = await searchPersons(personSearch, selectedStructureId);
         setPersons(res.data || []);
       }
     };
@@ -156,7 +142,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     }, 300);
 
     return () => clearTimeout(debounce);
-  }, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
+  }, [personSearch, selectedStructureId, isPersonPopoverOpen]);
 
 
   // Submit handler
@@ -173,21 +159,14 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
           consumables[dist.article.id] = dist.quantity;
         }
       });
-
-      const isSubDirectionSelected = values.subDirectionId && values.subDirectionId !== "ALL_PERSONNEL";
       
-      const structureIdForPayload = isSubDirectionSelected 
-          ? parseInt(values.subDirectionId!)
-          : parseInt(values.structureId);
-
-
       const payload = {
         personId: parseInt(values.beneficiaryId),
         remarks: values.remarks,
         userId: 1, // Assuming a logged-in user
         hardwares,
         consumables,
-        structureId: structureIdForPayload,
+        structureId: parseInt(values.structureId),
       };
 
       const response = await api.post("/distributions", payload, {
@@ -290,7 +269,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {/* Beneficiary Selection */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="structureId"
@@ -312,36 +291,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </SelectContent>
                       </Select>
                       <FormMessage>{form.formState.errors.structureId && t(form.formState.errors.structureId.message as string)}</FormMessage>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="subDirectionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('sub_direction')} (Optional)</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? ""}
-                        disabled={!selectedStructureId || subDirections.length === 0}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                           <SelectItem value="ALL_PERSONNEL">All Personnel in Direction</SelectItem>
-                          {subDirections.map((sub) => (
-                            <SelectItem key={sub.id} value={sub.id.toString()}>
-                              {sub.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage>{form.formState.errors.subDirectionId && t(form.formState.errors.subDirectionId.message as string)}</FormMessage>
                     </FormItem>
                   )}
                 />
@@ -593,7 +542,3 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
-
-
-
-

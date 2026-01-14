@@ -36,7 +36,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   getAllDirections,
-  getSubDirectionsOfDirection,
   getPersonsByIdStructure,
   searchItemsBySerialNumberAndPerson,
   registerReparations,
@@ -54,7 +53,6 @@ const reparationItemSchema = z.object({
 
 const reparationFormSchema = z.object({
   structureId: z.string().min(1, "Please select a direction."),
-  subDirectionId: z.string().min(1, "Please select a sub direction."),
   personId: z.string().min(1, "Please select the person returning the item."),
   reparations: z.array(reparationItemSchema).min(1, "Please add at least one item for repair."),
 });
@@ -70,7 +68,6 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [directions, setDirections] = useState<Structure[]>([]);
-  const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
   const [searchedItems, setSearchedItems] = useState<Item[]>([]);
 
@@ -78,7 +75,6 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
     resolver: zodResolver(reparationFormSchema),
     defaultValues: {
       structureId: "",
-      subDirectionId: "",
       personId: "",
       reparations: [],
     },
@@ -101,33 +97,18 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
-
-  useEffect(() => {
-    const fetchSubDirections = async () => {
-      form.resetField("subDirectionId");
-      form.resetField("personId");
-      setSubDirections([]);
-      setPersons([]);
-      if (selectedStructureId) {
-        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId));
-        setSubDirections(res.data || []);
-      }
-    };
-    fetchSubDirections();
-  }, [selectedStructureId, form]);
 
   useEffect(() => {
     const fetchPersons = async () => {
       form.resetField("personId");
       setPersons([]);
-      if (selectedSubDirectionId) {
-        const res = await getPersonsByIdStructure(parseInt(selectedSubDirectionId));
-        setPersons(res.data || []);
+      if (selectedStructureId) {
+        const res = await getPersonsByIdStructure(parseInt(selectedStructureId));
+        setPersons(res || []);
       }
     };
     fetchPersons();
-  }, [selectedSubDirectionId, form]);
+  }, [selectedStructureId, form]);
 
 
   async function onSubmit(values: ReparationFormValues) {
@@ -217,42 +198,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="subDirectionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Sub Direction</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={!selectedStructureId || subDirections.length === 0}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a sub direction" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {subDirections.map((sub) => (
-                            <SelectItem key={sub.id} value={sub.id.toString()}>
-                              {sub.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                       {!selectedStructureId && (
-                        <FormDescription>
-                          Please select a structure first.
-                        </FormDescription>
-                      )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-               <FormField
+                 <FormField
                   control={form.control}
                   name="personId"
                   render={({ field }) => (
@@ -261,7 +207,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
-                        disabled={!selectedSubDirectionId || persons.length === 0}
+                        disabled={!selectedStructureId || persons.length === 0}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -276,16 +222,16 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      {!selectedSubDirectionId && (
+                      {!selectedStructureId && (
                         <FormDescription>
-                            Please select a sub-direction first.
+                            Please select a structure first.
                         </FormDescription>
                      )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
+              </div>
 
               <div className="space-y-4">
                 <FormLabel>Items to Repair</FormLabel>
