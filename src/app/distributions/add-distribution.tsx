@@ -40,6 +40,7 @@ import {
   searchArticles,
   searchItemsBySerialNumber,
   searchPersons,
+  getPersonsByIdStructure,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Article, Item, Person, Structure } from "@/lib/definitions";
@@ -113,12 +114,13 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
 
   useEffect(() => {
     const fetchSubDirections = async () => {
       form.resetField("subDirectionId");
+      form.resetField("beneficiaryId");
       setSubDirections([]);
+      setPersons([]);
       if (selectedStructureId) {
         const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId));
         setSubDirections(res.data || []);
@@ -131,13 +133,13 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     const fetchPersons = async () => {
       form.resetField("beneficiaryId");
       setPersons([]);
-      if (personSearch.length > 2) {
-          const res = await searchPersons(personSearch);
+      if (personSearch.length > 2 && selectedStructureId) {
+          const res = await searchPersons(personSearch, selectedStructureId);
           setPersons(res.data);
       }
     };
     fetchPersons();
-  }, [personSearch, form]);
+  }, [personSearch, selectedStructureId, form]);
 
 
   // Submit handler
@@ -230,7 +232,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       form.setValue(`articles.${fieldIndex}.serialNumbers`, [...currentSerials, serial.serialNumber]);
     }
     setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
-    const serialInput = document.getElementById(`serial-search-${fieldIndex}`);
+    const serialInput = document.getElementById(`serial-search-${index}`);
     if (serialInput) (serialInput as HTMLInputElement).value = '';
   };
 
@@ -305,11 +307,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                       {!selectedStructureId && (
-                        <FormDescription>
-                          Please select a structure first.
-                        </FormDescription>
-                      )}
                       <FormMessage>{form.formState.errors.subDirectionId && t(form.formState.errors.subDirectionId.message as string)}</FormMessage>
                     </FormItem>
                   )}
@@ -328,6 +325,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <Button
                             variant="outline"
                             role="combobox"
+                            disabled={!selectedStructureId}
                             className={cn(
                               "w-full justify-between",
                               !field.value && "text-muted-foreground"
@@ -347,10 +345,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
                           <CommandInput
-                            placeholder={t('search_person_placeholder', 'Search person...')}
+                            placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
+                            disabled={!selectedStructureId}
                           />
-                          <CommandEmpty>{t('no_person_found', 'No person found.')}</CommandEmpty>
+                          <CommandEmpty>{t('no_person_found')}</CommandEmpty>
                           <CommandGroup>
                             {persons.map((person) => (
                               <CommandItem
@@ -376,6 +375,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </Command>
                       </PopoverContent>
                     </Popover>
+                     {!selectedStructureId && (
+                        <FormDescription>
+                          Please select a structure first to search for a beneficiary.
+                        </FormDescription>
+                      )}
                     <FormMessage>{form.formState.errors.beneficiaryId && t(form.formState.errors.beneficiaryId.message as string)}</FormMessage>
                   </FormItem>
                 )}
@@ -555,10 +559,5 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   );
 }
     
-
-    
-
-
-
 
     

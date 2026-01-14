@@ -107,7 +107,7 @@ export const getSubDirectionsOfDirection = async (directionId: number) => {
 };
 
 export const getPersonsByIdStructure = async (idStructure: number) => {
-  const response = await api.get<Person[]>(`/persons/structure/${idStructure}/all`);
+  const response = await api.get<Person[]>(`/persons/structure/${idStructure}`);
   return {
     data: response.data as Person[],
   };
@@ -158,18 +158,17 @@ export const fetchAllOperations = async () => {
   return response.data;
 }
 
-export const fetchPersons = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
-  const { pageIndex, pageSize, query, sort } = options;
+export const fetchPersons = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string, structureId?: string }) => {
+  const { pageIndex, pageSize, query, sort, structureId } = options;
   const response = await api.get<PaginatedResponse<Person>>("/persons", {
     params: {
       page: pageIndex,
       size: pageSize,
       query: query || undefined,
       sort: sort,
+      structureId: structureId || undefined,
     },
   });
-  console.log("ssssss",response.data);
-  
 
   return {
     data: response.data.content as Person[],
@@ -180,10 +179,11 @@ export const fetchPersons = async (options: { pageIndex: number; pageSize: numbe
   };
 };
 
-export const searchPersons = async (query: string) => {
+export const searchPersons = async (query: string, structureId: string) => {
   const response = await api.get<Person[]>("/persons/search", {
     params: {
-      query: query
+      query: query,
+      structureId: structureId,
     }
   });
   return {
