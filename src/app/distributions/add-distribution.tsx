@@ -132,20 +132,31 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
 
  useEffect(() => {
     const fetchPersons = async () => {
-      if (personSearch.length > 2 && selectedStructureId) {
-        const res = await searchPersons(personSearch, selectedStructureId);
-        setPersons(res.data || []);
-      } else {
+      const structureId = selectedSubDirectionId || selectedStructureId;
+      if (!structureId) {
         setPersons([]);
+        return;
+      }
+      
+      if (personSearch.length === 0) {
+        // If search is empty, get all persons for the structure
+        const personsRes = await getPersonsByIdStructure(parseInt(structureId));
+        setPersons(personsRes || []);
+      } else {
+        // Otherwise, perform a search
+        const res = await searchPersons(personSearch, structureId);
+        setPersons(res.data || []);
       }
     };
 
     const debounce = setTimeout(() => {
+      if (isPersonPopoverOpen) { // Only fetch when popover is open
         fetchPersons();
+      }
     }, 300);
 
     return () => clearTimeout(debounce);
-  }, [personSearch, selectedStructureId]);
+  }, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
 
 
   // Submit handler
@@ -375,8 +386,8 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                             onValueChange={setPersonSearch}
                             disabled={!selectedStructureId}
                           />
+                           <ScrollArea className="max-h-56">
                           <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                          <ScrollArea className="max-h-56">
                             <CommandGroup>
                               {persons.map((person) => (
                                 <CommandItem
@@ -582,6 +593,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
 
 

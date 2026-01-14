@@ -106,11 +106,9 @@ export const getSubDirectionsOfDirection = async (directionId: number) => {
   };
 };
 
-export const getPersonsByIdStructure = async (idStructure: number) => {
+export const getPersonsByIdStructure = async (idStructure: number): Promise<Person[]> => {
   const response = await api.get<Person[]>(`/persons/structure/${idStructure}`);
-  return {
-    data: response.data as Person[],
-  };
+  return response.data;
 };
 
 export async function searchArticles(query: string, type: string | "ALL") {
@@ -429,4 +427,5 @@ export const getStructureDistributionStats = async (params: { from?: string; to?
 };
 
     
+
 
