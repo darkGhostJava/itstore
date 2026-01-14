@@ -40,7 +40,6 @@ import {
   searchArticles,
   searchItemsBySerialNumber,
   searchPersons,
-  getPersonsByIdStructure,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Article, Item, Person, Structure } from "@/lib/definitions";
@@ -351,28 +350,30 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                             disabled={!selectedStructureId}
                           />
                           <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                          <CommandGroup>
-                            {persons.map((person) => (
-                              <CommandItem
-                                value={`${person.firstName} ${person.lastName}`}
-                                key={person.id}
-                                onSelect={() => {
-                                  form.setValue("beneficiaryId", person.id.toString());
-                                  setPersonPopoverOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    person.id.toString() === field.value
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {person.firstName} {person.lastName}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          <ScrollArea className="max-h-56">
+                            <CommandGroup>
+                              {persons.map((person) => (
+                                <CommandItem
+                                  value={`${person.firstName} ${person.lastName}`}
+                                  key={person.id}
+                                  onSelect={() => {
+                                    form.setValue("beneficiaryId", person.id.toString());
+                                    setPersonPopoverOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      person.id.toString() === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {person.firstName} {person.lastName}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </ScrollArea>
                         </Command>
                       </PopoverContent>
                     </Popover>
