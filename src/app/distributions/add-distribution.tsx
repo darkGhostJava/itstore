@@ -113,7 +113,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
 
   useEffect(() => {
     const fetchSubDirections = async () => {
@@ -361,7 +360,10 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
+                        <Command filter={(value, search) => {
+                            // Always show all results from the API
+                            return 1
+                          }}>
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
@@ -574,4 +576,5 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
