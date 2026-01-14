@@ -132,8 +132,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
  useEffect(() => {
     const fetchPersons = async () => {
       if (personSearch.length > 2 && selectedStructureId) {
-        const searchStructureId = selectedSubDirectionId && selectedSubDirectionId !== "ALL_PERSONNEL" ? selectedSubDirectionId : selectedStructureId;
-        const res = await searchPersons(personSearch, searchStructureId);
+        const res = await searchPersons(personSearch, selectedStructureId);
         setPersons(res.data || []);
       } else {
         setPersons([]);
@@ -145,7 +144,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     }, 300);
 
     return () => clearTimeout(debounce);
-  }, [personSearch, selectedStructureId, selectedSubDirectionId]);
+  }, [personSearch, selectedStructureId]);
 
 
   // Submit handler
@@ -575,3 +574,4 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
