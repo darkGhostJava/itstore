@@ -114,6 +114,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
 
   useEffect(() => {
     const fetchSubDirections = async () => {
@@ -133,13 +134,19 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     const fetchPersons = async () => {
       form.resetField("beneficiaryId");
       setPersons([]);
-      if (personSearch.length > 2 && selectedStructureId) {
-          const res = await searchPersons(personSearch, selectedStructureId);
+      
+      const structureIdForSearch = 
+        selectedSubDirectionId && selectedSubDirectionId !== "ALL_PERSONNEL"
+        ? selectedSubDirectionId
+        : selectedStructureId;
+
+      if (personSearch.length > 2 && structureIdForSearch) {
+          const res = await searchPersons(personSearch, structureIdForSearch);
           setPersons(res.data);
       }
     };
     fetchPersons();
-  }, [personSearch, selectedStructureId, form]);
+  }, [personSearch, selectedStructureId, selectedSubDirectionId, form]);
 
 
   // Submit handler
