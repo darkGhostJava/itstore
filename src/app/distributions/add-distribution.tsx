@@ -40,6 +40,7 @@ import {
   searchArticles,
   searchItemsBySerialNumber,
   searchPersons,
+  getPersonsByIdStructure,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Article, Item, Person, Structure } from "@/lib/definitions";
@@ -113,6 +114,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
 
   useEffect(() => {
     const fetchSubDirections = async () => {
@@ -162,7 +164,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       });
 
       const isSubDirectionSelected = values.subDirectionId && values.subDirectionId !== "ALL_PERSONNEL";
-      const subDirectionId = isSubDirectionSelected ? parseInt(values.subDirectionId!) : null;
+      
+      const structureIdForPayload = isSubDirectionSelected 
+          ? parseInt(values.subDirectionId!)
+          : parseInt(values.structureId);
+
 
       const payload = {
         personId: parseInt(values.beneficiaryId),
@@ -170,7 +176,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         userId: 1, // Assuming a logged-in user
         hardwares,
         consumables,
-        subDirectionId: subDirectionId,
+        structureId: structureIdForPayload,
       };
 
       const response = await api.post("/distributions", payload, {
@@ -576,5 +582,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
 
