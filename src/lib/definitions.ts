@@ -6,6 +6,7 @@ export type Article = {
   type: "HARDWARE" | "CONSUMABLE";
   category: string;
   quantity: number;
+  budget?: string;
 };
 
 export type Item = {
@@ -13,6 +14,7 @@ export type Item = {
   serialNumber: string;
   article: Article;
   status: "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED" | "REPAIRED";
+  budget?: string;
 };
 
 export type PersonFunction = 

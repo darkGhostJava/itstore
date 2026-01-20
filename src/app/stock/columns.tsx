@@ -58,6 +58,18 @@ export const StockColumns = (t: TFunction): ColumnDef<Article>[] => {
       ),
     },
     {
+      accessorKey: "budget",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('budget')} />
+      ),
+      cell: ({ row }) => {
+        const budget = row.original.budget;
+        if (!budget) return 'N/A';
+        const budgetKey = `budget_${budget.toLowerCase()}` as const;
+        return t(budgetKey, budget);
+      }
+    },
+    {
       id: "actions",
       cell: ({ row }) => {
         const article = row.original;

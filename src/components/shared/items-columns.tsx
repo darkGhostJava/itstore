@@ -74,6 +74,18 @@ export const getItemsColumns = ({ onSuccess, t }: ItemsColumnProps): ColumnDef<I
     }
   },
   {
+    accessorKey: "budget",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t('budget')} />
+    ),
+    cell: ({ row }) => {
+      const budget = row.original.budget;
+      if (!budget) return 'N/A';
+      const budgetKey = `budget_${budget.toLowerCase()}` as const;
+      return t(budgetKey, budget);
+    }
+  },
+  {
     accessorKey: "status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t('status', 'Status')} />
