@@ -1,0 +1,20 @@
+
+{
+  "grades": [
+    "DJOUNDI",
+    "CAPORAL",
+    "CAPORAL_CHEF",
+    "SERGENT",
+    "SERGENT_CHEF",
+    "ADJUDANT",
+    "ADJUDANT_CHEF",
+    "ADJUDANT_MAJOR",
+    "SOUS_LIEUTENANT",
+    "LIEUTENANT",
+    "CAPITAINE",
+    "COMMANDANT",
+    "LT_COLONEL",
+    "COLONEL",
+    "GENERAL"
+  ]
+}

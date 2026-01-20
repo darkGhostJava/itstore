@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -36,6 +37,7 @@ import { api } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Structure } from "@/lib/definitions";
 import { fetchAllStructures } from "@/lib/data";
+import grades from "@/lib/grades.json";
 
 const personFunctions = [
     "DIRECTEUR_GENERALE",
@@ -183,17 +185,28 @@ export function AddPerson({ onSuccess }: AddPersonProps) {
             />
             <div className="grid grid-cols-2 gap-4">
                 <FormField
-                control={form.control}
-                name="grade"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>{t('grade')}</FormLabel>
-                    <FormControl>
-                        <Input placeholder={t('grade_placeholder')} {...field} />
-                    </FormControl>
-                    <FormMessage>{form.formState.errors.grade && t(form.formState.errors.grade.message as string)}</FormMessage>
-                    </FormItem>
-                )}
+                    control={form.control}
+                    name="grade"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>{t('grade')}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder={t('select_grade_placeholder')} />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            {grades.grades.map((grade) => (
+                                <SelectItem key={grade} value={grade}>
+                                    {t(`grade_${grade.toLowerCase()}` as any, grade.replace(/_/g, " "))}
+                                </SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage>{form.formState.errors.grade && t(form.formState.errors.grade.message as string)}</FormMessage>
+                        </FormItem>
+                    )}
                 />
                 <FormField
                 control={form.control}
@@ -271,3 +284,4 @@ export function AddPerson({ onSuccess }: AddPersonProps) {
     </Dialog>
   );
 }
+
