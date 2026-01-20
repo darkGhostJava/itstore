@@ -15,14 +15,23 @@ export type Item = {
   status: "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED" | "REPAIRED";
 };
 
+export type PersonFunction = 
+  | "DIRECTEUR_GENERALE"
+  | "DIRECTEUR"
+  | "SOUS_DIRECTEUR"
+  | "CHARGEE_DE_DOSSIER"
+  | "SECRITEUR";
+
 export type Person = {
   id: number;
   firstName: string;
   lastName: string;
   grade: string;
   matricule: string;
-  structure: Structure;
-  function: string;
+  pseudo: string;
+  structure?: Structure;
+  structureId?: number;
+  function: PersonFunction;
 };
 
 export type Structure = {
