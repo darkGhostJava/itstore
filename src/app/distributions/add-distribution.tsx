@@ -135,9 +135,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [selectedSubDirectionId, form]);
 
  useEffect(() => {
+    const structureToQuery = selectedSubDirectionId || selectedStructureId;
+
     const fetchPersons = async () => {
-      // Use sub-direction if available, otherwise fall back to the main direction.
-      const structureToQuery = selectedSubDirectionId || selectedStructureId;
       if (!structureToQuery) {
         setPersons([]);
         return;
@@ -152,13 +152,15 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       }
     };
 
-    const debounce = setTimeout(() => {
-      if (isPersonPopoverOpen && selectedStructureId) {
-        fetchPersons();
-      }
-    }, 300);
+    if (isPersonPopoverOpen && structureToQuery) {
+        const debounce = setTimeout(() => {
+            fetchPersons();
+        }, 300);
 
-    return () => clearTimeout(debounce);
+        return () => clearTimeout(debounce);
+    } else {
+        setPersons([]);
+    }
   }, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
 
 
@@ -585,5 +587,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
 
