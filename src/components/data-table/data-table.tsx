@@ -43,7 +43,7 @@ interface DataTableProps<TData, TValue> {
   filterPlaceholder?: string
   facetedFilters?: React.ReactNode
   initialQuery?: string;
-  emptyStateMessage?: string;
+  emptyStateMessage?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -83,6 +83,10 @@ export function DataTable<TData, TValue>({
     [pageIndex, pageSize]
   );
   
+  // Create refs to store previous sorting and query values
+  const prevSortingRef = React.useRef(sorting);
+  const prevDebouncedQueryRef = React.useRef(debouncedQuery);
+
   const table = useReactTable({
     data,
     columns,
@@ -112,21 +116,33 @@ export function DataTable<TData, TValue>({
   });
 
   React.useEffect(() => {
-    // When query or sorting changes, reset to the first page
-    if (debouncedQuery !== initialQuery || sorting.length > 0) {
-      setPagination(prev => ({ ...prev, pageIndex: 0 }));
-    }
-  }, [debouncedQuery, sorting, initialQuery]);
-  
-  React.useEffect(() => {
+    // Check if sorting or query has changed since the last render
+    const sortChanged = JSON.stringify(prevSortingRef.current) !== JSON.stringify(sorting);
+    const queryChanged = prevDebouncedQueryRef.current !== debouncedQuery;
+    
+    // If sorting or filtering changed, we need to fetch page 0.
+    const pageToFetch = (sortChanged || queryChanged) ? 0 : pageIndex;
+    
     let sortString: string | undefined = undefined;
     if (sorting.length > 0) {
       const sort = sorting[0];
       const direction = sort.desc ? 'desc' : 'asc';
       sortString = `${sort.id},${direction}`;
     }
-    fetchData({ pageIndex, pageSize, query: debouncedQuery, sort: sortString });
-  }, [fetchData, pageIndex, pageSize, debouncedQuery, sorting]);
+
+    // Call the fetchData prop with the correct page index and other params.
+    fetchData({ pageIndex: pageToFetch, pageSize, query: debouncedQuery, sort: sortString });
+    
+    // If we're fetching a different page index than the one in state, update the state.
+    // This happens when a sort/filter change resets the page to 0.
+    if (pageToFetch !== pageIndex) {
+      setPagination(p => ({ ...p, pageIndex: pageToFetch }));
+    }
+
+    // Update refs for the next render.
+    prevSortingRef.current = sorting;
+    prevDebouncedQueryRef.current = debouncedQuery;
+  }, [pageIndex, pageSize, debouncedQuery, sorting, fetchData]);
 
 
   return (
