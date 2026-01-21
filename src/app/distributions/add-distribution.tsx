@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -133,35 +132,37 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   useEffect(() => {
     // Reset beneficiary when sub-direction changes
     form.resetField("beneficiaryId");
-    setPersons([]);
   }, [selectedSubDirectionId, form]);
 
  useEffect(() => {
     const fetchPersons = async () => {
-      if (!selectedSubDirectionId) {
+      // Prioritize sub-direction, but fall back to main direction if available.
+      const structureToQuery = selectedSubDirectionId || selectedStructureId;
+      if (!structureToQuery) {
         setPersons([]);
         return;
       }
       
-      if (personSearch.length === 0) {
-        // If search is empty, get all persons for the structure
-        const personsRes = await getPersonsByIdStructure(parseInt(selectedSubDirectionId));
-        setPersons(personsRes || []);
-      } else {
-        // Otherwise, perform a search
-        const res = await searchPersons(personSearch, selectedSubDirectionId);
+      if (personSearch) {
+        // If there is a search term, use the search endpoint
+        const res = await searchPersons(personSearch, structureToQuery);
         setPersons(res.data || []);
+      } else {
+        // If search is empty, get all persons for the structure
+        const personsRes = await getPersonsByIdStructure(parseInt(structureToQuery, 10));
+        setPersons(personsRes || []);
       }
     };
 
     const debounce = setTimeout(() => {
-      if (isPersonPopoverOpen) { // Only fetch when popover is open
+      // Only fetch when popover is open and a main direction has been selected
+      if (isPersonPopoverOpen && selectedStructureId) {
         fetchPersons();
       }
     }, 300);
 
     return () => clearTimeout(debounce);
-  }, [personSearch, selectedSubDirectionId, isPersonPopoverOpen]);
+  }, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen, form]);
 
 
   // Submit handler
@@ -351,7 +352,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <Button
                             variant="outline"
                             role="combobox"
-                            disabled={!selectedSubDirectionId}
+                            disabled={!selectedStructureId}
                             className={cn(
                               "w-full justify-between",
                               !field.value && "text-muted-foreground"
@@ -376,7 +377,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
-                            disabled={!selectedSubDirectionId}
+                            disabled={!selectedStructureId}
                           />
                            <ScrollArea className="max-h-56">
                           <CommandEmpty>{t('no_person_found')}</CommandEmpty>
@@ -406,9 +407,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </Command>
                       </PopoverContent>
                     </Popover>
-                     {!selectedSubDirectionId && (
+                     {!selectedStructureId && (
                         <FormDescription>
-                          Please select a sub-direction first to search for a beneficiary.
+                          Please select a direction first to search for a beneficiary.
                         </FormDescription>
                       )}
                     <FormMessage>{form.formState.errors.beneficiaryId && t(form.formState.errors.beneficiaryId.message as string)}</FormMessage>
