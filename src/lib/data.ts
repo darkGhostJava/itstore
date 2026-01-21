@@ -107,8 +107,15 @@ export const getSubDirectionsOfDirection = async (directionId: number) => {
 };
 
 export const getPersonsByIdStructure = async (idStructure: number): Promise<Person[]> => {
-  const response = await api.get<Person[]>(`/persons/structure/${idStructure}`);
-  return response.data;
+  const response = await api.get<any>(`/persons/structure/${idStructure}`);
+  // The backend might return a raw array or a paginated object. This handles both.
+  if (Array.isArray(response.data)) {
+    return response.data;
+  }
+  if (response.data && Array.isArray(response.data.content)) {
+    return response.data.content;
+  }
+  return [];
 };
 
 export async function searchArticles(query: string, type: string | "ALL") {
@@ -427,5 +434,6 @@ export const getStructureDistributionStats = async (params: { from?: string; to?
 };
 
     
+
 
 
