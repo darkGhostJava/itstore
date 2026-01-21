@@ -129,45 +129,48 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     }
   }, [selectedStructureId, form]);
 
-  useEffect(() => {
-    // Reset beneficiary when sub-direction changes, to force re-selection if needed
-    form.resetField("beneficiaryId");
-  }, [selectedSubDirectionId, form]);
+ useEffect(() => {
+    // This is the ID used to get the initial list of ALL people when the popover opens without a search query.
+    // It correctly prioritizes the sub-direction to show a refined list first.
+    const structureForInitialList = selectedSubDirectionId || selectedStructureId;
 
-  useEffect(() => {
-    // Determine which structure to query. Prioritize sub-direction if it's selected.
-    const structureToQuery = selectedSubDirectionId || selectedStructureId;
+    // This is the ID used for SEARCHING when the user types.
+    // As per your instruction, we will use the main direction ID for the text search.
+    const structureForTextSearch = selectedStructureId;
 
     const fetchPersons = async () => {
-        // If we don't have a structure to query, do nothing.
-        if (!structureToQuery) {
-            setPersons([]);
-            return;
-        }
-
-        // If there's a search term, use the search API.
+        // If there's a search term, use the main direction ID for searching.
         if (personSearch) {
-            const res = await searchPersons(personSearch, structureToQuery);
+            if (!structureForTextSearch) {
+                 setPersons([]);
+                 return;
+            }
+            const res = await searchPersons(personSearch, structureForTextSearch);
             setPersons(res.data || []);
         } else {
-            // Otherwise, get all people for the selected structure.
-            const personsRes = await getPersonsByIdStructure(parseInt(structureToQuery, 10));
-            setPersons(personsRes || []);
+            // Otherwise, when the popover is opened without a search query,
+            // get all people for the most specific structure selected (sub-direction if available).
+            if (structureForInitialList) {
+                const personsRes = await getPersonsByIdStructure(parseInt(structureForInitialList, 10));
+                setPersons(personsRes || []);
+            } else {
+                setPersons([]);
+            }
         }
     };
 
-    // Only fetch if the popover is open and we have a structure to query.
-    if (isPersonPopoverOpen && structureToQuery) {
+    // Trigger fetch only when the popover is open and a main direction is selected.
+    if (isPersonPopoverOpen && selectedStructureId) {
         const debounce = setTimeout(() => {
             fetchPersons();
         }, 300);
 
         return () => clearTimeout(debounce);
     } else if (!isPersonPopoverOpen) {
-        // Clear the list when the popover closes to ensure fresh data next time.
+        // Clear the list when the popover closes.
         setPersons([]);
     }
-}, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen, form]);
+}, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
 
 
   // Submit handler
@@ -324,7 +327,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   name="subDirectionId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('sub_direction')} ({t('optional', 'Optional')})</FormLabel>
+                      <FormLabel>{t('sub_direction')} ({t('optional')})</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedStructureId || subDirections.length === 0}>
                         <FormControl>
                           <SelectTrigger>
@@ -593,6 +596,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
 
 
