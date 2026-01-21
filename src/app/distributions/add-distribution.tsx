@@ -134,34 +134,40 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     form.resetField("beneficiaryId");
   }, [selectedSubDirectionId, form]);
 
- useEffect(() => {
+  useEffect(() => {
+    // Determine which structure to query. Prioritize sub-direction if it's selected.
     const structureToQuery = selectedSubDirectionId || selectedStructureId;
 
     const fetchPersons = async () => {
-      if (!structureToQuery) {
-        setPersons([]);
-        return;
-      }
-      
-      if (personSearch) {
-        const res = await searchPersons(personSearch, structureToQuery);
-        setPersons(res.data || []);
-      } else {
-        const personsRes = await getPersonsByIdStructure(parseInt(structureToQuery, 10));
-        setPersons(personsRes || []);
-      }
+        // If we don't have a structure to query, do nothing.
+        if (!structureToQuery) {
+            setPersons([]);
+            return;
+        }
+
+        // If there's a search term, use the search API.
+        if (personSearch) {
+            const res = await searchPersons(personSearch, structureToQuery);
+            setPersons(res.data || []);
+        } else {
+            // Otherwise, get all people for the selected structure.
+            const personsRes = await getPersonsByIdStructure(parseInt(structureToQuery, 10));
+            setPersons(personsRes || []);
+        }
     };
 
+    // Only fetch if the popover is open and we have a structure to query.
     if (isPersonPopoverOpen && structureToQuery) {
         const debounce = setTimeout(() => {
             fetchPersons();
         }, 300);
 
         return () => clearTimeout(debounce);
-    } else {
+    } else if (!isPersonPopoverOpen) {
+        // Clear the list when the popover closes to ensure fresh data next time.
         setPersons([]);
     }
-  }, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
+}, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen, form]);
 
 
   // Submit handler
@@ -587,6 +593,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
 
 

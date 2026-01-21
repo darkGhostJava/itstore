@@ -209,5 +209,7 @@
     "grade_commandant": "Major",
     "grade_lt_colonel": "Lieutenant Colonel",
     "grade_colonel": "Colonel",
-    "grade_general": "General"
+    "grade_general": "General",
+    "optional": "Optional",
+    "select_direction_first": "Please select a direction first."
 }
