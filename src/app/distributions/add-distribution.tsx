@@ -59,7 +59,7 @@ const articleDistributionSchema = z.object({
 
 const distributionFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
-  subDirectionId: z.string().min(1, "subdirection_is_required"),
+  subDirectionId: z.string().optional(),
   beneficiaryId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleDistributionSchema).min(1, "at_least_one_article_is_required"),
@@ -130,13 +130,14 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [selectedStructureId, form]);
 
   useEffect(() => {
-    // Reset beneficiary when sub-direction changes
+    // Reset beneficiary when sub-direction changes, to force re-selection if needed
     form.resetField("beneficiaryId");
   }, [selectedSubDirectionId, form]);
 
  useEffect(() => {
     const fetchPersons = async () => {
-      const structureToQuery = selectedSubDirectionId;
+      // Use sub-direction if available, otherwise fall back to the main direction.
+      const structureToQuery = selectedSubDirectionId || selectedStructureId;
       if (!structureToQuery) {
         setPersons([]);
         return;
@@ -152,13 +153,13 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     };
 
     const debounce = setTimeout(() => {
-      if (isPersonPopoverOpen && selectedSubDirectionId) {
+      if (isPersonPopoverOpen && selectedStructureId) {
         fetchPersons();
       }
     }, 300);
 
     return () => clearTimeout(debounce);
-  }, [personSearch, selectedSubDirectionId, isPersonPopoverOpen]);
+  }, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
 
 
   // Submit handler
@@ -182,7 +183,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         userId: 1, // Assuming a logged-in user
         hardwares,
         consumables,
-        structureId: parseInt(values.subDirectionId),
+        structureId: parseInt(values.subDirectionId || values.structureId),
       };
 
       const response = await api.post("/distributions", payload, {
@@ -315,7 +316,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   name="subDirectionId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('sub_direction')}</FormLabel>
+                      <FormLabel>{t('sub_direction')} ({t('optional', 'Optional')})</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedStructureId || subDirections.length === 0}>
                         <FormControl>
                           <SelectTrigger>
@@ -348,7 +349,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <Button
                             variant="outline"
                             role="combobox"
-                            disabled={!selectedSubDirectionId}
+                            disabled={!selectedStructureId}
                             className={cn(
                               "w-full justify-between",
                               !field.value && "text-muted-foreground"
@@ -373,7 +374,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
-                            disabled={!selectedSubDirectionId}
+                            disabled={!selectedStructureId}
                           />
                            <ScrollArea className="max-h-56">
                           <CommandEmpty>{t('no_person_found')}</CommandEmpty>
@@ -403,9 +404,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </Command>
                       </PopoverContent>
                     </Popover>
-                     {!selectedSubDirectionId && (
+                     {!selectedStructureId && (
                         <FormDescription>
-                          Please select a sub-direction first to search for a beneficiary.
+                          {t('select_direction_first', 'Please select a direction first.')}
                         </FormDescription>
                       )}
                     <FormMessage>{form.formState.errors.beneficiaryId && t(form.formState.errors.beneficiaryId.message as string)}</FormMessage>
@@ -584,4 +585,5 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
