@@ -130,16 +130,10 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [selectedStructureId, form]);
 
  useEffect(() => {
-    // This is the ID used to get the initial list of ALL people when the popover opens without a search query.
-    // It correctly prioritizes the sub-direction to show a refined list first.
     const structureForInitialList = selectedSubDirectionId || selectedStructureId;
-
-    // This is the ID used for SEARCHING when the user types.
-    // As per your instruction, we will use the main direction ID for the text search.
     const structureForTextSearch = selectedStructureId;
 
     const fetchPersons = async () => {
-        // If there's a search term, use the main direction ID for searching.
         if (personSearch) {
             if (!structureForTextSearch) {
                  setPersons([]);
@@ -148,8 +142,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
             const res = await searchPersons(personSearch, structureForTextSearch);
             setPersons(res.data || []);
         } else {
-            // Otherwise, when the popover is opened without a search query,
-            // get all people for the most specific structure selected (sub-direction if available).
             if (structureForInitialList) {
                 const personsRes = await getPersonsByIdStructure(parseInt(structureForInitialList, 10));
                 setPersons(personsRes || []);
@@ -159,16 +151,12 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         }
     };
 
-    // Trigger fetch only when the popover is open and a main direction is selected.
     if (isPersonPopoverOpen && selectedStructureId) {
         const debounce = setTimeout(() => {
             fetchPersons();
         }, 300);
 
         return () => clearTimeout(debounce);
-    } else if (!isPersonPopoverOpen) {
-        // Clear the list when the popover closes.
-        setPersons([]);
     }
 }, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
 
@@ -596,6 +584,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     
 
     
+
 
 
 
