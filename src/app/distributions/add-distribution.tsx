@@ -182,7 +182,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         userId: 1, // Assuming a logged-in user
         hardwares,
         consumables,
-        structureId: parseInt(values.subDirectionId || values.structureId),
+        subDirectionId: parseInt(values.subDirectionId || values.structureId),
       };
 
       const response = await api.post("/distributions", payload, {
