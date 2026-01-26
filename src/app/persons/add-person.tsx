@@ -50,10 +50,10 @@ const personFunctions = [
 const formSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  grade: z.string().optional(),
+  grade: z.string().min(1, "grade_is_required"),
   matricule: z.string().optional(),
   pseudo: z.string().optional(),
-  structureId: z.string().optional(),
+  structureId: z.string().min(1, "direction_is_required"),
   function: z.enum(personFunctions),
 });
 
