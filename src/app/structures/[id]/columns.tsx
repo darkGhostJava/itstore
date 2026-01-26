@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { format } from "date-fns";
 
 export const columns: ColumnDef<Item>[] = [
   {
@@ -44,6 +45,16 @@ export const columns: ColumnDef<Item>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Designation" />
     ),
+  },
+    {
+    accessorKey: "date",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date" />
+    ),
+    cell: ({ row }) => {
+        const date = row.original.date;
+        return date ? format(new Date(date), "PPP") : "N/A";
+    }
   },
   {
     accessorKey: "status",
