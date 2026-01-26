@@ -15,6 +15,7 @@ export type Item = {
   article: Article;
   status: "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED" | "REPAIRED";
   budget?: string;
+  date?: string;
 };
 
 export type PersonFunction = 
@@ -26,11 +27,11 @@ export type PersonFunction =
 
 export type Person = {
   id: number;
-  firstName: string;
-  lastName: string;
-  grade: string;
-  matricule: string;
-  pseudo: string;
+  firstName?: string;
+  lastName?: string;
+  grade?: string;
+  matricule?: string;
+  pseudo?: string;
   structure?: Structure;
   structureId?: number;
   function: PersonFunction;
