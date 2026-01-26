@@ -48,12 +48,12 @@ const personFunctions = [
 ] as const;
 
 const formSchema = z.object({
-  firstName: z.string().min(1, "first_name_is_required"),
-  lastName: z.string().min(1, "last_name_is_required"),
-  grade: z.string().min(1, "grade_is_required"),
-  matricule: z.string().min(1, "matricule_is_required"),
-  pseudo: z.string().min(1, "pseudo_is_required"),
-  structureId: z.string().min(1, "structure_is_required"),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  grade: z.string().optional(),
+  matricule: z.string().optional(),
+  pseudo: z.string().optional(),
+  structureId: z.string().optional(),
   function: z.enum(personFunctions),
 });
 
@@ -105,7 +105,7 @@ export function AddPerson({ onSuccess }: AddPersonProps) {
     try {
       await api.post("/persons", {
         ...values,
-        structureId: parseInt(values.structureId, 10)
+        structureId: values.structureId ? parseInt(values.structureId, 10) : null
       });
       toast({
         title: t('person_added_toast_title'),
@@ -284,4 +284,3 @@ export function AddPerson({ onSuccess }: AddPersonProps) {
     </Dialog>
   );
 }
-
