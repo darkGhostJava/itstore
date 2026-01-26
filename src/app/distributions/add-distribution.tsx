@@ -395,7 +395,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                         : "opacity-0"
                                     )}
                                   />
-                                  {person.firstName} {person.lastName}
+                                  {person.grade} {person.firstName} {person.lastName}  ({person.pseudo})
                                 </CommandItem>
                               ))}
                             </CommandGroup>
