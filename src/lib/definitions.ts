@@ -63,7 +63,7 @@ export type Distribution = {
   item: Item;
   person: Person;
   user: User;
-  hasAttestation: boolean;
+  isSigned: boolean;
 }
 
 export type User = {

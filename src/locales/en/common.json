@@ -211,5 +211,8 @@
     "grade_colonel": "Colonel",
     "grade_general": "General",
     "optional": "Optional",
-    "select_direction_first": "Please select a direction first."
+    "select_direction_first": "Please select a direction first.",
+    "attestation_status": "Attestation",
+    "signed": "Signed",
+    "not_signed": "Not Signed"
 }
