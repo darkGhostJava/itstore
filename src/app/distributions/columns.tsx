@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, CheckCircle2, XCircle } from "lucide-react";
 import { UploadAttestation } from "./upload-attestation";
 import { DownloadAttestation } from "./download-attestation";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -80,6 +80,27 @@ export const useDistributionsColumns = () => {
       ),
       cell: ({ row }) => {
         return row.original.user ? `${row.original.user.name}`: "N/A";
+      },
+    },
+    {
+      id: "isSigned",
+      accessorKey: "isSigned",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />
+      ),
+      cell: ({ row }) => {
+        const isSigned = row.original.isSigned;
+        return isSigned ? (
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
+            <span>{t('signed', 'Signed')}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-destructive">
+            <XCircle className="h-4 w-4" />
+            <span>{t('not_signed', 'Not Signed')}</span>
+          </div>
+        );
       },
     },
     {
