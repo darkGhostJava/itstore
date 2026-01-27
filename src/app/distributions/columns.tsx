@@ -18,6 +18,7 @@ import { UploadAttestation } from "./upload-attestation";
 import { DownloadAttestation } from "./download-attestation";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
+import Link from "next/link";
 
 export const useDistributionsColumns = () => {
   const { t } = useTranslation('common');
@@ -36,7 +37,13 @@ export const useDistributionsColumns = () => {
         <DataTableColumnHeader column={column} title={t('article')} />
       ),
       cell: ({ row }) => {
-        return row.original.item ? `${row.original.item.article.model} - ${row.original.item.article.designation}` : "N/A";
+        const item = row.original.item;
+        if (!item) return "N/A";
+        return (
+             <Button variant="link" asChild className="p-0 h-auto">
+                <Link href={`/articles/${item.article.id}`}>{item.article.model} - {item.article.designation}</Link>
+            </Button>
+        )
       },
     },
     {
@@ -46,7 +53,13 @@ export const useDistributionsColumns = () => {
         <DataTableColumnHeader column={column} title={t('serial_number')} />
       ),
       cell: ({ row }) => {
-        return row.original.item ? `${row.original.item.serialNumber}` : "N/A";
+        const item = row.original.item;
+        if (!item) return "N/A";
+        return (
+            <Button variant="link" asChild className="p-0 h-auto">
+                <Link href={`/items/${item.id}`}>{item.serialNumber}</Link>
+            </Button>
+        )
       },
     },
     {
@@ -56,8 +69,30 @@ export const useDistributionsColumns = () => {
         <DataTableColumnHeader column={column} title={t('beneficiary')} />
       ),
       cell: ({ row }) => {
-        return row.original.person ? `${row.original.person.firstName} ${row.original.person.lastName}` : "N/A";
+        const person = row.original.person;
+        if (!person) return "N/A";
+        return (
+            <Button variant="link" asChild className="p-0 h-auto">
+                <Link href={`/persons/${person.id}`}>{person.firstName} {person.lastName}</Link>
+            </Button>
+        )
       },
+    },
+    {
+      id: 'person.structure.name',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('structure')} />
+      ),
+      cell: ({ row }) => {
+        const structure = row.original.person?.structure;
+        if (!structure) return t('unknown');
+        return (
+            <Button variant="link" asChild className="p-0 h-auto">
+                <Link href={`/structures/${structure.id}`}>{structure.name}</Link>
+            </Button>
+        )
+      },
+      accessorFn: (row) => row.person?.structure?.name,
     },
     {
       accessorKey: "date",
