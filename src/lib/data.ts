@@ -307,15 +307,21 @@ export const fetchArrivals = async (options: { pageIndex: number; pageSize: numb
 
 export const fetchDistributions = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string; }) => {
   const { pageIndex, pageSize, query, sort } = options;
-  const response = await api.get<PaginatedResponse<Distribution>>("/distributions", {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-    },
+  
+  const params = new URLSearchParams({
+      page: pageIndex.toString(),
+      size: pageSize.toString(),
   });
 
+  if (query) {
+      params.append('query', query);
+  }
+  if (sort) {
+      params.append('sort', sort);
+  }
+
+  const response = await api.get<PaginatedResponse<Distribution>>(`/distributions?${params.toString()}`);
+  
   return {
     data: response.data.content as Distribution[],
     pageCount: response.data.totalPages,
@@ -434,6 +440,7 @@ export const getStructureDistributionStats = async (params: { from?: string; to?
 };
 
     
+
 
 
 

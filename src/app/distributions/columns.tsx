@@ -32,7 +32,6 @@ export const useDistributionsColumns = () => {
     },
     {
       id: "item.article.model",
-      accessorKey: "item.article.model",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('article')} />
       ),
@@ -48,7 +47,6 @@ export const useDistributionsColumns = () => {
     },
     {
       id: "item.serialNumber",
-      accessorKey: "item.serialNumber",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('serial_number')} />
       ),
@@ -64,7 +62,6 @@ export const useDistributionsColumns = () => {
     },
     {
       id: "person.firstName",
-      accessorKey: "person.firstName",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('beneficiary')} />
       ),
