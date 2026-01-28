@@ -34,13 +34,12 @@ export const useArrivalsColumns = () => {
       cell: ({ row }) => format(new Date(row.original.date), "PPP"),
     },
     {
-      id: "items.article.model",
-      accessorKey: "items[0].article.model",
+      id: "article",
+      accessorFn: (row) => (row as any).items[0]?.article?.model,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('article')} />
       ),
       cell: ({ row }) => {
-        // Assuming the backend returns items for an arrival operation
         const items = (row.original as any).items as Item[] | undefined;
         if (!items || items.length === 0) return "N/A";
         const article = items[0].article;
@@ -49,7 +48,7 @@ export const useArrivalsColumns = () => {
     },
     {
       id: "count",
-      accessorKey: "items.length",
+      accessorFn: (row) => (row as any).items?.length,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('count')} />
       ),
@@ -59,8 +58,8 @@ export const useArrivalsColumns = () => {
       }
     },
     {
-      id: "user.name",
-      accessorKey: "user.name",
+      id: "user",
+      accessorFn: row => row.user?.name,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('user')} />
       ),
@@ -97,5 +96,3 @@ export const useArrivalsColumns = () => {
 
   return columns;
 };
-
-    

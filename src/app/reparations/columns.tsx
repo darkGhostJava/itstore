@@ -31,8 +31,8 @@ export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
     },
   },
   {
-    id: 'items.article.model',
-    accessorKey: "items[0].article.model",
+    id: 'article',
+    accessorFn: (row) => (row as any).items[0]?.article?.model,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Article"/>
     ),
@@ -44,8 +44,8 @@ export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
     },
   },
   {
-    id: 'items.serialNumber',
-    accessorKey: "items[0].serialNumber",
+    id: 'serialNumber',
+    accessorFn: (row) => (row as any).items[0]?.serialNumber,
      header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Serial Number" />
     ),
@@ -69,8 +69,8 @@ export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
     ),
   },
   {
-    id: "user.name",
-    accessorKey: "user.name",
+    id: "user",
+    accessorFn: (row) => row.user?.name,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="User" />
     ),
@@ -79,8 +79,8 @@ export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
     },
   },
   {
-    id: 'items.status',
-    accessorKey: "items[0].status",
+    id: 'status',
+    accessorFn: (row) => (row as any).items[0]?.status,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),

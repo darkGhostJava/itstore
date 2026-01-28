@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -79,8 +80,8 @@ export const usePersonsColumns = () => {
       ),
     },
     {
-      id: "structure.name",
-      accessorKey: "structure.name",
+      id: "structure",
+      accessorFn: (row) => row.structure?.name,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('structure')} />
       ),

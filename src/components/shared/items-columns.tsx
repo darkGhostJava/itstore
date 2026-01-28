@@ -35,8 +35,8 @@ export const getItemsColumns = ({ onSuccess, t }: ItemsColumnProps): ColumnDef<I
     },
   },
   {
-    id: "article.model",
-    accessorKey: "article.model",
+    id: "article",
+    accessorFn: row => row.article.model,
      header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t('article')} />
     ),
@@ -46,8 +46,8 @@ export const getItemsColumns = ({ onSuccess, t }: ItemsColumnProps): ColumnDef<I
     },
   },
    {
-    id: "article.designation",
-    accessorKey: "article.designation",
+    id: "designation",
+    accessorFn: row => row.article.designation,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title={t('designation')} />
     ),

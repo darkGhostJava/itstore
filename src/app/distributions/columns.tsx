@@ -30,7 +30,8 @@ export const useDistributionsColumns = () => {
       enableSorting: false,
     },
     {
-      accessorKey: "item.article.model",
+      id: "article",
+      accessorFn: row => `${row.item.article.model} - ${row.item.article.designation}`,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('article')} />,
       cell: ({ row }) => {
         const item = row.original.item;
@@ -43,7 +44,8 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      accessorKey: "item.serialNumber",
+      id: "serialNumber",
+      accessorFn: row => row.item.serialNumber,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('serial_number')} />,
       cell: ({ row }) => {
         const item = row.original.item;
@@ -56,9 +58,9 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      accessorKey: "person.lastName",
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
+      id: "beneficiary",
       accessorFn: row => `${row.person?.firstName || ''} ${row.person?.lastName || ''}`,
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
       cell: ({ row }) => {
         const person = row.original.person;
         if (!person) return "N/A";
@@ -70,7 +72,8 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      accessorKey: 'person.structure.name',
+      id: "structure",
+      accessorFn: row => row.person?.structure?.name,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('structure')} />,
       cell: ({ row }) => {
         const structure = row.original.person?.structure;
@@ -92,7 +95,8 @@ export const useDistributionsColumns = () => {
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('remarks')} />,
     },
     {
-      accessorKey: "user.name",
+      id: "user",
+      accessorFn: row => row.user?.name,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('user')} />,
       cell: ({ row }) => row.original.user?.name || "N/A",
     },
