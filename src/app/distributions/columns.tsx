@@ -30,7 +30,7 @@ export const useDistributionsColumns = () => {
       enableSorting: false,
     },
     {
-      id: "item.article.model",
+      id: "article",
       accessorFn: row => `${row.item.article.model} - ${row.item.article.designation}`,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('article')} />,
       cell: ({ row }) => {
@@ -44,7 +44,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "item.serialNumber",
+      id: "serialNumber",
       accessorKey: "item.serialNumber",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('serial_number')} />,
       cell: ({ row }) => {
@@ -58,7 +58,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "person.lastName", // Sort by last name
+      id: "beneficiary",
       accessorFn: row => `${row.person?.firstName || ''} ${row.person?.lastName || ''}`,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
       cell: ({ row }) => {
@@ -72,7 +72,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "person.structure.name",
+      id: "structure",
       accessorFn: row => row.person?.structure?.name,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('structure')} />,
       cell: ({ row }) => {
@@ -86,21 +86,24 @@ export const useDistributionsColumns = () => {
       },
     },
     {
+      id: "date",
       accessorKey: "date",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('date')} />,
       cell: ({ row }) => format(new Date(row.original.date), "PPP"),
     },
     {
+      id: "remarks",
       accessorKey: "remarks",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('remarks')} />,
     },
     {
-      id: "user.name",
-      accessorKey: "user.name",
+      id: "user",
+      accessorFn: (row) => row.user?.name,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('user')} />,
       cell: ({ row }) => row.original.user?.name || "N/A",
     },
     {
+      id: "isSigned",
       accessorKey: "isSigned",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />,
       cell: ({ row }) => {
