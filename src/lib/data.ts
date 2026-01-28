@@ -1,5 +1,4 @@
 
-
 import { api } from './api';
 import type { Article, Item, Person, Structure, Operation, Distribution, Stats } from './definitions';
 
@@ -14,23 +13,21 @@ type PaginatedResponse<T> = {
 
 export const getStats = async (): Promise<Stats> => {
   const response = await api.get('/stats');
-  console.log(response);
-
   return response.data;
 }
 
 export const fetchArticles = async (options: { pageIndex: number; pageSize: number; query?: string; type?: 'HARDWARE' | 'CONSUMABLE', sort?: string; }) => {
   const { pageIndex, pageSize, query, type, sort } = options;
 
-  const response = await api.get<PaginatedResponse<Article>>("/articles", {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      type: type || undefined,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (type) params.append('type', type);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Article>>(`/articles?${params.toString()}`);
 
   return {
     data: response.data.content as Article[],
@@ -40,17 +37,18 @@ export const fetchArticles = async (options: { pageIndex: number; pageSize: numb
     totalElements: response.data.totalElements,
   };
 };
+
 export const fetchItemsInStock = async ( options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
   const { pageIndex, pageSize, query, sort } = options;
   
-  const response = await api.get<PaginatedResponse<Article>>(`/items/search/in-stock`, {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+      page: pageIndex.toString(),
+      size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+  
+  const response = await api.get<PaginatedResponse<Article>>(`/items/search/in-stock?${params.toString()}`);
   
   return {
     data: response.data.content as Article[],
@@ -61,15 +59,15 @@ export const fetchItemsInStock = async ( options: { pageIndex: number; pageSize:
 export const fetchItems = async (type: 'HARDWARE' | 'CONSUMABLE', options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
   const { pageIndex, pageSize, query, sort } = options;
   
-  const response = await api.get<PaginatedResponse<Item>>(`/items/search`, {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      type: type,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+      page: pageIndex.toString(),
+      size: pageSize.toString(),
+      type,
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+  
+  const response = await api.get<PaginatedResponse<Item>>(`/items/search?${params.toString()}`);
   
   return {
     data: response.data.content as Item[],
@@ -88,10 +86,12 @@ export const getArticlesInStockCons = async (): Promise<Record<string, number>> 
     const response = await api.get<Record<string, number>>("/articles/in-stock/consumables");
     return response.data;
 }
+
 export const getArticlesInStockMateriel= async (): Promise<Record<string, number>> => {
     const response = await api.get<Record<string, number>>("/articles/in-stock/materiels");
     return response.data;
 }
+
 export const getAllDirections = async () => {
   const response = await api.get<Structure[]>("/structures/directions");
   return {
@@ -130,7 +130,6 @@ export async function searchItems(serialNumber: string): Promise<Item[]> {
   return res.data;
 }
 
-
 export async function searchItemsBySerialNumber(serialNumber: string, articleId: number) {
   const res = await api.get(`/items/search/${articleId}/${serialNumber}`);
   return res.data;
@@ -144,14 +143,15 @@ export async function searchItemsBySerialNumberAndPerson(personId: number, seria
 
 export const fetchOperations = async (options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
   const { pageIndex, pageSize, query, sort } = options;
-  const response = await api.get<PaginatedResponse<Operation>>("/operations", {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-    },
+
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Operation>>(`/operations?${params.toString()}`);
   return {
     data: response.data.content,
     pageCount: response.data.totalPages
@@ -165,15 +165,15 @@ export const fetchAllOperations = async () => {
 
 export const fetchPersons = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string, structureId?: string }) => {
   const { pageIndex, pageSize, query, sort, structureId } = options;
-  const response = await api.get<PaginatedResponse<Person>>("/persons", {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-      structureId: structureId || undefined,
-    },
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+  if (structureId) params.append('structureId', structureId);
+  
+  const response = await api.get<PaginatedResponse<Person>>(`/persons?${params.toString()}`);
 
   return {
     data: response.data.content as Person[],
@@ -203,14 +203,14 @@ export const fetchPersonById = async (id: number): Promise<Person> => {
 
 export const fetchStructures = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
-  const response = await api.get<PaginatedResponse<Structure>>("/structures", {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Structure>>(`/structures?${params.toString()}`);
 
   return {
     data: response.data.content as Structure[],
@@ -238,14 +238,14 @@ export const fetchStructureById = async (id: number): Promise<Structure> => {
 
 export const fetchItemsForArticle = async (articleId: number, options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
-  const response = await api.get<PaginatedResponse<Item>>(`/items/article/${articleId}`, {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Item>>(`/items/article/${articleId}?${params.toString()}`);
   return {
     data: response.data.content,
     pageCount: response.data.totalPages,
@@ -259,14 +259,14 @@ export const fetchAllItems = async () => {
 
 export const fetchItemsForPerson = async (personId: number, options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
-  const response = await api.get<PaginatedResponse<Item>>(`/items/person/${personId}`, {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Item>>(`/items/person/${personId}?${params.toString()}`);
   return {
     data: response.data.content,
     pageCount: response.data.totalPages,
@@ -275,14 +275,14 @@ export const fetchItemsForPerson = async (personId: number, options: { pageIndex
 
 export const fetchItemsForStructure = async (structureId: number, options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     const { pageIndex, pageSize, query, sort } = options;
-    const response = await api.get<PaginatedResponse<Item>>(`items/structure/${structureId}`, {
-        params: {
-        page: pageIndex,
-        size: pageSize,
-        query: query || undefined,
-        sort: sort,
-        },
+    const params = new URLSearchParams({
+        page: pageIndex.toString(),
+        size: pageSize.toString(),
     });
+    if (query) params.append('query', query);
+    if (sort) params.append('sort', sort);
+    
+    const response = await api.get<PaginatedResponse<Item>>(`items/structure/${structureId}?${params.toString()}`);
     return {
         data: response.data.content,
         pageCount: response.data.totalPages,
@@ -291,14 +291,14 @@ export const fetchItemsForStructure = async (structureId: number, options: { pag
 
 export const fetchArrivals = async (options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
   const { pageIndex, pageSize, query, sort } = options;
-  const response = await api.get<PaginatedResponse<Operation>>("/arrivals", {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Operation>>(`/arrivals?${params.toString()}`);
   return {
     data: response.data.content,
     pageCount: response.data.totalPages
@@ -330,14 +330,14 @@ export const fetchDistributions = async (options: { pageIndex: number; pageSize:
 
 export const fetchReparations = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
-  const response = await api.get<PaginatedResponse<Operation>>("/reparations", {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
   });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Operation>>(`/reparations?${params.toString()}`);
   return {
     data: response.data.content,
     pageCount: response.data.totalPages
@@ -415,18 +415,16 @@ export const fetchItemById = async (id: number): Promise<Item> => {
 
 export const fetchOperationsForItem = async (itemId: number, options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
-  console.log(itemId);
   
-  const response = await api.get<PaginatedResponse<Operation>>(`/items/operations`, {
-    params: {
-      page: pageIndex,
-      size: pageSize,
-      query: query || undefined,
-      itemId:itemId,
-      sort: sort,
-    },
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
+    itemId: itemId.toString(),
   });
-  console.log(response.statusText);
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Operation>>(`/items/operations?${params.toString()}`);
   
   return {
     data: response.data.content,
@@ -438,9 +436,3 @@ export const getStructureDistributionStats = async (params: { from?: string; to?
   const response = await api.get("stats/structures/distribution", { params });
   return response.data;
 };
-
-    
-
-
-
-
