@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -26,15 +25,12 @@ export const useDistributionsColumns = () => {
   const columns: ColumnDef<Distribution>[] = [
     {
       header: "#",
-      cell: ({ row }) => {
-        return row.index + 1;
-      },
+      cell: ({ row }) => row.index + 1,
+      enableSorting: false,
     },
     {
       id: "item.article.model",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('article')} />
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('article')} />,
       cell: ({ row }) => {
         const item = row.original.item;
         if (!item) return "N/A";
@@ -47,9 +43,7 @@ export const useDistributionsColumns = () => {
     },
     {
       id: "item.serialNumber",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('serial_number')} />
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('serial_number')} />,
       cell: ({ row }) => {
         const item = row.original.item;
         if (!item) return "N/A";
@@ -61,10 +55,8 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "person.firstName",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('beneficiary')} />
-      ),
+      id: "person.lastName",
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
       cell: ({ row }) => {
         const person = row.original.person;
         if (!person) return "N/A";
@@ -77,9 +69,7 @@ export const useDistributionsColumns = () => {
     },
     {
       id: 'person.structure.name',
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('structure')} />
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('structure')} />,
       cell: ({ row }) => {
         const structure = row.original.person?.structure;
         if (!structure) return t('unknown');
@@ -89,37 +79,25 @@ export const useDistributionsColumns = () => {
             </Button>
         )
       },
-      accessorFn: (row) => row.person?.structure?.name,
     },
     {
       accessorKey: "date",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('date')} />
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('date')} />,
       cell: ({ row }) => format(new Date(row.original.date), "PPP"),
     },
     {
       accessorKey: "remarks",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('remarks')} />
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('remarks')} />,
     },
     {
       id: "user.name",
-      accessorKey: "user.name",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('user')} />
-      ),
-      cell: ({ row }) => {
-        return row.original.user ? `${row.original.user.name}`: "N/A";
-      },
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('user')} />,
+      cell: ({ row }) => row.original.user?.name || "N/A",
+      accessorFn: (row) => row.user?.name,
     },
     {
-      id: "isSigned",
       accessorKey: "isSigned",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />
-      ),
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />,
       cell: ({ row }) => {
         const isSigned = row.original.isSigned;
         return isSigned ? (
@@ -157,6 +135,7 @@ export const useDistributionsColumns = () => {
           </DropdownMenu>
         );
       },
+      enableSorting: false,
     },
   ];
   return columns;
