@@ -20,7 +20,8 @@ export default function OperationsPage() {
   const operationTypes = [
     { label: t("arrival"), value: "ARRIVAL" },
     { label: t("distribution"), value: "DISTRIBUTION" },
-    { label: t("reparation"), value: "REPARATION" },
+    { label: t("reparation"), value: "REPAIR" },
+    { label: t("repaired"), value: "REPAIRED" },
     { label: t("reversement"), value: "REVERSEMENT" },
     { label: t("reforme"), value: "REFORME" },
   ]

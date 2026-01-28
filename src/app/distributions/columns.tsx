@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -29,7 +30,7 @@ export const useDistributionsColumns = () => {
       enableSorting: false,
     },
     {
-      id: "item.article.model",
+      accessorKey: "item.article.model",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('article')} />,
       cell: ({ row }) => {
         const item = row.original.item;
@@ -42,7 +43,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "item.serialNumber",
+      accessorKey: "item.serialNumber",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('serial_number')} />,
       cell: ({ row }) => {
         const item = row.original.item;
@@ -55,8 +56,9 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "person.lastName",
+      accessorKey: "person.lastName",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
+      accessorFn: row => `${row.person?.firstName || ''} ${row.person?.lastName || ''}`,
       cell: ({ row }) => {
         const person = row.original.person;
         if (!person) return "N/A";
@@ -68,7 +70,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: 'person.structure.name',
+      accessorKey: 'person.structure.name',
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('structure')} />,
       cell: ({ row }) => {
         const structure = row.original.person?.structure;
@@ -90,10 +92,9 @@ export const useDistributionsColumns = () => {
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('remarks')} />,
     },
     {
-      id: "user.name",
+      accessorKey: "user.name",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('user')} />,
       cell: ({ row }) => row.original.user?.name || "N/A",
-      accessorFn: (row) => row.user?.name,
     },
     {
       accessorKey: "isSigned",

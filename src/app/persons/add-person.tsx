@@ -40,9 +40,6 @@ import { fetchAllStructures } from "@/lib/data";
 import grades from "@/lib/grades.json";
 
 const personFunctions = [
-    "DIRECTEUR_GENERALE",
-    "DIRECTEUR",
-    "SOUS_DIRECTEUR",
     "CHARGEE_DE_DOSSIER",
     "SECRITEUR"
 ] as const;
@@ -50,10 +47,10 @@ const personFunctions = [
 const formSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  grade: z.string().min(1, "grade_is_required"),
+  grade: z.string().optional(),
   matricule: z.string().optional(),
   pseudo: z.string().optional(),
-  structureId: z.string().min(1, "direction_is_required"),
+  structureId: z.string().optional(),
   function: z.enum(personFunctions),
 });
 
