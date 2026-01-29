@@ -30,7 +30,7 @@ export const useDistributionsColumns = () => {
       enableSorting: false,
     },
     {
-      id: "article",
+      id: "items.article.model",
       accessorFn: row => `${row.item.article.model} - ${row.item.article.designation}`,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('article')} />,
       cell: ({ row }) => {
@@ -44,7 +44,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "serialNumber",
+      id: "items.serialNumber",
       accessorKey: "item.serialNumber",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('serial_number')} />,
       cell: ({ row }) => {
@@ -58,7 +58,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "beneficiary",
+      id: "person.lastName",
       accessorFn: row => `${row.person?.firstName || ''} ${row.person?.lastName || ''}`,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
       cell: ({ row }) => {
@@ -72,7 +72,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "structure",
+      id: "person.structure.name",
       accessorFn: row => row.person?.structure?.name,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('structure')} />,
       cell: ({ row }) => {
@@ -97,7 +97,7 @@ export const useDistributionsColumns = () => {
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('remarks')} />,
     },
     {
-      id: "user",
+      id: "user.name",
       accessorFn: (row) => row.user?.name,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('user')} />,
       cell: ({ row }) => row.original.user?.name || "N/A",
