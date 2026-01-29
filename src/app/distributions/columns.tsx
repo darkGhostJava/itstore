@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -58,7 +57,7 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "person.lastName",
+      id: "person",
       accessorFn: row => `${row.person?.firstName || ''} ${row.person?.lastName || ''}`,
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
       cell: ({ row }) => {
