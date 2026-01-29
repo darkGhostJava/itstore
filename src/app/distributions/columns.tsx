@@ -29,9 +29,10 @@ export const useDistributionsColumns = () => {
       enableSorting: false,
     },
     {
-      id: "items.article.model",
+      id: "article",
       accessorFn: row => `${row.item.article.model} - ${row.item.article.designation}`,
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('article')} />,
+      header: t('article'),
+      enableSorting: false, // Disabled to prevent backend crash
       cell: ({ row }) => {
         const item = row.original.item;
         if (!item) return "N/A";
@@ -43,9 +44,10 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "items.serialNumber",
+      id: "serialNumber",
       accessorKey: "item.serialNumber",
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('serial_number')} />,
+      header: t('serial_number'),
+      enableSorting: false, // Disabled to prevent backend crash
       cell: ({ row }) => {
         const item = row.original.item;
         if (!item) return "N/A";
@@ -57,8 +59,8 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "person",
-      accessorFn: row => `${row.person?.firstName || ''} ${row.person?.lastName || ''}`,
+      id: "beneficiary",
+      accessorKey: "person.lastName",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
       cell: ({ row }) => {
         const person = row.original.person;
@@ -71,8 +73,8 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "person.structure.name",
-      accessorFn: row => row.person?.structure?.name,
+      id: "structure",
+      accessorKey: "person.structure.name",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('structure')} />,
       cell: ({ row }) => {
         const structure = row.original.person?.structure;
@@ -96,8 +98,8 @@ export const useDistributionsColumns = () => {
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('remarks')} />,
     },
     {
-      id: "user.name",
-      accessorFn: (row) => row.user?.name,
+      id: "user",
+      accessorKey: "user.name",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('user')} />,
       cell: ({ row }) => row.original.user?.name || "N/A",
     },
