@@ -39,6 +39,8 @@ import {
   fetchItemsForPerson,
   registerReversals,
   getAllDirections,
+  getSubDirectionsOfDirection,
+  getPersonsByIdStructure,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Item, Person, Structure } from "@/lib/definitions";
@@ -56,6 +58,8 @@ const reversalItemSchema = z.object({
 });
 
 const reversalFormSchema = z.object({
+  structureId: z.string().min(1, "direction_is_required"),
+  subDirectionId: z.string().optional(),
   personId: z.string().min(1, "beneficiary_is_required"),
   reversals: z.array(reversalItemSchema).min(1, "at_least_one_article_is_required"),
 });
@@ -71,8 +75,12 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  
+  const [directions, setDirections] = useState<Structure[]>([]);
+  const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
   const [personItems, setPersonItems] = useState<Item[]>([]);
+  
   const [personSearch, setPersonSearch] = useState("");
   const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
@@ -80,6 +88,8 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   const form = useForm<ReversalFormValues>({
     resolver: zodResolver(reversalFormSchema),
     defaultValues: {
+      structureId: "",
+      subDirectionId: "",
       personId: "",
       reversals: [],
     },
@@ -90,22 +100,64 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     name: "reversals",
   });
   
+  const selectedStructureId = form.watch("structureId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
   const selectedPersonId = form.watch("personId");
 
-  // Fetch persons when searching
+  // Load directions on open
   useEffect(() => {
-    const fetchDebouncedPersons = async () => {
-      if (personSearch.length > 1) {
-        const res = await searchPersons(personSearch, ""); // empty structureId to search globally
-        setPersons(res.data || []);
-      }
+    if (open) {
+      (async () => {
+        const res = await getAllDirections();
+        setDirections(res.data || []);
+      })();
+    }
+  }, [open]);
+
+  // Load sub-directions when direction changes
+  useEffect(() => {
+    form.setValue("subDirectionId", "");
+    form.setValue("personId", "");
+    form.setValue("reversals", []);
+    setSubDirections([]);
+    setPersons([]);
+
+    if (selectedStructureId) {
+      (async () => {
+        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId, 10));
+        setSubDirections(res.data || []);
+      })();
+    }
+  }, [selectedStructureId, form]);
+
+  // Load persons when structure changes or search query changes
+  useEffect(() => {
+    const structureForInitialList = selectedSubDirectionId || selectedStructureId;
+    const structureForTextSearch = selectedStructureId;
+
+    const fetchBeneficiaries = async () => {
+        if (personSearch) {
+            if (!structureForTextSearch) {
+                 setPersons([]);
+                 return;
+            }
+            const res = await searchPersons(personSearch, structureForTextSearch);
+            setPersons(res.data || []);
+        } else {
+            if (structureForInitialList) {
+                const personsRes = await getPersonsByIdStructure(parseInt(structureForInitialList, 10));
+                setPersons(personsRes || []);
+            } else {
+                setPersons([]);
+            }
+        }
     };
 
-    if (isPersonPopoverOpen) {
-        const timeout = setTimeout(fetchDebouncedPersons, 300);
-        return () => clearTimeout(timeout);
+    if (isPersonPopoverOpen && selectedStructureId) {
+        const debounce = setTimeout(fetchBeneficiaries, 300);
+        return () => clearTimeout(debounce);
     }
-  }, [personSearch, isPersonPopoverOpen]);
+}, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
 
   // Fetch distributed items for selected person
   useEffect(() => {
@@ -193,6 +245,59 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         <ScrollArea className="max-h-[70vh] pr-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              
+              {/* Structure Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="structureId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('structure')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('select_structure_placeholder')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {directions.map((structure) => (
+                            <SelectItem key={structure.id} value={structure.id.toString()}>
+                              {structure.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage>{form.formState.errors.structureId && t(form.formState.errors.structureId.message as string)}</FormMessage>
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="subDirectionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('sub_direction')} ({t('optional')})</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedStructureId || subDirections.length === 0}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subDirections.map((sub) => (
+                            <SelectItem key={sub.id} value={sub.id.toString()}>
+                              {sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage>{form.formState.errors.subDirectionId && t(form.formState.errors.subDirectionId.message as string)}</FormMessage>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
                {/* Beneficiary Search */}
                <FormField
                 control={form.control}
@@ -206,6 +311,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                           <Button
                             variant="outline"
                             role="combobox"
+                            disabled={!selectedStructureId}
                             className={cn(
                               "w-full justify-between",
                               !field.value && "text-muted-foreground"
@@ -227,6 +333,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
+                            disabled={!selectedStructureId}
                           />
                            <ScrollArea className="max-h-56">
                           <CommandEmpty>{t('no_person_found')}</CommandEmpty>
@@ -260,6 +367,11 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                         </Command>
                       </PopoverContent>
                     </Popover>
+                    {!selectedStructureId && (
+                        <FormDescription>
+                          {t('select_direction_first')}
+                        </FormDescription>
+                      )}
                     <FormMessage />
                   </FormItem>
                 )}
