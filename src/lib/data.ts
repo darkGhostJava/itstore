@@ -344,18 +344,18 @@ export const fetchReversals = async (options: { pageIndex: number; pageSize: num
   };
 }
 
-export const registerReversals = async (payload: { itemId: number; remarks: string; userId: number; }[]) => {
-  const response = await api.post("/reversals", payload, {
+export const registerReversals = async (payload: { itemId: number; personId: number; remarks: string; }[]) => {
+  const response = await api.post("/refunds", payload, {
     responseType: "arraybuffer",
   });
 
   const blob = new Blob([response.data], {
-    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    type: "application/pdf",
   });
   const url = window.URL.createObjectURL(blob);
   const link = document.body.appendChild(document.createElement("a"));
   link.href = url;
-  link.download = `reversement_${Date.now()}.docx`;
+  link.download = `reversal_${Date.now()}.pdf`;
   link.target = "_blank";
   link.click();
   document.body.removeChild(link);

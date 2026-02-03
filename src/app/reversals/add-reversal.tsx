@@ -118,8 +118,8 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     try {
       const payload = values.reversals.map(rev => ({
         itemId: rev.item.id,
+        personId: parseInt(values.personId, 10),
         remarks: rev.remarks,
-        userId: 1, // Assuming a logged-in user
       }));
 
       await registerReversals(payload);
