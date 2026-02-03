@@ -2,7 +2,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Operation, Item } from "@/lib/definitions";
+import type { Item, Person, User } from "@/lib/definitions";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -17,10 +17,21 @@ import { DataTableColumnHeader } from "@/components/data-table/data-table-column
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 
+// Define the shape of the Refund object as returned by /api/refunds
+export type Refund = {
+  id: number;
+  date: string;
+  remarks: string;
+  item?: Item;
+  items?: Item[]; // In case it returns a list of items like a generic operation
+  person: Person;
+  user: User;
+}
+
 export const useReversalsColumns = () => {
   const { t } = useTranslation('common');
 
-  const columns: ColumnDef<Operation>[] = [
+  const columns: ColumnDef<Refund>[] = [
     {
       header: "#",
       cell: ({ row }) => row.index + 1,
@@ -30,7 +41,7 @@ export const useReversalsColumns = () => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('date')} />
       ),
-      cell: ({ row }) => format(new Date(row.original.date), "PPP"),
+      cell: ({ row }) => row.original.date ? format(new Date(row.original.date), "PPP") : "N/A",
     },
     {
       id: "article",
@@ -38,9 +49,9 @@ export const useReversalsColumns = () => {
         <DataTableColumnHeader column={column} title={t('article')} />
       ),
       cell: ({ row }) => {
-        const items = (row.original as any).items as Item[] | undefined;
-        if (!items || items.length === 0) return "N/A";
-        const article = items[0].article;
+        const item = row.original.item || row.original.items?.[0];
+        if (!item) return "N/A";
+        const article = item.article;
         return (
             <Button variant="link" asChild className="p-0 h-auto">
                 <Link href={`/articles/${article.id}`}>{article.model} - {article.designation}</Link>
@@ -54,9 +65,8 @@ export const useReversalsColumns = () => {
         <DataTableColumnHeader column={column} title={t('serial_number')} />
       ),
       cell: ({ row }) => {
-        const items = (row.original as any).items as Item[] | undefined;
-        if (!items || items.length === 0) return "N/A";
-        const item = items[0];
+        const item = row.original.item || row.original.items?.[0];
+        if (!item) return "N/A";
         return (
             <Button variant="link" asChild className="p-0 h-auto">
                 <Link href={`/items/${item.id}`}>{item.serialNumber}</Link>
