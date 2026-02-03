@@ -111,9 +111,8 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedDirectionId = form.watch("directionId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
 
-  // Load sub-directions when direction changes
+  // Load sub-directions and persons when the main direction changes
   useEffect(() => {
     form.setValue("subDirectionId", "");
     form.setValue("beneficiaryId", "");
@@ -121,12 +120,13 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     setPersons([]);
 
     if (selectedDirectionId) {
+      // 1. Load Sub-Directions
       (async () => {
         const res = await getSubDirectionsOfDirection(parseInt(selectedDirectionId, 10));
         setSubDirections(res.data || []);
       })();
       
-      // Initially load persons from the main structure
+      // 2. Load Persons from the main structure (always use main structure for persons)
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
         setPersons(personsRes || []);
@@ -134,39 +134,23 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     }
   }, [selectedDirectionId, form]);
 
-  // Load persons when sub-direction changes
-  useEffect(() => {
-    form.setValue("beneficiaryId", "");
-    setPersons([]);
-
-    const targetId = selectedSubDirectionId || selectedDirectionId;
-
-    if (targetId) {
-      (async () => {
-        const personsRes = await getPersonsByIdStructure(parseInt(targetId, 10));
-        setPersons(personsRes || []);
-      })();
-    }
-  }, [selectedSubDirectionId, selectedDirectionId, form]);
-
-  // Handle dynamic person search
+  // Handle dynamic person search (always uses main structure ID)
   useEffect(() => {
     const fetchPersonsData = async () => {
-        const targetId = selectedSubDirectionId || selectedDirectionId;
-        if (personSearch && targetId) {
-            const res = await searchPersons(personSearch, targetId);
+        if (personSearch && selectedDirectionId) {
+            const res = await searchPersons(personSearch, selectedDirectionId);
             setPersons(res.data || []);
-        } else if (targetId) {
-            const personsRes = await getPersonsByIdStructure(parseInt(targetId, 10));
+        } else if (selectedDirectionId) {
+            const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
             setPersons(personsRes || []);
         }
     };
 
-    if (isPersonPopoverOpen && (selectedDirectionId || selectedSubDirectionId)) {
+    if (isPersonPopoverOpen && selectedDirectionId) {
         const debounce = setTimeout(fetchPersonsData, 300);
         return () => clearTimeout(debounce);
     }
-  }, [personSearch, selectedDirectionId, selectedSubDirectionId, isPersonPopoverOpen]);
+  }, [personSearch, selectedDirectionId, isPersonPopoverOpen]);
 
   async function onSubmit(values: DistributionFormValues) {
     setLoading(true);
