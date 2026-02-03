@@ -36,6 +36,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   getAllDirections,
+  getSubDirectionsOfDirection,
   searchArticles,
   searchItemsBySerialNumber,
   searchPersons,
@@ -48,7 +49,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
 const articleDistributionSchema = z.object({
@@ -58,7 +59,8 @@ const articleDistributionSchema = z.object({
 });
 
 const distributionFormSchema = z.object({
-  structureId: z.string().min(1, "direction_is_required"),
+  directionId: z.string().min(1, "direction_is_required"),
+  subDirectionId: z.string().min(1, "subdirection_is_required"),
   beneficiaryId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleDistributionSchema).min(1, "at_least_one_article_is_required"),
@@ -75,6 +77,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const { toast } = useToast();
   const [searchedArticles, setSearchedArticles] = useState<Article[]>([]);
   const [directions, setDirections] = useState<Structure[]>([]);
+  const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
   const [serials, setSerials] = useState<Record<number, Item[]>>({});
   const [loading, setLoading] = useState(false);
@@ -86,7 +89,8 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const form = useForm<DistributionFormValues>({
     resolver: zodResolver(distributionFormSchema),
     defaultValues: {
-      structureId: "",
+      directionId: "",
+      subDirectionId: "",
       beneficiaryId: "",
       remarks: "",
       articles: [],
@@ -107,36 +111,54 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     }
   }, [open]);
 
-  const selectedStructureId = form.watch("structureId");
+  const selectedDirectionId = form.watch("directionId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
 
+  // Load sub-directions when direction changes
   useEffect(() => {
-    form.resetField("beneficiaryId");
+    form.setValue("subDirectionId", "");
+    form.setValue("beneficiaryId", "");
+    setSubDirections([]);
     setPersons([]);
 
-    if (selectedStructureId) {
+    if (selectedDirectionId) {
       (async () => {
-        const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
+        const res = await getSubDirectionsOfDirection(parseInt(selectedDirectionId, 10));
+        setSubDirections(res.data || []);
+      })();
+    }
+  }, [selectedDirectionId, form]);
+
+  // Load persons when sub-direction changes
+  useEffect(() => {
+    form.setValue("beneficiaryId", "");
+    setPersons([]);
+
+    if (selectedSubDirectionId) {
+      (async () => {
+        const personsRes = await getPersonsByIdStructure(parseInt(selectedSubDirectionId, 10));
         setPersons(personsRes || []);
       })();
     }
-  }, [selectedStructureId, form]);
+  }, [selectedSubDirectionId, form]);
 
- useEffect(() => {
-    const fetchPersons = async () => {
-        if (personSearch && selectedStructureId) {
-            const res = await searchPersons(personSearch, selectedStructureId);
+  // Handle dynamic person search
+  useEffect(() => {
+    const fetchPersonsData = async () => {
+        if (personSearch && selectedSubDirectionId) {
+            const res = await searchPersons(personSearch, selectedSubDirectionId);
             setPersons(res.data || []);
-        } else if (selectedStructureId) {
-            const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
+        } else if (selectedSubDirectionId) {
+            const personsRes = await getPersonsByIdStructure(parseInt(selectedSubDirectionId, 10));
             setPersons(personsRes || []);
         }
     };
 
-    if (isPersonPopoverOpen && selectedStructureId) {
-        const debounce = setTimeout(fetchPersons, 300);
+    if (isPersonPopoverOpen && selectedSubDirectionId) {
+        const debounce = setTimeout(fetchPersonsData, 300);
         return () => clearTimeout(debounce);
     }
-}, [personSearch, selectedStructureId, isPersonPopoverOpen]);
+  }, [personSearch, selectedSubDirectionId, isPersonPopoverOpen]);
 
   async function onSubmit(values: DistributionFormValues) {
     setLoading(true);
@@ -158,7 +180,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         userId: 1,
         hardwares,
         consumables,
-        subDirectionId: parseInt(values.structureId),
+        subDirectionId: parseInt(values.subDirectionId),
       };
 
       const response = await api.post("/distributions", payload, {
@@ -259,30 +281,61 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         <ScrollArea className="max-h-[70vh] pr-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="structureId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('structure')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('select_structure_placeholder')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {directions.map((structure) => (
-                          <SelectItem key={structure.id} value={structure.id.toString()}>
-                            {structure.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="directionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('structure')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('select_structure_placeholder')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {directions.map((structure) => (
+                            <SelectItem key={structure.id} value={structure.id.toString()}>
+                              {structure.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="subDirectionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('sub_direction')}</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={!selectedDirectionId || subDirections.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subDirections.map((sub) => (
+                            <SelectItem key={sub.id} value={sub.id.toString()}>
+                              {sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
                <FormField
                 control={form.control}
@@ -296,7 +349,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <Button
                             variant="outline"
                             role="combobox"
-                            disabled={!selectedStructureId}
+                            disabled={!selectedSubDirectionId}
                             className={cn(
                               "w-full justify-between",
                               !field.value && "text-muted-foreground"
@@ -318,31 +371,33 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
-                            disabled={!selectedStructureId}
+                            disabled={!selectedSubDirectionId}
                           />
                            <ScrollArea className="max-h-56">
                           <CommandEmpty>{t('no_person_found')}</CommandEmpty>
                             <CommandGroup>
-                              {persons.map((person) => (
-                                <CommandItem
-                                  value={`${person.firstName} ${person.lastName}`}
-                                  key={person.id}
-                                  onSelect={() => {
-                                    form.setValue("beneficiaryId", person.id.toString());
-                                    setPersonPopoverOpen(false);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      person.id.toString() === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {person.grade} {person.firstName} {person.lastName}
-                                </CommandItem>
-                              ))}
+                              <CommandList>
+                                {persons.map((person) => (
+                                  <CommandItem
+                                    value={`${person.firstName} ${person.lastName}`}
+                                    key={person.id}
+                                    onSelect={() => {
+                                      form.setValue("beneficiaryId", person.id.toString());
+                                      setPersonPopoverOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        person.id.toString() === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {person.grade} {person.firstName} {person.lastName}
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
                             </CommandGroup>
                           </ScrollArea>
                         </Command>
@@ -358,7 +413,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                 <div className="space-y-4">
                   {fields.map((field, index) => {
                     const articleType = form.getValues(`articles.${index}.article.type`);
-                    const currentSerials = serials[index] || [];
+                    const currentSerialsList = serials[index] || [];
                     const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
 
                     return (
@@ -384,9 +439,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                     onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
                                     onBlur={() => setTimeout(() => setSerials(prev => ({ ...prev, [index]: [] })), 150)}
                                   />
-                                  {currentSerials.length > 0 && (
+                                  {currentSerialsList.length > 0 && (
                                     <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-48 overflow-y-auto">
-                                      {currentSerials.map((serial) => (
+                                      {currentSerialsList.map((serial) => (
                                         <div
                                           key={serial.id}
                                           className="p-2 cursor-pointer hover:bg-muted"
