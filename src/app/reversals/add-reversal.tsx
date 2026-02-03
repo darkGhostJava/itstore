@@ -29,16 +29,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Undo2, Check, ChevronsUpDown, Trash2 } from "lucide-react";
+import { Undo2, Check, ChevronsUpDown, Trash2, Search } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   searchPersons,
-  fetchItemsForPerson,
   registerReversals,
   getAllDirections,
   getPersonsByIdStructure,
+  fetchItemsForStructure,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Item, Person, Structure } from "@/lib/definitions";
@@ -47,7 +47,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
 const reversalItemSchema = z.object({
@@ -75,10 +75,12 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   
   const [directions, setDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
-  const [personItems, setPersonItems] = useState<Item[]>([]);
+  const [structureItems, setStructureItems] = useState<Item[]>([]);
   
   const [personSearch, setPersonSearch] = useState("");
+  const [itemSearch, setItemSearch] = useState("");
   const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
+  const [isItemPopoverOpen, setItemPopoverOpen] = useState(false);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
 
   const form = useForm<ReversalFormValues>({
@@ -107,15 +109,32 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     }
   }, [open]);
 
+  // When structure changes, reset person and reversals, and load new structure items
   useEffect(() => {
     form.setValue("personId", "");
     form.setValue("reversals", []);
     setPersons([]);
+    setStructureItems([]);
 
     if (selectedStructureId) {
+      // Fetch persons for this structure
       (async () => {
-        const res = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
-        setPersons(res || []);
+        const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
+        setPersons(personsRes || []);
+      })();
+
+      // Fetch items distributed to this structure
+      (async () => {
+        setIsLoadingItems(true);
+        try {
+          const res = await fetchItemsForStructure(parseInt(selectedStructureId, 10), { pageIndex: 0, pageSize: 1000 });
+          setStructureItems(res.data || []);
+        } catch (error) {
+          console.error("Failed to fetch structure items", error);
+          setStructureItems([]);
+        } finally {
+          setIsLoadingItems(false);
+        }
       })();
     }
   }, [selectedStructureId, form]);
@@ -136,26 +155,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         return () => clearTimeout(debounce);
     }
 }, [personSearch, selectedStructureId, isPersonPopoverOpen]);
-
-  useEffect(() => {
-    const loadItems = async () => {
-      if (selectedPersonId) {
-        setIsLoadingItems(true);
-        try {
-          const res = await fetchItemsForPerson(parseInt(selectedPersonId, 10), { pageIndex: 0, pageSize: 100 });
-          setPersonItems(res.data || []);
-        } catch (error) {
-          console.error("Failed to fetch person items", error);
-          setPersonItems([]);
-        } finally {
-          setIsLoadingItems(false);
-        }
-      } else {
-        setPersonItems([]);
-      }
-    };
-    loadItems();
-  }, [selectedPersonId]);
 
   async function onSubmit(values: ReversalFormValues) {
     setLoading(true);
@@ -193,6 +192,8 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     const alreadyAdded = fields.some(f => f.item.id === item.id);
     if (!alreadyAdded) {
         append({ item: item, remarks: "" });
+        setItemPopoverOpen(false);
+        setItemSearch("");
     } else {
         toast({
             title: t('item_already_added', 'Item already added'),
@@ -286,29 +287,30 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                            <ScrollArea className="max-h-56">
                           <CommandEmpty>{t('no_person_found')}</CommandEmpty>
                             <CommandGroup>
-                              {persons.map((person) => (
-                                <CommandItem
-                                  value={`${person.firstName} ${person.lastName}`}
-                                  key={person.id}
-                                  onSelect={() => {
-                                    form.setValue("personId", person.id.toString());
-                                    form.setValue("reversals", []);
-                                    setPersonPopoverOpen(false);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      person.id.toString() === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  <div className="flex flex-col">
-                                    <span>{person.grade} {person.firstName} {person.lastName} ({person.pseudo})</span>
-                                  </div>
-                                </CommandItem>
-                              ))}
+                              <CommandList>
+                                {persons.map((person) => (
+                                  <CommandItem
+                                    value={`${person.firstName} ${person.lastName}`}
+                                    key={person.id}
+                                    onSelect={() => {
+                                      form.setValue("personId", person.id.toString());
+                                      setPersonPopoverOpen(false);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        person.id.toString() === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span>{person.grade} {person.firstName} {person.lastName} ({person.pseudo})</span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandList>
                             </CommandGroup>
                           </ScrollArea>
                         </Command>
@@ -319,7 +321,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                 )}
               />
 
-              {selectedPersonId && (
+              {selectedStructureId && (
                 <div className="space-y-4 pt-4 border-t">
                     <FormLabel>{t('articles_to_return')}</FormLabel>
                     
@@ -357,33 +359,59 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <FormLabel>{t('select_item_from_assigned', 'Select Item from Assigned')}</FormLabel>
-                        <Select onValueChange={(val) => {
-                            const item = personItems.find(i => i.id.toString() === val);
-                            if (item) handleSelectItem(item);
-                        }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder={isLoadingItems ? t('loading_items', 'Loading items...') : t('select_item_placeholder', 'Select an assigned item to return')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {personItems.length === 0 ? (
-                                    <div className="p-2 text-sm text-muted-foreground">{t('no_items_found', 'No items currently assigned to this person.')}</div>
-                                ) : (
-                                    personItems.map((item) => (
-                                        <SelectItem key={item.id} value={item.id.toString()}>
-                                            {item.serialNumber} - {item.article.model}
-                                        </SelectItem>
-                                    ))
-                                )}
-                            </SelectContent>
-                        </Select>
+                        <FormLabel>{t('search_item_in_structure', 'Search Item in Structure')}</FormLabel>
+                        <Popover open={isItemPopoverOpen} onOpenChange={setItemPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              disabled={isLoadingItems}
+                              className="w-full justify-between"
+                            >
+                              {isLoadingItems ? t('loading_items', 'Loading items...') : t('search_add_serial_placeholder')}
+                              <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                            <Command>
+                              <CommandInput 
+                                placeholder={t('filter_by_serial_number_placeholder')} 
+                                onValueChange={setItemSearch}
+                              />
+                              <ScrollArea className="max-h-64">
+                                <CommandEmpty>{t('no_items_found', 'No items found.')}</CommandEmpty>
+                                <CommandGroup>
+                                  <CommandList>
+                                    {structureItems
+                                      .filter(item => item.serialNumber.toLowerCase().includes(itemSearch.toLowerCase()))
+                                      .map((item) => (
+                                      <CommandItem
+                                        key={item.id}
+                                        value={item.serialNumber}
+                                        onSelect={() => handleSelectItem(item)}
+                                      >
+                                        <div className="flex flex-col w-full">
+                                          <div className="flex justify-between items-center w-full">
+                                            <span className="font-medium">{item.serialNumber}</span>
+                                            <Badge variant="outline" className="text-[10px]">{item.article.model}</Badge>
+                                          </div>
+                                          <span className="text-xs text-muted-foreground">{item.article.designation}</span>
+                                        </div>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandList>
+                                </CommandGroup>
+                              </ScrollArea>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                     </div>
                 </div>
               )}
 
               <DialogFooter>
-                <Button type="submit" disabled={loading || !selectedPersonId}>
+                <Button type="submit" disabled={loading || !selectedPersonId || fields.length === 0}>
                   {loading ? t('saving') : t('save_reversal')}
                 </Button>
               </DialogFooter>
