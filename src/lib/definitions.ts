@@ -54,6 +54,8 @@ export type Operation = {
   remarks: string;
   user: User;
   person?: Person;
+  items?: Item[];
+  budget?: string;
 };
 
 export type Distribution = {

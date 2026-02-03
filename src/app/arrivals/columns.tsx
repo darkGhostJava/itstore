@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
+import { ViewArrivalDetailsDialog } from "./view-arrival-details-dialog";
 
 export const useArrivalsColumns = () => {
   const { t } = useTranslation('common');
@@ -30,16 +32,16 @@ export const useArrivalsColumns = () => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('date')} />
       ),
-      cell: ({ row }) => format(new Date(row.original.date), "PPP"),
+      cell: ({ row }) => format(new Date(row.original.date), "PPP p"),
     },
     {
       id: "article",
-      accessorFn: (row) => (row as any).items[0]?.article?.model,
+      accessorFn: (row) => row.items?.[0]?.article?.model,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('article')} />
       ),
       cell: ({ row }) => {
-        const items = (row.original as any).items as Item[] | undefined;
+        const items = row.original.items;
         if (!items || items.length === 0) return "N/A";
         const article = items[0].article;
         return article ? `${article.model} - ${article.designation}` : "N/A";
@@ -47,12 +49,12 @@ export const useArrivalsColumns = () => {
     },
     {
       id: "count",
-      accessorFn: (row) => (row as any).items?.length,
+      accessorFn: (row) => row.items?.length,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('count')} />
       ),
       cell: ({ row }) => {
-        const items = (row.original as any).items as Item[] | undefined;
+        const items = row.original.items;
         return items?.length ?? 0;
       }
     },
@@ -75,6 +77,7 @@ export const useArrivalsColumns = () => {
     {
       id: "actions",
       cell: ({ row }) => {
+        const arrival = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -85,7 +88,7 @@ export const useArrivalsColumns = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-              <DropdownMenuItem>{t('view_details')}</DropdownMenuItem>
+              <ViewArrivalDetailsDialog arrival={arrival} />
             </DropdownMenuContent>
           </DropdownMenu>
         );
