@@ -108,7 +108,6 @@ export const getSubDirectionsOfDirection = async (directionId: number) => {
 
 export const getPersonsByIdStructure = async (idStructure: number): Promise<Person[]> => {
   const response = await api.get<any>(`/persons/structure/${idStructure}`);
-  // The backend might return a raw array or a paginated object. This handles both.
   if (Array.isArray(response.data)) {
     return response.data;
   }
@@ -344,7 +343,7 @@ export const fetchReversals = async (options: { pageIndex: number; pageSize: num
   };
 }
 
-export const registerReversals = async (payload: { itemId: number; personId: number; remarks: string; }[]) => {
+export const registerReversals = async (payload: { itemIds: number[]; personId: number; remarks: string; }) => {
   const response = await api.post("/refunds", payload, {
     responseType: "arraybuffer",
   });

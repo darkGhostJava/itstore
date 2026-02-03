@@ -52,12 +52,12 @@ import { cn } from "@/lib/utils";
 
 const reversalItemSchema = z.object({
   item: z.any().refine(val => val, { message: "article_is_required" }),
-  remarks: z.string().min(1, "remarks_are_required"),
 });
 
 const reversalFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
   personId: z.string().min(1, "beneficiary_is_required"),
+  remarks: z.string().min(1, "remarks_are_required"),
   reversals: z.array(reversalItemSchema).min(1, "at_least_one_article_is_required"),
 });
 
@@ -88,6 +88,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     defaultValues: {
       structureId: "",
       personId: "",
+      remarks: "",
       reversals: [],
     },
   });
@@ -109,7 +110,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     }
   }, [open]);
 
-  // When structure changes, reset person and reversals, and load new structure items
   useEffect(() => {
     form.setValue("personId", "");
     form.setValue("reversals", []);
@@ -117,13 +117,11 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     setStructureItems([]);
 
     if (selectedStructureId) {
-      // Fetch persons for this structure
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
         setPersons(personsRes || []);
       })();
 
-      // Fetch items distributed to this structure
       (async () => {
         setIsLoadingItems(true);
         try {
@@ -159,11 +157,11 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   async function onSubmit(values: ReversalFormValues) {
     setLoading(true);
     try {
-      const payload = values.reversals.map(rev => ({
-        itemId: rev.item.id,
+      const payload = {
+        itemIds: values.reversals.map(rev => rev.item.id),
         personId: parseInt(values.personId, 10),
-        remarks: rev.remarks,
-      }));
+        remarks: values.remarks,
+      };
 
       await registerReversals(payload);
 
@@ -191,7 +189,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   const handleSelectItem = (item: Item) => {
     const alreadyAdded = fields.some(f => f.item.id === item.id);
     if (!alreadyAdded) {
-        append({ item: item, remarks: "" });
+        append({ item: item });
         setItemPopoverOpen(false);
         setItemSearch("");
     } else {
@@ -327,7 +325,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                     
                     <div className="space-y-4">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
+                        <div key={field.id} className="rounded-md border p-4 space-y-2 relative">
                         <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -337,23 +335,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                             <p className="text-sm">{t('serial_number')}: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
                             <p className="text-sm">{t('status')}: <StatusBadge status={field.item.status} /></p>
                         </div>
-
-                        <FormField
-                            control={form.control}
-                            name={`reversals.${index}.remarks`}
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{t('remarks')}</FormLabel>
-                                <FormControl>
-                                <Textarea
-                                    placeholder={t('add_remarks_placeholder')}
-                                    {...field}
-                                />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
                         </div>
                     ))}
                     </div>
@@ -409,6 +390,20 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                     </div>
                 </div>
               )}
+
+              <FormField
+                control={form.control}
+                name="remarks"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('remarks')}</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder={t('add_remarks_placeholder')} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <DialogFooter>
                 <Button type="submit" disabled={loading || !selectedPersonId || fields.length === 0}>
