@@ -15,7 +15,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -60,7 +59,7 @@ const articleDistributionSchema = z.object({
 
 const distributionFormSchema = z.object({
   directionId: z.string().min(1, "direction_is_required"),
-  subDirectionId: z.string().min(1, "subdirection_is_required"),
+  subDirectionId: z.string().optional(),
   beneficiaryId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleDistributionSchema).min(1, "at_least_one_article_is_required"),
@@ -126,6 +125,12 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         const res = await getSubDirectionsOfDirection(parseInt(selectedDirectionId, 10));
         setSubDirections(res.data || []);
       })();
+      
+      // Initially load persons from the main structure
+      (async () => {
+        const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
+        setPersons(personsRes || []);
+      })();
     }
   }, [selectedDirectionId, form]);
 
@@ -134,31 +139,34 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     form.setValue("beneficiaryId", "");
     setPersons([]);
 
-    if (selectedSubDirectionId) {
+    const targetId = selectedSubDirectionId || selectedDirectionId;
+
+    if (targetId) {
       (async () => {
-        const personsRes = await getPersonsByIdStructure(parseInt(selectedSubDirectionId, 10));
+        const personsRes = await getPersonsByIdStructure(parseInt(targetId, 10));
         setPersons(personsRes || []);
       })();
     }
-  }, [selectedSubDirectionId, form]);
+  }, [selectedSubDirectionId, selectedDirectionId, form]);
 
   // Handle dynamic person search
   useEffect(() => {
     const fetchPersonsData = async () => {
-        if (personSearch && selectedSubDirectionId) {
-            const res = await searchPersons(personSearch, selectedSubDirectionId);
+        const targetId = selectedSubDirectionId || selectedDirectionId;
+        if (personSearch && targetId) {
+            const res = await searchPersons(personSearch, targetId);
             setPersons(res.data || []);
-        } else if (selectedSubDirectionId) {
-            const personsRes = await getPersonsByIdStructure(parseInt(selectedSubDirectionId, 10));
+        } else if (targetId) {
+            const personsRes = await getPersonsByIdStructure(parseInt(targetId, 10));
             setPersons(personsRes || []);
         }
     };
 
-    if (isPersonPopoverOpen && selectedSubDirectionId) {
+    if (isPersonPopoverOpen && (selectedDirectionId || selectedSubDirectionId)) {
         const debounce = setTimeout(fetchPersonsData, 300);
         return () => clearTimeout(debounce);
     }
-  }, [personSearch, selectedSubDirectionId, isPersonPopoverOpen]);
+  }, [personSearch, selectedDirectionId, selectedSubDirectionId, isPersonPopoverOpen]);
 
   async function onSubmit(values: DistributionFormValues) {
     setLoading(true);
@@ -180,7 +188,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         userId: 1,
         hardwares,
         consumables,
-        subDirectionId: parseInt(values.subDirectionId),
+        subDirectionId: values.subDirectionId ? parseInt(values.subDirectionId) : parseInt(values.directionId),
       };
 
       const response = await api.post("/distributions", payload, {
@@ -188,7 +196,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       });
 
       const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        type: "application/pdf",
       });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -312,7 +320,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   name="subDirectionId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('sub_direction')}</FormLabel>
+                      <FormLabel>{t('sub_direction')} <span className="text-xs text-muted-foreground">({t('optional')})</span></FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
                         value={field.value}
@@ -349,7 +357,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <Button
                             variant="outline"
                             role="combobox"
-                            disabled={!selectedSubDirectionId}
+                            disabled={!selectedDirectionId}
                             className={cn(
                               "w-full justify-between",
                               !field.value && "text-muted-foreground"
@@ -371,7 +379,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
-                            disabled={!selectedSubDirectionId}
+                            disabled={!selectedDirectionId}
                           />
                            <ScrollArea className="max-h-56">
                           <CommandEmpty>{t('no_person_found')}</CommandEmpty>
