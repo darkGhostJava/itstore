@@ -66,12 +66,12 @@ export const useReversalsColumns = () => {
     },
     {
       id: "beneficiary",
-      accessorKey: "person",
+      accessorKey: "person.lastName",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('beneficiary')} />
       ),
       cell: ({ row }) => {
-        const person = row.original.beneficiary;
+        const person = row.original.person;
         if (!person) return t('unknown');
         return (
             <Button variant="link" asChild className="p-0 h-auto">

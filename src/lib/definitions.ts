@@ -13,7 +13,7 @@ export type Item = {
   id: number;
   serialNumber: string;
   article: Article;
-  status: "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED" | "REPAIRED";
+  status: "IN_STOCK_NEW" | "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED" | "REPAIRED";
   budget?: string;
   date?: string;
 };
@@ -49,11 +49,11 @@ export type Structure = {
 
 export type Operation = {
   id: number;
-  type: "ARRIVAL" | "DISTRIBUTION" | "REPARATION" | "REVERSEMENT" | "REFORME";
+  type: "ARRIVAL" | "DISTRIBUTION" | "REPAIR" | "REPAIRED" | "REVERSEMENT" | "REFORME";
   date: string;
   remarks: string;
   user: User;
-  beneficiary?: Person;
+  person?: Person;
 };
 
 export type Distribution = {

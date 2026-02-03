@@ -30,15 +30,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, Undo2 } from "lucide-react";
+import { PlusCircle, Trash2, Undo2, Check, ChevronsUpDown } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  getAllDirections,
-  getPersonsByIdStructure,
-  searchItemsBySerialNumberAndPerson,
+  searchPersons,
+  fetchItemsForPerson,
   registerReversals,
+  getAllDirections,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Item, Person, Structure } from "@/lib/definitions";
@@ -46,6 +46,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useTranslation } from "react-i18next";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 const reversalItemSchema = z.object({
   item: z.any().refine(val => val, { message: "article_is_required" }),
@@ -53,7 +56,6 @@ const reversalItemSchema = z.object({
 });
 
 const reversalFormSchema = z.object({
-  structureId: z.string().min(1, "direction_is_required"),
   personId: z.string().min(1, "beneficiary_is_required"),
   reversals: z.array(reversalItemSchema).min(1, "at_least_one_article_is_required"),
 });
@@ -69,14 +71,15 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [directions, setDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
-  const [searchedItems, setSearchedItems] = useState<Item[]>([]);
+  const [personItems, setPersonItems] = useState<Item[]>([]);
+  const [personSearch, setPersonSearch] = useState("");
+  const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
+  const [isLoadingItems, setIsLoadingItems] = useState(false);
 
   const form = useForm<ReversalFormValues>({
     resolver: zodResolver(reversalFormSchema),
     defaultValues: {
-      structureId: "",
       personId: "",
       reversals: [],
     },
@@ -89,28 +92,41 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   
   const selectedPersonId = form.watch("personId");
 
+  // Fetch persons when searching
   useEffect(() => {
-    if (open) {
-      (async () => {
-        const res = await getAllDirections();
-        setDirections(res.data || []);
-      })();
-    }
-  }, [open]);
-
-  const selectedStructureId = form.watch("structureId");
-
-  useEffect(() => {
-    const fetchPersons = async () => {
-      form.resetField("personId");
-      setPersons([]);
-      if (selectedStructureId) {
-        const res = await getPersonsByIdStructure(parseInt(selectedStructureId));
-        setPersons(res || []);
+    const fetchDebouncedPersons = async () => {
+      if (personSearch.length > 1) {
+        const res = await searchPersons(personSearch, ""); // empty structureId to search globally
+        setPersons(res.data || []);
       }
     };
-    fetchPersons();
-  }, [selectedStructureId, form]);
+
+    if (isPersonPopoverOpen) {
+        const timeout = setTimeout(fetchDebouncedPersons, 300);
+        return () => clearTimeout(timeout);
+    }
+  }, [personSearch, isPersonPopoverOpen]);
+
+  // Fetch distributed items for selected person
+  useEffect(() => {
+    const loadItems = async () => {
+      if (selectedPersonId) {
+        setIsLoadingItems(true);
+        try {
+          const res = await fetchItemsForPerson(parseInt(selectedPersonId, 10), { pageIndex: 0, pageSize: 100 });
+          setPersonItems(res.data || []);
+        } catch (error) {
+          console.error("Failed to fetch person items", error);
+          setPersonItems([]);
+        } finally {
+          setIsLoadingItems(false);
+        }
+      } else {
+        setPersonItems([]);
+      }
+    };
+    loadItems();
+  }, [selectedPersonId]);
 
 
   async function onSubmit(values: ReversalFormValues) {
@@ -145,12 +161,16 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     }
   }
 
-  const handleItemSearch = async (query: string) => {
-    if (query.length > 1 && selectedPersonId) {
-      const res = await searchItemsBySerialNumberAndPerson(parseInt(selectedPersonId), query);
-      setSearchedItems(res);
+  const handleSelectItem = (item: Item) => {
+    const alreadyAdded = fields.some(f => f.item.id === item.id);
+    if (!alreadyAdded) {
+        append({ item: item, remarks: "" });
     } else {
-      setSearchedItems([]);
+        toast({
+            title: t('item_already_added', 'Item already added'),
+            description: t('item_already_added_desc', 'This item is already in the list to be returned.'),
+            variant: "destructive"
+        });
     }
   };
 
@@ -167,148 +187,152 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         <DialogHeader>
           <DialogTitle>{t('add_new_reversal')}</DialogTitle>
           <DialogDescription>
-            {t('add_reversal_desc', 'Select who is returning the item, then find items by serial number to add for reversal.')}
+            {t('add_reversal_desc')}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-               {/* Person Selection */}
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="structureId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('structure')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+               {/* Beneficiary Search */}
+               <FormField
+                control={form.control}
+                name="personId"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>{t('beneficiary')}</FormLabel>
+                    <Popover open={isPersonPopoverOpen} onOpenChange={setPersonPopoverOpen}>
+                      <PopoverTrigger asChild>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_structure_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {directions.map((structure) => (
-                            <SelectItem key={structure.id} value={structure.id.toString()}>
-                              {structure.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                 <FormField
-                  control={form.control}
-                  name="personId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('beneficiary')}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={!selectedStructureId || persons.length === 0}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_beneficiary_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {persons.map((person) => (
-                            <SelectItem key={person.id} value={person.id.toString()}>
-                              {person.firstName} {person.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {!selectedStructureId && (
-                        <FormDescription>
-                            {t('select_direction_first')}
-                        </FormDescription>
-                     )}
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <FormLabel>{t('articles_to_return', 'Articles to Return')}</FormLabel>
-                <div className="space-y-4">
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
-                       <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      
-                      <div>
-                        <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
-                        <p className="text-sm">{t('serial_number')}: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
-                        <p className="text-sm">{t('status')}: <StatusBadge status={field.item.status} /></p>
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name={`reversals.${index}.remarks`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t('remarks')}</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder={t('add_remarks_placeholder')}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="relative space-y-2">
-                  <FormLabel htmlFor="item-search">{t('search_add_serial_placeholder')}</FormLabel>
-                   <div className="relative">
-                    <Input
-                      id="item-search"
-                      placeholder={t('search_add_serial_placeholder')}
-                      onChange={(e) => handleItemSearch(e.target.value)}
-                       onBlur={() => setTimeout(() => setSearchedItems([]), 150)}
-                      className="flex-1"
-                      disabled={!selectedPersonId}
-                    />
-                    {searchedItems.length > 0 && (
-                      <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
-                        {searchedItems.map((item) => (
-                          <div
-                            key={item.id}
-                            className="p-2 cursor-pointer hover:bg-muted"
-                            onMouseDown={() => {
-                              append({ item: item, remarks: "" });
-                              setSearchedItems([]);
-                              const searchInput = document.getElementById('item-search');
-                              if (searchInput) (searchInput as HTMLInputElement).value = "";
-                            }}
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
                           >
-                            {item.serialNumber} ({item.article.model}) - {t('status')}: {item.status}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {!selectedPersonId && <FormDescription>{t('select_person_to_search_items', 'Please select a person to search for their items.')}</FormDescription>}
-                  <FormMessage>
-                    {form.formState.errors.reversals && typeof form.formState.errors.reversals.message === 'string' && t(form.formState.errors.reversals.message)}
-                  </FormMessage>
+                            {field.value
+                              ? persons.find(
+                                  (p) => p.id.toString() === field.value
+                                )?.firstName + " " + persons.find(
+                                  (p) => p.id.toString() === field.value
+                                )?.lastName || t('select_beneficiary_placeholder')
+                              : t('select_beneficiary_placeholder')}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command filter={(value, search) => 1}>
+                          <CommandInput
+                            placeholder={t('search_person_placeholder')}
+                            onValueChange={setPersonSearch}
+                          />
+                           <ScrollArea className="max-h-56">
+                          <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                            <CommandGroup>
+                              {persons.map((person) => (
+                                <CommandItem
+                                  value={`${person.firstName} ${person.lastName}`}
+                                  key={person.id}
+                                  onSelect={() => {
+                                    form.setValue("personId", person.id.toString());
+                                    form.setValue("reversals", []); // Clear current reversals if person changes
+                                    setPersonPopoverOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      person.id.toString() === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span>{person.grade} {person.firstName} {person.lastName} ({person.pseudo})</span>
+                                    <span className="text-xs text-muted-foreground">{person.structure?.name}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </ScrollArea>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {selectedPersonId && (
+                <div className="space-y-4 pt-4 border-t">
+                    <FormLabel>{t('articles_to_return')}</FormLabel>
+                    
+                    <div className="space-y-4">
+                    {fields.map((field, index) => (
+                        <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
+                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        
+                        <div>
+                            <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
+                            <p className="text-sm">{t('serial_number')}: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
+                            <p className="text-sm">{t('status')}: <StatusBadge status={field.item.status} /></p>
+                        </div>
+
+                        <FormField
+                            control={form.control}
+                            name={`reversals.${index}.remarks`}
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t('remarks')}</FormLabel>
+                                <FormControl>
+                                <Textarea
+                                    placeholder={t('add_remarks_placeholder')}
+                                    {...field}
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        </div>
+                    ))}
+                    </div>
+
+                    <div className="space-y-2">
+                        <FormLabel>{t('select_item_from_assigned', 'Select Item from Assigned')}</FormLabel>
+                        <Select onValueChange={(val) => {
+                            const item = personItems.find(i => i.id.toString() === val);
+                            if (item) handleSelectItem(item);
+                        }}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={isLoadingItems ? t('loading_items', 'Loading items...') : t('select_item_placeholder', 'Select an assigned item to return')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {personItems.length === 0 ? (
+                                    <div className="p-2 text-sm text-muted-foreground">{t('no_items_found', 'No items currently assigned to this person.')}</div>
+                                ) : (
+                                    personItems.map((item) => (
+                                        <SelectItem key={item.id} value={item.id.toString()}>
+                                            {item.serialNumber} - {item.article.model} ({item.status})
+                                        </SelectItem>
+                                    ))
+                                )}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage>
+                            {form.formState.errors.reversals && typeof form.formState.errors.reversals.message === 'string' && t(form.formState.errors.reversals.message)}
+                        </FormMessage>
+                    </div>
                 </div>
-              </div>
+              )}
+
               <DialogFooter>
-                <Button type="submit" disabled={loading}>
-                  {loading ? t('saving') : t('save_reversal', 'Save Reversal')}
+                <Button type="submit" disabled={loading || !selectedPersonId}>
+                  {loading ? t('saving') : t('save_reversal')}
                 </Button>
               </DialogFooter>
             </form>

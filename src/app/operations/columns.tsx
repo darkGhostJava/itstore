@@ -30,7 +30,7 @@ export const columns: ColumnDef<Operation>[] = [
       let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
       if (type === "ARRIVAL") variant = "default";
       if (type === "DISTRIBUTION") variant = "secondary";
-      if (type === "REPARATION") variant = "destructive";
+      if (type === "REPAIR") variant = "destructive";
       
       return <Badge variant={variant}>{type}</Badge>;
     },
@@ -52,10 +52,10 @@ export const columns: ColumnDef<Operation>[] = [
     },
   },
   {
-    accessorKey: "beneficiary.firstName",
+    accessorKey: "person.lastName",
     header: ({ column }) => <TranslatedHeader column={column} titleKey="beneficiary" />,
     cell: ({ row }) => {
-      const person = row.original.beneficiary;
+      const person = row.original.person;
       return person ? `${person.firstName} ${person.lastName}` : "N/A";
     },
   },
