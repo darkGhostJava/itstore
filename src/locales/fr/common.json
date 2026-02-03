@@ -216,5 +216,16 @@
     "select_direction_first": "Veuillez d'abord sélectionner une direction.",
     "attestation_status": "Attestation",
     "signed": "Signée",
-    "not_signed": "Non Signée"
+    "not_signed": "Non Signée",
+    "reversements": "Reversements",
+    "add_reversal": "Ajouter un Reversement",
+    "add_new_reversal": "Nouveau Reversement",
+    "add_reversal_desc": "Enregistrer un retour d'articles au stock.",
+    "reversal_added_toast_title": "Reversement Enregistré",
+    "reversal_added_toast_desc": "Le reversement a été enregistré et les articles retournés au stock.",
+    "add_reversal_error": "Échec de l'enregistrement du reversement.",
+    "save_reversal": "Enregistrer le Reversement",
+    "articles_to_return": "Articles à Retourner",
+    "remarks_are_required": "Veuillez fournir des remarques.",
+    "select_person_to_search_items": "Sélectionnez une personne pour voir ses articles assignés."
 }

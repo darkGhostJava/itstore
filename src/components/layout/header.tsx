@@ -13,6 +13,7 @@ import {
   HardDrive,
   Boxes,
   Printer,
+  Undo2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -34,6 +35,7 @@ export function Header() {
     { href: "/stock", label: t("stock", "Stock"), icon: Boxes },
     { href: "/arrivals", label: t("arrivals"), icon: Truck },
     { href: "/distributions", label: t("distributions"), icon: ArrowRightLeft },
+    { href: "/reversals", label: t("reversements", "Reversals"), icon: Undo2 },
     { href: "/reparations", label: t("reparations"), icon: Wrench },
     { href: "/persons", label: t("persons"), icon: Users },
     { href: "/structures", label: t("structures"), icon: Building },

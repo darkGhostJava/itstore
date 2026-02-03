@@ -328,6 +328,41 @@ export const fetchDistributions = async (options: { pageIndex: number; pageSize:
   };
 }
 
+export const fetchReversals = async (options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
+  const { pageIndex, pageSize, query, sort } = options;
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
+  });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Operation>>(`/reversals?${params.toString()}`);
+  return {
+    data: response.data.content,
+    pageCount: response.data.totalPages
+  };
+}
+
+export const registerReversals = async (payload: { itemId: number; remarks: string; userId: number; }[]) => {
+  const response = await api.post("/reversals", payload, {
+    responseType: "arraybuffer",
+  });
+
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.body.appendChild(document.createElement("a"));
+  link.href = url;
+  link.download = `reversement_${Date.now()}.docx`;
+  link.target = "_blank";
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+  return response;
+}
+
 export const fetchReparations = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
   const params = new URLSearchParams({

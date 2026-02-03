@@ -216,5 +216,16 @@
     "select_direction_first": "Please select a direction first.",
     "attestation_status": "Attestation",
     "signed": "Signed",
-    "not_signed": "Not Signed"
+    "not_signed": "Not Signed",
+    "reversements": "Reversals",
+    "add_reversal": "Add Reversal",
+    "add_new_reversal": "Add New Reversal",
+    "add_reversal_desc": "Record a return of items to stock.",
+    "reversal_added_toast_title": "Reversal Added",
+    "reversal_added_toast_desc": "The reversal has been recorded and items returned to stock.",
+    "add_reversal_error": "Failed to add reversal.",
+    "save_reversal": "Save Reversal",
+    "articles_to_return": "Articles to Return",
+    "remarks_are_required": "Please provide remarks.",
+    "select_person_to_search_items": "Select a person to see their assigned items."
 }
