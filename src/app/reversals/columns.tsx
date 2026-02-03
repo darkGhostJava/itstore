@@ -2,7 +2,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Item, Person, User } from "@/lib/definitions";
+import type { Refund } from "@/lib/definitions";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -10,23 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, CheckCircle2, XCircle } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
-
-// Define the shape of the Refund object as returned by /api/refunds
-export type Refund = {
-  id: number;
-  date: string;
-  remarks: string;
-  item?: Item;
-  items?: Item[]; // In case it returns a list of items like a generic operation
-  person: Person;
-  user: User;
-}
 
 export const useReversalsColumns = () => {
   const { t } = useTranslation('common');
@@ -37,6 +27,7 @@ export const useReversalsColumns = () => {
       cell: ({ row }) => row.index + 1,
     },
     {
+      id: "date",
       accessorKey: "date",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('date')} />
@@ -49,7 +40,7 @@ export const useReversalsColumns = () => {
         <DataTableColumnHeader column={column} title={t('article')} />
       ),
       cell: ({ row }) => {
-        const item = row.original.item || row.original.items?.[0];
+        const item = row.original.item;
         if (!item) return "N/A";
         const article = item.article;
         return (
@@ -65,7 +56,7 @@ export const useReversalsColumns = () => {
         <DataTableColumnHeader column={column} title={t('serial_number')} />
       ),
       cell: ({ row }) => {
-        const item = row.original.item || row.original.items?.[0];
+        const item = row.original.item;
         if (!item) return "N/A";
         return (
             <Button variant="link" asChild className="p-0 h-auto">
@@ -99,10 +90,30 @@ export const useReversalsColumns = () => {
       cell: ({ row }) => row.original.user?.name || t('unknown'),
     },
     {
+      id: "remarks",
       accessorKey: "remarks",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('remarks')} />
       ),
+    },
+    {
+      id: "isSigned",
+      accessorKey: "isSigned",
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />,
+      cell: ({ row }) => {
+        const isSigned = row.original.isSigned;
+        return isSigned ? (
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
+            <span>{t('signed', 'Signed')}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-destructive">
+            <XCircle className="h-4 w-4" />
+            <span>{t('not_signed', 'Not Signed')}</span>
+          </div>
+        );
+      },
     },
     {
       id: "actions",

@@ -1,6 +1,6 @@
 
 import { api } from './api';
-import type { Article, Item, Person, Structure, Operation, Distribution, Stats } from './definitions';
+import type { Article, Item, Person, Structure, Operation, Distribution, Refund, Stats } from './definitions';
 
 type PaginatedResponse<T> = {
   content: T[];
@@ -337,7 +337,7 @@ export const fetchReversals = async (options: { pageIndex: number; pageSize: num
   if (query) params.append('query', query);
   if (sort) params.append('sort', sort);
 
-  const response = await api.get<PaginatedResponse<any>>(`/refunds?${params.toString()}`);
+  const response = await api.get<PaginatedResponse<Refund>>(`/refunds?${params.toString()}`);
   return {
     data: response.data.content,
     pageCount: response.data.totalPages

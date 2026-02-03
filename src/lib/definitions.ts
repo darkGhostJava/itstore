@@ -66,6 +66,17 @@ export type Distribution = {
   isSigned: boolean;
 }
 
+export type Refund = {
+  id: number;
+  item: Item;
+  person: Person;
+  user: User;
+  remarks: string;
+  date: string;
+  dechargeId: number;
+  isSigned: boolean;
+};
+
 export type User = {
   id: number;
   username: string;
