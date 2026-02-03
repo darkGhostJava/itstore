@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -10,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, CheckCircle2, XCircle } from "lucide-react";
@@ -52,6 +50,7 @@ export const useReversalsColumns = () => {
     },
     {
       id: "serialNumber",
+      accessorKey: "item.serialNumber",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('serial_number')} />
       ),
@@ -67,7 +66,7 @@ export const useReversalsColumns = () => {
     },
     {
       id: "beneficiary",
-      accessorKey: "person.lastName",
+      accessorKey: "person",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('beneficiary')} />
       ),
@@ -77,6 +76,22 @@ export const useReversalsColumns = () => {
         return (
             <Button variant="link" asChild className="p-0 h-auto">
                 <Link href={`/persons/${person.id}`}>{person.firstName} {person.lastName}</Link>
+            </Button>
+        )
+      },
+    },
+    {
+      id: "structure",
+      accessorKey: "person.structure.name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('structure')} />
+      ),
+      cell: ({ row }) => {
+        const structure = row.original.person?.structure;
+        if (!structure) return t('unknown');
+        return (
+            <Button variant="link" asChild className="p-0 h-auto">
+                <Link href={`/structures/${structure.id}`}>{structure.name}</Link>
             </Button>
         )
       },

@@ -29,10 +29,16 @@ export const useDistributionsColumns = () => {
       enableSorting: false,
     },
     {
+      id: "date",
+      accessorKey: "date",
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('date')} />,
+      cell: ({ row }) => format(new Date(row.original.date), "PPP"),
+    },
+    {
       id: "article",
       accessorFn: row => `${row.item.article.model} - ${row.item.article.designation}`,
       header: t('article'),
-      enableSorting: false, // Disabled to prevent backend crash
+      enableSorting: false, 
       cell: ({ row }) => {
         const item = row.original.item;
         if (!item) return "N/A";
@@ -47,7 +53,7 @@ export const useDistributionsColumns = () => {
       id: "serialNumber",
       accessorKey: "item.serialNumber",
       header: t('serial_number'),
-      enableSorting: false, // Disabled to prevent backend crash
+      enableSorting: false, 
       cell: ({ row }) => {
         const item = row.original.item;
         if (!item) return "N/A";
@@ -60,7 +66,7 @@ export const useDistributionsColumns = () => {
     },
     {
       id: "beneficiary",
-      accessorKey: "person.lastName",
+      accessorKey: "person",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('beneficiary')} />,
       cell: ({ row }) => {
         const person = row.original.person;
@@ -87,21 +93,15 @@ export const useDistributionsColumns = () => {
       },
     },
     {
-      id: "date",
-      accessorKey: "date",
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('date')} />,
-      cell: ({ row }) => format(new Date(row.original.date), "PPP"),
+      id: "user",
+      accessorKey: "user.name",
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t('user')} />,
+      cell: ({ row }) => row.original.user?.name || "N/A",
     },
     {
       id: "remarks",
       accessorKey: "remarks",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('remarks')} />,
-    },
-    {
-      id: "user",
-      accessorKey: "user.name",
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('user')} />,
-      cell: ({ row }) => row.original.user?.name || "N/A",
     },
     {
       id: "isSigned",

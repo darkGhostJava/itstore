@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -44,19 +43,19 @@ export const columns: ColumnDef<Operation>[] = [
     cell: ({ row }) => format(new Date(row.original.date), "PPP p"),
   },
   {
+    accessorKey: "person",
+    header: ({ column }) => <TranslatedHeader column={column} titleKey="beneficiary" />,
+    cell: ({ row }) => {
+      const person = row.original.person;
+      return person ? `${person.firstName} ${person.lastName}` : "N/A";
+    },
+  },
+  {
     accessorKey: "user.name",
     header: ({ column }) => <TranslatedHeader column={column} titleKey="user" />,
     cell: ({ row }) => {
       const { t } = useTranslation('common');
       return row.original.user?.name || t('unknown');
-    },
-  },
-  {
-    accessorKey: "person.lastName",
-    header: ({ column }) => <TranslatedHeader column={column} titleKey="beneficiary" />,
-    cell: ({ row }) => {
-      const person = row.original.person;
-      return person ? `${person.firstName} ${person.lastName}` : "N/A";
     },
   },
   {
