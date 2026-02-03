@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, FileUp, X } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -41,11 +41,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { ErrorSummary } from "@/components/shared/error-summary";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const articleArrivalSchema = z.object({
   article: z.any().refine(val => val, { message: "Please select an article." }),
   serialNumbers: z.array(z.string()).optional(),
   quantity: z.number().optional(),
+  file: z.any().optional(),
 });
 
 const arrivalFormSchema = z.object({
@@ -86,26 +88,33 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
   async function onSubmit(values: ArrivalFormValues) {
     setLoading(true);
     try {
-      const hardwares: { [key: number]: string[] } = {};
-      const consumables: { [key: number]: number } = {};
+      const formData = new FormData();
+      formData.append("budget", values.budget);
+      formData.append("remark", values.remarks || "");
 
-      values.articles.forEach(a => {
+      values.articles.forEach((a, index) => {
+        const articleId = a.article.id;
         if (a.article.type === 'HARDWARE') {
-          hardwares[a.article.id] = a.serialNumbers || [];
+          // Add manual serial numbers
+          if (a.serialNumbers && a.serialNumbers.length > 0) {
+            a.serialNumbers.forEach(sn => {
+              formData.append(`hardwares[${articleId}]`, sn);
+            });
+          }
+          // Add Excel file if present
+          if (a.file) {
+            formData.append(`hardwaresFile[${articleId}]`, a.file);
+          }
         } else if (a.article.type === 'CONSUMABLE') {
-          consumables[a.article.id] = a.quantity || 1;
+          formData.append(`consumables[${articleId}]`, (a.quantity || 1).toString());
         }
       });
-      
-      const payload = {
-        budget: values.budget,
-        hardwares,
-        consumables,
-        userId: 1, // Assuming a logged-in user
-        remark: values.remarks,
-      };
 
-      await api.post("/arrivals", payload);
+      await api.post("/arrivals/with_file", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       toast({
         title: t('arrival_added_toast_title'),
@@ -113,9 +122,9 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
       });
 
       form.reset();
-      remove(); // Clear all appended fields
+      remove();
       setOpen(false);
-      onSuccess?.(); // Trigger refresh
+      onSuccess?.();
     } catch (error) {
       console.error("Error adding arrival:", error);
       toast({
@@ -150,9 +159,8 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
 
     const currentSerials = form.getValues(`articles.${index}.serialNumbers`) || [];
     if (!currentSerials.includes(newSerial)) {
-        const field = fields[index];
         update(index, {
-            ...field,
+            ...fields[index],
             serialNumbers: [...currentSerials, newSerial]
         });
         setSerialNumberInputs(prev => ({ ...prev, [index]: '' }));
@@ -163,15 +171,6 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
             variant: "destructive"
         });
     }
-  };
-
-  const handleRemoveSerialNumber = (articleIndex: number, serialToRemove: string) => {
-    const currentSerials = form.getValues(`articles.${articleIndex}.serialNumbers`) || [];
-    const field = fields[articleIndex];
-    update(articleIndex, {
-        ...field,
-        serialNumbers: currentSerials.filter(sn => sn !== serialToRemove)
-    });
   };
 
   return (
@@ -225,8 +224,11 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                 <FormLabel>{t('arrived_articles')}</FormLabel>
                 <div className="space-y-4">
                   {fields.map((field, index) => {
-                    const articleType = form.getValues(`articles.${index}.article.type`);
+                    const article = form.getValues(`articles.${index}.article`);
+                    const articleType = article.type;
                     const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
+                    const uploadedFile = form.getValues(`articles.${index}.file`);
+
                     return (
                       <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
                         <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
@@ -234,45 +236,108 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                         </Button>
 
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
+                          <p className="font-semibold text-sm">{article.model} - <span className="text-xs text-muted-foreground">{article.designation}</span></p>
                           <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
                             {t(articleType.toLowerCase() as "hardware" | "consumable")}
                           </Badge>
                         </div>
 
                         {articleType === 'HARDWARE' && (
-                          <FormItem>
-                            <FormLabel>{t('serial_numbers')}</FormLabel>
-                            <div className="flex gap-2">
-                              <Input
-                                value={serialNumberInputs[index] || ''}
-                                onChange={(e) => setSerialNumberInputs(prev => ({ ...prev, [index]: e.target.value }))}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleAddSerialNumber(index);
-                                  }
-                                }}
-                                placeholder={t('enter_serial_number_placeholder')}
-                              />
-                              <Button type="button" onClick={() => handleAddSerialNumber(index)}>{t('add')}</Button>
-                            </div>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {addedSerials?.map((sn) => (
-                                <Badge key={sn} variant="secondary" className="flex items-center gap-1">
-                                  {sn}
-                                  <button
-                                    type="button"
-                                    className="ml-1 rounded-full text-destructive hover:text-red-500"
-                                    onClick={() => handleRemoveSerialNumber(index, sn)}
-                                  >
-                                    &times;
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
+                          <Tabs defaultValue="manual" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="manual">{t('manual_entry', 'Manual Entry')}</TabsTrigger>
+                              <TabsTrigger value="excel">{t('excel_import', 'Excel Import')}</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="manual" className="space-y-4 pt-4">
+                              <FormItem>
+                                <FormLabel>{t('serial_numbers')}</FormLabel>
+                                <div className="flex gap-2">
+                                  <Input
+                                    value={serialNumberInputs[index] || ''}
+                                    onChange={(e) => setSerialNumberInputs(prev => ({ ...prev, [index]: e.target.value }))}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleAddSerialNumber(index);
+                                      }
+                                    }}
+                                    placeholder={t('enter_serial_number_placeholder')}
+                                  />
+                                  <Button type="button" onClick={() => handleAddSerialNumber(index)}>{t('add')}</Button>
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {addedSerials?.map((sn) => (
+                                    <Badge key={sn} variant="secondary" className="flex items-center gap-1">
+                                      {sn}
+                                      <button
+                                        type="button"
+                                        className="ml-1 rounded-full text-destructive hover:text-red-500"
+                                        onClick={() => {
+                                          const current = form.getValues(`articles.${index}.serialNumbers`) || [];
+                                          update(index, { ...fields[index], serialNumbers: current.filter(s => s !== sn)});
+                                        }}
+                                      >
+                                        &times;
+                                      </button>
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </FormItem>
+                            </TabsContent>
+                            <TabsContent value="excel" className="space-y-4 pt-4">
+                              <FormItem>
+                                <FormLabel>{t('upload_excel_file', 'Upload Excel File')}</FormLabel>
+                                <div className="flex items-center gap-4">
+                                  <FormControl>
+                                    <div className="flex items-center gap-2 w-full">
+                                      {!uploadedFile ? (
+                                        <div className="relative w-full">
+                                          <Input
+                                            type="file"
+                                            accept=".xlsx, .xls"
+                                            className="hidden"
+                                            id={`file-upload-${index}`}
+                                            onChange={(e) => {
+                                              const file = e.target.files?.[0];
+                                              if (file) {
+                                                update(index, { ...fields[index], file: file });
+                                              }
+                                            }}
+                                          />
+                                          <label
+                                            htmlFor={`file-upload-${index}`}
+                                            className="flex h-10 w-full cursor-pointer items-center justify-center rounded-md border border-dashed border-input bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                          >
+                                            <FileUp className="mr-2 h-4 w-4" />
+                                            {t('select_excel_file', 'Select Excel File')}
+                                          </label>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-1 items-center justify-between rounded-md border p-2 bg-muted/50">
+                                          <div className="flex items-center">
+                                            <FileUp className="mr-2 h-4 w-4 text-primary" />
+                                            <span className="text-sm font-medium truncate max-w-[200px]">{uploadedFile.name}</span>
+                                          </div>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={() => update(index, { ...fields[index], file: undefined })}
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </FormControl>
+                                </div>
+                                <p className="text-[0.7rem] text-muted-foreground">
+                                  {t('excel_format_hint', 'Serials will be read from the first column of the first sheet.')}
+                                </p>
+                              </FormItem>
+                            </TabsContent>
+                          </Tabs>
                         )}
 
                         {articleType === 'CONSUMABLE' && (

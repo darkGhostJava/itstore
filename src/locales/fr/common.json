@@ -227,5 +227,10 @@
     "save_reversal": "Enregistrer le Reversement",
     "articles_to_return": "Articles à Retourner",
     "remarks_are_required": "Veuillez fournir des remarques.",
-    "select_person_to_search_items": "Sélectionnez une personne pour voir ses articles assignés."
+    "select_person_to_search_items": "Sélectionnez une personne pour voir ses articles assignés.",
+    "manual_entry": "Saisie Manuelle",
+    "excel_import": "Import Excel",
+    "upload_excel_file": "Charger un fichier Excel",
+    "select_excel_file": "Sélectionner un fichier Excel",
+    "excel_format_hint": "Les numéros de série seront lus à partir de la première colonne de la première feuille."
 }

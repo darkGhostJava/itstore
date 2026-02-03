@@ -227,5 +227,10 @@
     "save_reversal": "Save Reversal",
     "articles_to_return": "Articles to Return",
     "remarks_are_required": "Please provide remarks.",
-    "select_person_to_search_items": "Select a person to see their assigned items."
+    "select_person_to_search_items": "Select a person to see their assigned items.",
+    "manual_entry": "Manual Entry",
+    "excel_import": "Excel Import",
+    "upload_excel_file": "Upload Excel File",
+    "select_excel_file": "Select Excel File",
+    "excel_format_hint": "Serials will be read from the first column of the first sheet."
 }
