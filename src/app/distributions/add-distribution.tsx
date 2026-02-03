@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -39,7 +40,6 @@ import {
   searchItemsBySerialNumber,
   searchPersons,
   getPersonsByIdStructure,
-  getSubDirectionsOfDirection,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Article, Item, Person, Structure } from "@/lib/definitions";
@@ -59,7 +59,6 @@ const articleDistributionSchema = z.object({
 
 const distributionFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
-  subDirectionId: z.string().optional(),
   beneficiaryId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleDistributionSchema).min(1, "at_least_one_article_is_required"),
@@ -76,7 +75,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const { toast } = useToast();
   const [searchedArticles, setSearchedArticles] = useState<Article[]>([]);
   const [directions, setDirections] = useState<Structure[]>([]);
-  const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
   const [serials, setSerials] = useState<Record<number, Item[]>>({});
   const [loading, setLoading] = useState(false);
@@ -85,12 +83,10 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
   const { t } = useTranslation('common');
 
-
   const form = useForm<DistributionFormValues>({
     resolver: zodResolver(distributionFormSchema),
     defaultValues: {
       structureId: "",
-      subDirectionId: "",
       beneficiaryId: "",
       remarks: "",
       articles: [],
@@ -102,7 +98,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     name: "articles",
   });
 
-  // Load directions
   useEffect(() => {
     if(open) {
       (async () => {
@@ -113,55 +108,36 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedStructureId = form.watch("structureId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
 
   useEffect(() => {
-    form.resetField("subDirectionId");
     form.resetField("beneficiaryId");
-    setSubDirections([]);
     setPersons([]);
 
     if (selectedStructureId) {
       (async () => {
-        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId, 10));
-        setSubDirections(res.data || []);
+        const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
+        setPersons(personsRes || []);
       })();
     }
   }, [selectedStructureId, form]);
 
  useEffect(() => {
-    const structureForInitialList = selectedSubDirectionId || selectedStructureId;
-    const structureForTextSearch = selectedStructureId;
-
     const fetchPersons = async () => {
-        if (personSearch) {
-            if (!structureForTextSearch) {
-                 setPersons([]);
-                 return;
-            }
-            const res = await searchPersons(personSearch, structureForTextSearch);
+        if (personSearch && selectedStructureId) {
+            const res = await searchPersons(personSearch, selectedStructureId);
             setPersons(res.data || []);
-        } else {
-            if (structureForInitialList) {
-                const personsRes = await getPersonsByIdStructure(parseInt(structureForInitialList, 10));
-                setPersons(personsRes || []);
-            } else {
-                setPersons([]);
-            }
+        } else if (selectedStructureId) {
+            const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
+            setPersons(personsRes || []);
         }
     };
 
     if (isPersonPopoverOpen && selectedStructureId) {
-        const debounce = setTimeout(() => {
-            fetchPersons();
-        }, 300);
-
+        const debounce = setTimeout(fetchPersons, 300);
         return () => clearTimeout(debounce);
     }
-}, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
+}, [personSearch, selectedStructureId, isPersonPopoverOpen]);
 
-
-  // Submit handler
   async function onSubmit(values: DistributionFormValues) {
     setLoading(true);
     try {
@@ -179,10 +155,10 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       const payload = {
         personId: parseInt(values.beneficiaryId),
         remarks: values.remarks,
-        userId: 1, // Assuming a logged-in user
+        userId: 1,
         hardwares,
         consumables,
-        subDirectionId: parseInt(values.subDirectionId || values.structureId),
+        subDirectionId: parseInt(values.structureId),
       };
 
       const response = await api.post("/distributions", payload, {
@@ -202,16 +178,15 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-
       toast({
         title: t('distribution_added_toast_title'),
         description: t('distribution_added_toast_desc'),
       });
 
       form.reset();
-      remove(); // Clear all appended fields
+      remove();
       setOpen(false);
-      onSuccess?.(); // Trigger refresh
+      onSuccess?.();
     } catch (error) {
       console.error("Error adding distribution:", error);
       toast({
@@ -256,7 +231,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     if (serialInput) (serialInput as HTMLInputElement).value = '';
   };
   
-    const handleRemoveSerialNumber = (articleIndex: number, serialToRemove: string) => {
+  const handleRemoveSerialNumber = (articleIndex: number, serialToRemove: string) => {
     const currentSerials = form.getValues(`articles.${articleIndex}.serialNumbers`) || [];
     const field = fields[articleIndex];
     update(articleIndex, {
@@ -284,57 +259,30 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         <ScrollArea className="max-h-[70vh] pr-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Beneficiary Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="structureId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('structure')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_structure_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {directions.map((structure) => (
-                            <SelectItem key={structure.id} value={structure.id.toString()}>
-                              {structure.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage>{form.formState.errors.structureId && t(form.formState.errors.structureId.message as string)}</FormMessage>
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="subDirectionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('sub_direction')} ({t('optional')})</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedStructureId || subDirections.length === 0}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {subDirections.map((sub) => (
-                            <SelectItem key={sub.id} value={sub.id.toString()}>
-                              {sub.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage>{form.formState.errors.subDirectionId && t(form.formState.errors.subDirectionId.message as string)}</FormMessage>
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="structureId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('structure')}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('select_structure_placeholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {directions.map((structure) => (
+                          <SelectItem key={structure.id} value={structure.id.toString()}>
+                            {structure.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
                <FormField
                 control={form.control}
@@ -366,10 +314,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command filter={(value, search) => {
-                            // Always show all results from the API
-                            return 1
-                          }}>
+                        <Command filter={() => 1}>
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
@@ -395,7 +340,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                         : "opacity-0"
                                     )}
                                   />
-                                  {person.grade} {person.firstName} {person.lastName}  ({person.pseudo})
+                                  {person.grade} {person.firstName} {person.lastName}
                                 </CommandItem>
                               ))}
                             </CommandGroup>
@@ -403,12 +348,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </Command>
                       </PopoverContent>
                     </Popover>
-                     {!selectedStructureId && (
-                        <FormDescription>
-                          {t('select_direction_first', 'Please select a direction first.')}
-                        </FormDescription>
-                      )}
-                    <FormMessage>{form.formState.errors.beneficiaryId && t(form.formState.errors.beneficiaryId.message as string)}</FormMessage>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -428,7 +368,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </Button>
 
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)} - <span className="text-xs text-muted-foreground">{form.getValues(`articles.${index}.article.designation`)}</span></p>
+                          <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)}</p>
                           <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
                             {t(articleType.toLowerCase() as "hardware" | "consumable")}
                           </Badge>
@@ -531,7 +471,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         <div
                           key={article.id}
                           className="p-2 cursor-pointer hover:bg-muted"
-                          onMouseDown={() => { // use onMouseDown to fire before blur
+                          onMouseDown={() => {
                             append({ article: article, serialNumbers: [], quantity: 1 });
                             setSearchedArticles([]);
                             const articleInput = document.getElementById('article-search');
@@ -539,20 +479,14 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           }}
                         >
                           {article.model} ({t(article.type.toLowerCase() as "hardware" | "consumable")})
-                          <span className="text-sm text-muted-foreground ml-2">
-                             ({t('in_stock')}: {article.quantity})
-                          </span>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-                <FormMessage>
-                  {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && t(form.formState.errors.articles.message)}
-                </FormMessage>
+                <FormMessage />
               </div>
 
-              {/* Remarks */}
               <FormField
                 control={form.control}
                 name="remarks"
@@ -579,14 +513,3 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     </Dialog>
   );
 }
-    
-
-    
-
-    
-
-
-
-
-
-

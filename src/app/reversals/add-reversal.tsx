@@ -29,8 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, Undo2, Check, ChevronsUpDown } from "lucide-react";
+import { Undo2, Check, ChevronsUpDown, Trash2 } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -39,7 +38,6 @@ import {
   fetchItemsForPerson,
   registerReversals,
   getAllDirections,
-  getSubDirectionsOfDirection,
   getPersonsByIdStructure,
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
@@ -59,7 +57,6 @@ const reversalItemSchema = z.object({
 
 const reversalFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
-  subDirectionId: z.string().optional(),
   personId: z.string().min(1, "beneficiary_is_required"),
   reversals: z.array(reversalItemSchema).min(1, "at_least_one_article_is_required"),
 });
@@ -77,7 +74,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   const [loading, setLoading] = useState(false);
   
   const [directions, setDirections] = useState<Structure[]>([]);
-  const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
   const [personItems, setPersonItems] = useState<Item[]>([]);
   
@@ -89,7 +85,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     resolver: zodResolver(reversalFormSchema),
     defaultValues: {
       structureId: "",
-      subDirectionId: "",
       personId: "",
       reversals: [],
     },
@@ -101,10 +96,8 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   });
   
   const selectedStructureId = form.watch("structureId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
   const selectedPersonId = form.watch("personId");
 
-  // Load directions on open
   useEffect(() => {
     if (open) {
       (async () => {
@@ -114,42 +107,27 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     }
   }, [open]);
 
-  // Load sub-directions when direction changes
   useEffect(() => {
-    form.setValue("subDirectionId", "");
     form.setValue("personId", "");
     form.setValue("reversals", []);
-    setSubDirections([]);
     setPersons([]);
 
     if (selectedStructureId) {
       (async () => {
-        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId, 10));
-        setSubDirections(res.data || []);
+        const res = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
+        setPersons(res || []);
       })();
     }
   }, [selectedStructureId, form]);
 
-  // Load persons when structure changes or search query changes
   useEffect(() => {
-    const structureForInitialList = selectedSubDirectionId || selectedStructureId;
-    const structureForTextSearch = selectedStructureId;
-
     const fetchBeneficiaries = async () => {
-        if (personSearch) {
-            if (!structureForTextSearch) {
-                 setPersons([]);
-                 return;
-            }
-            const res = await searchPersons(personSearch, structureForTextSearch);
+        if (personSearch && selectedStructureId) {
+            const res = await searchPersons(personSearch, selectedStructureId);
             setPersons(res.data || []);
-        } else {
-            if (structureForInitialList) {
-                const personsRes = await getPersonsByIdStructure(parseInt(structureForInitialList, 10));
-                setPersons(personsRes || []);
-            } else {
-                setPersons([]);
-            }
+        } else if (selectedStructureId) {
+            const res = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
+            setPersons(res || []);
         }
     };
 
@@ -157,9 +135,8 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         const debounce = setTimeout(fetchBeneficiaries, 300);
         return () => clearTimeout(debounce);
     }
-}, [personSearch, selectedStructureId, selectedSubDirectionId, isPersonPopoverOpen]);
+}, [personSearch, selectedStructureId, isPersonPopoverOpen]);
 
-  // Fetch distributed items for selected person
   useEffect(() => {
     const loadItems = async () => {
       if (selectedPersonId) {
@@ -180,7 +157,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     loadItems();
   }, [selectedPersonId]);
 
-
   async function onSubmit(values: ReversalFormValues) {
     setLoading(true);
     try {
@@ -200,7 +176,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
       form.reset();
       remove();
       setOpen(false);
-      onSuccess?.(); // Trigger refresh
+      onSuccess?.();
     } catch (error) {
       console.error("Error registering reversal:", error);
       toast({
@@ -246,59 +222,31 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               
-              {/* Structure Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="structureId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('structure')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_structure_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {directions.map((structure) => (
-                            <SelectItem key={structure.id} value={structure.id.toString()}>
-                              {structure.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage>{form.formState.errors.structureId && t(form.formState.errors.structureId.message as string)}</FormMessage>
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="subDirectionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('sub_direction')} ({t('optional')})</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedStructureId || subDirections.length === 0}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {subDirections.map((sub) => (
-                            <SelectItem key={sub.id} value={sub.id.toString()}>
-                              {sub.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage>{form.formState.errors.subDirectionId && t(form.formState.errors.subDirectionId.message as string)}</FormMessage>
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="structureId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('structure')}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('select_structure_placeholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {directions.map((structure) => (
+                          <SelectItem key={structure.id} value={structure.id.toString()}>
+                            {structure.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-               {/* Beneficiary Search */}
                <FormField
                 control={form.control}
                 name="personId"
@@ -329,7 +277,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command filter={(value, search) => 1}>
+                        <Command filter={() => 1}>
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
@@ -344,7 +292,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                                   key={person.id}
                                   onSelect={() => {
                                     form.setValue("personId", person.id.toString());
-                                    form.setValue("reversals", []); // Clear current reversals if person changes
+                                    form.setValue("reversals", []);
                                     setPersonPopoverOpen(false);
                                   }}
                                 >
@@ -358,7 +306,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                                   />
                                   <div className="flex flex-col">
                                     <span>{person.grade} {person.firstName} {person.lastName} ({person.pseudo})</span>
-                                    <span className="text-xs text-muted-foreground">{person.structure?.name}</span>
                                   </div>
                                 </CommandItem>
                               ))}
@@ -367,11 +314,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                         </Command>
                       </PopoverContent>
                     </Popover>
-                    {!selectedStructureId && (
-                        <FormDescription>
-                          {t('select_direction_first')}
-                        </FormDescription>
-                      )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -429,15 +371,13 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                                 ) : (
                                     personItems.map((item) => (
                                         <SelectItem key={item.id} value={item.id.toString()}>
-                                            {item.serialNumber} - {item.article.model} ({item.status})
+                                            {item.serialNumber} - {item.article.model}
                                         </SelectItem>
                                     ))
                                 )}
                             </SelectContent>
                         </Select>
-                        <FormMessage>
-                            {form.formState.errors.reversals && typeof form.formState.errors.reversals.message === 'string' && t(form.formState.errors.reversals.message)}
-                        </FormMessage>
+                        <FormMessage />
                     </div>
                 </div>
               )}
