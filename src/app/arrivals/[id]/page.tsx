@@ -17,7 +17,7 @@ import { Package, Calendar, User, Wallet } from "lucide-react";
 export default function ArrivalDetailPage() {
   const { t } = useTranslation('common');
   const params = useParams<{ id: string }>();
-  const arrivalId = parseInt(params.id);
+  const arrivalId = params.id ? parseInt(params.id, 10) : null;
   
   const [arrival, setArrival] = React.useState<Operation | null>(null);
   const [items, setItems] = React.useState<Item[]>([]);
