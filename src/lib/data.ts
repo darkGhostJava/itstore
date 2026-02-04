@@ -162,6 +162,11 @@ export const fetchAllOperations = async () => {
   return response.data;
 }
 
+export const fetchArrivalById = async (id: number): Promise<Operation> => {
+  const response = await api.get<Operation>(`/arrivals/${id}`);
+  return response.data;
+}
+
 export const fetchPersons = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string, structureId?: string }) => {
   const { pageIndex, pageSize, query, sort, structureId } = options;
   const params = new URLSearchParams({

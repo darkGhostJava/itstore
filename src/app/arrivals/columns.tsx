@@ -2,7 +2,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Operation, Item } from "@/lib/definitions";
+import type { Operation } from "@/lib/definitions";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -12,10 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Eye } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
-import { ViewArrivalDetailsDialog } from "./view-arrival-details-dialog";
+import Link from "next/link";
 
 export const useArrivalsColumns = () => {
   const { t } = useTranslation('common');
@@ -88,7 +88,12 @@ export const useArrivalsColumns = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-              <ViewArrivalDetailsDialog arrival={arrival} />
+              <DropdownMenuItem asChild>
+                <Link href={`/arrivals/${arrival.id}`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  {t('view_details')}
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
