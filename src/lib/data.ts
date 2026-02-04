@@ -167,6 +167,22 @@ export const fetchArrivalById = async (id: number): Promise<Operation> => {
   return response.data;
 }
 
+export const fetchItemsByArrivalId = async (id: number, options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
+  const { pageIndex, pageSize, query, sort } = options;
+  const params = new URLSearchParams({
+    page: pageIndex.toString(),
+    size: pageSize.toString(),
+  });
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+
+  const response = await api.get<PaginatedResponse<Item>>(`/arrivals/items/${id}?${params.toString()}`);
+  return {
+    data: response.data.content,
+    pageCount: response.data.totalPages,
+  };
+}
+
 export const fetchPersons = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string, structureId?: string }) => {
   const { pageIndex, pageSize, query, sort, structureId } = options;
   const params = new URLSearchParams({

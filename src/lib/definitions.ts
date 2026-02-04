@@ -11,7 +11,7 @@ export type Article = {
 
 export type Item = {
   id: number;
-  serialNumber: string;
+  serialNumber: string | null;
   article: Article;
   status: "IN_STOCK_NEW" | "IN_STOCK" | "DISTRIBUTED" | "UNDER_REPAIR" | "REFORMED" | "REPAIRED";
   budget?: string;

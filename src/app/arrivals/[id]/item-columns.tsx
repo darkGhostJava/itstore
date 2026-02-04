@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import { StatusBadge } from "@/components/shared/status-badge";
 
 export const useArrivalItemColumns = () => {
   const { t } = useTranslation('common');
@@ -69,7 +70,7 @@ export const useArrivalItemColumns = () => {
       ),
       cell: ({ row }) => {
         const status = row.original.status;
-        return <Badge variant="outline">{status.replace(/_/g, " ")}</Badge>;
+        return <StatusBadge status={status} />;
       },
     },
   ];

@@ -6,8 +6,8 @@ import { notFound, useParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table/data-table";
-import { Operation } from "@/lib/definitions";
-import { fetchArrivalById } from "@/lib/data";
+import { Operation, Item } from "@/lib/definitions";
+import { fetchArrivalById, fetchItemsByArrivalId } from "@/lib/data";
 import { useTranslation } from "react-i18next";
 import { format, isValid } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +17,14 @@ import { Package, Calendar, User, Wallet } from "lucide-react";
 export default function ArrivalDetailPage() {
   const { t } = useTranslation('common');
   const params = useParams<{ id: string }>();
-  const arrivalId = parseInt(params.id);
+  const arrivalId = params.id ? parseInt(params.id, 10) : null;
+  
   const [arrival, setArrival] = React.useState<Operation | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [items, setItems] = React.useState<Item[]>([]);
+  const [pageCount, setPageCount] = React.useState(0);
+  
+  const [isLoadingArrival, setIsLoadingArrival] = React.useState(true);
+  const [isLoadingItems, setIsLoadingItems] = React.useState(true);
   const [isMounted, setIsMounted] = React.useState(false);
   
   const columns = useArrivalItemColumns();
@@ -29,17 +34,33 @@ export default function ArrivalDetailPage() {
     const getArrival = async () => {
       if (!arrivalId) return;
       try {
-        setIsLoading(true);
+        setIsLoadingArrival(true);
         const fetchedArrival = await fetchArrivalById(arrivalId);
         setArrival(fetchedArrival);
       } catch (error) {
-        console.error("Failed to fetch arrival:", error);
+        console.error("Failed to fetch arrival metadata:", error);
         setArrival(null);
       } finally {
-        setIsLoading(false);
+        setIsLoadingArrival(false);
       }
     };
     getArrival();
+  }, [arrivalId]);
+
+  const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
+    if (!arrivalId) return;
+    setIsLoadingItems(true);
+    try {
+      const result = await fetchItemsByArrivalId(arrivalId, { pageIndex, pageSize, query, sort });
+      setItems(result.data);
+      setPageCount(result.pageCount);
+    } catch (error) {
+      console.error("Failed to fetch arrival items:", error);
+      setItems([]);
+      setPageCount(0);
+    } finally {
+      setIsLoadingItems(false);
+    }
   }, [arrivalId]);
 
   // Handle Spring Boot array dates [yyyy, mm, dd, hh, mm, ss] or standard strings
@@ -58,15 +79,13 @@ export default function ArrivalDetailPage() {
     return d ? format(d, "PPP p") : String(arrival.date);
   }, [arrival?.date]);
 
-  if (!isMounted || isLoading) {
+  if (!isMounted || isLoadingArrival) {
     return <div className="p-8 text-center">{t('loading', 'Loading details...')}</div>;
   }
 
   if (!arrival) {
     notFound();
   }
-
-  const items = arrival.items || [];
 
   return (
     <div className="flex flex-col gap-8">
@@ -102,13 +121,6 @@ export default function ArrivalDetailPage() {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>{t('total_items', 'Total Items')}</CardDescription>
-              <CardTitle className="text-4xl">{items.length}</CardTitle>
-            </CardHeader>
-          </Card>
         </div>
 
         <div className="lg:col-span-3">
@@ -121,9 +133,9 @@ export default function ArrivalDetailPage() {
               <DataTable 
                 columns={columns} 
                 data={items}
-                pageCount={1}
-                fetchData={() => {}} // Local data, no pagination needed for detail view currently
-                isLoading={false}
+                pageCount={pageCount}
+                fetchData={fetchData}
+                isLoading={isLoadingItems}
                 filterKey="serialNumber" 
                 filterPlaceholder={t('filter_by_serial_number_placeholder')}
                 emptyStateMessage={
