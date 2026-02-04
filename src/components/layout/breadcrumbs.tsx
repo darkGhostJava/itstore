@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { Fragment, useEffect, useState } from "react";
@@ -12,7 +13,7 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { Skeleton } from "../ui/skeleton";
-import { fetchItemById, fetchPersonById, fetchStructureById } from "@/lib/data";
+import { fetchItemById, fetchPersonById, fetchStructureById, fetchArticleById } from "@/lib/data";
 
 interface Crumb {
   name: string;
@@ -35,9 +36,9 @@ const fetchNameForId = async (segment: string, id: string): Promise<string | nul
       case "structures":
         const structure = await fetchStructureById(numericId);
         return structure?.name || id;
-      // case "articles":
-      //   const article = await fetchArticleById(numericId); // Assuming this function exists
-      //   return article?.model || id;
+      case "articles":
+        const article = await fetchArticleById(numericId);
+        return article?.model || id;
       default:
         return id;
     }
