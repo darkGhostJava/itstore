@@ -163,7 +163,7 @@ export const fetchAllOperations = async () => {
 }
 
 export const fetchArrivalById = async (id: number): Promise<Operation> => {
-  const response = await api.get<Operation>(`/arrivals/${id}`);
+  const response = await api.get<Operation>(`/arrivals/items/${id}`);
   return response.data;
 }
 
