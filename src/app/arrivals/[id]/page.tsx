@@ -11,7 +11,7 @@ import { fetchArrivalById, fetchItemsByArrivalId } from "@/lib/data";
 import { useTranslation } from "react-i18next";
 import { format, isValid } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { useArrivalItemColumns } from "./item-columns";
+import { useArrivalItemColumns, ArrivalTableItem } from "./item-columns";
 import { Package, Calendar, User, Wallet } from "lucide-react";
 
 export default function ArrivalDetailPage() {
@@ -62,6 +62,28 @@ export default function ArrivalDetailPage() {
       setIsLoadingItems(false);
     }
   }, [arrivalId]);
+
+  // Group consumables within the current page of results
+  const processedItems = React.useMemo(() => {
+    const result: ArrivalTableItem[] = [];
+    const consumableGroups: Record<number, ArrivalTableItem> = {};
+
+    items.forEach((item) => {
+      if (item.article.type === 'CONSUMABLE') {
+        const articleId = item.article.id;
+        if (consumableGroups[articleId]) {
+          consumableGroups[articleId].groupCount = (consumableGroups[articleId].groupCount || 0) + 1;
+        } else {
+          consumableGroups[articleId] = { ...item, groupCount: 1 };
+          result.push(consumableGroups[articleId]);
+        }
+      } else {
+        result.push({ ...item, groupCount: 1 });
+      }
+    });
+
+    return result;
+  }, [items]);
 
   // Handle Spring Boot array dates [yyyy, mm, dd, hh, mm, ss] or standard strings
   const parseSafeDate = (dateVal: any): Date | null => {
@@ -127,12 +149,12 @@ export default function ArrivalDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>{t('arrived_articles')}</CardTitle>
-              <CardDescription>{t('arrived_articles_list_desc', 'List of all individual items received in this shipment.')}</CardDescription>
+              <CardDescription>{t('arrived_articles_list_desc', 'List of received items. Consumables are grouped by article.')}</CardDescription>
             </CardHeader>
             <CardContent>
               <DataTable 
                 columns={columns} 
-                data={items}
+                data={processedItems}
                 pageCount={pageCount}
                 fetchData={fetchData}
                 isLoading={isLoadingItems}
