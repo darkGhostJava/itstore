@@ -9,12 +9,11 @@ import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { StatusBadge } from "@/components/shared/status-badge";
 
-// Extend Item type for grouping visualization
 export type ArrivalTableItem = Item & {
   groupCount?: number;
 };
 
-export const useArrivalItemColumns = () => {
+export const useHardwareColumns = () => {
   const { t } = useTranslation('common');
 
   const columns: ColumnDef<ArrivalTableItem>[] = [
@@ -41,31 +40,54 @@ export const useArrivalItemColumns = () => {
       },
     },
     {
-      id: "type",
-      accessorFn: (row) => row.article.type,
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('type')} />
-      ),
-      cell: ({ row }) => {
-        const type = row.original.article.type;
-        return (
-          <Badge variant={type === "HARDWARE" ? "default" : "secondary"}>
-            {t(type.toLowerCase() as any)}
-          </Badge>
-        );
-      },
-    },
-    {
       accessorKey: "serialNumber",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('serial_number')} />
       ),
       cell: ({ row }) => {
         const sn = row.original.serialNumber;
-        if (!sn || row.original.article.type === 'CONSUMABLE') {
-          return <span className="text-muted-foreground italic">N/A</span>;
-        }
-        return <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{sn}</code>;
+        return <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{sn || 'N/A'}</code>;
+      },
+    },
+    {
+      accessorKey: "status",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('status')} />
+      ),
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return <StatusBadge status={status} />;
+      },
+    },
+  ];
+
+  return columns;
+};
+
+export const useConsumableColumns = () => {
+  const { t } = useTranslation('common');
+
+  const columns: ColumnDef<ArrivalTableItem>[] = [
+    {
+      header: "#",
+      cell: ({ row }) => row.index + 1,
+    },
+    {
+      id: "article",
+      accessorFn: (row) => row.article.model,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('article')} />
+      ),
+      cell: ({ row }) => {
+        const article = row.original.article;
+        return (
+          <div className="flex flex-col">
+            <Link href={`/articles/${article.id}`} className="font-semibold hover:underline">
+              {article.model}
+            </Link>
+            <span className="text-xs text-muted-foreground">{article.designation}</span>
+          </div>
+        );
       },
     },
     {
@@ -74,7 +96,7 @@ export const useArrivalItemColumns = () => {
         <DataTableColumnHeader column={column} title={t('quantity')} />
       ),
       cell: ({ row }) => {
-        return <span className="font-medium">{row.original.groupCount || 1}</span>;
+        return <span className="font-bold text-lg">{row.original.groupCount || 1}</span>;
       },
     },
     {
