@@ -16,6 +16,7 @@ import { MoreHorizontal, Eye } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 
 export const useArrivalsColumns = () => {
   const { t } = useTranslation('common');
@@ -73,6 +74,19 @@ export const useArrivalsColumns = () => {
       cell: ({ row }) => {
         return row.original.user?.name || t('unknown');
       },
+    },
+    {
+      id: "budget",
+      accessorKey: "budget",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('budget')} />
+      ),
+      cell: ({ row }) => {
+        const budget = row.original.budget;
+        if (!budget) return 'N/A';
+        const budgetKey = `budget_${budget.toLowerCase()}` as any;
+        return <Badge variant="secondary">{t(budgetKey, budget)}</Badge>;
+      }
     },
     {
       accessorKey: "remarks",
