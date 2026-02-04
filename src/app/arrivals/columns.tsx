@@ -82,7 +82,9 @@ export const useArrivalsColumns = () => {
         <DataTableColumnHeader column={column} title={t('budget')} />
       ),
       cell: ({ row }) => {
-        const budget = row.original.budget;
+        const arrival = row.original;
+        // Try to get budget from operation level, or fallback to the first item's budget
+        const budget = arrival.budget || arrival.items?.[0]?.budget;
         if (!budget) return 'N/A';
         const budgetKey = `budget_${budget.toLowerCase()}` as any;
         return <Badge variant="secondary">{t(budgetKey, budget)}</Badge>;
@@ -101,6 +103,7 @@ export const useArrivalsColumns = () => {
         
         // Serialize date if it's an array/object for the URL
         const dateStr = Array.isArray(arrival.date) ? JSON.stringify(arrival.date) : arrival.date;
+        const budget = arrival.budget || arrival.items?.[0]?.budget;
 
         return (
           <DropdownMenu>
@@ -117,7 +120,7 @@ export const useArrivalsColumns = () => {
                   pathname: `/arrivals/${arrival.id}`,
                   query: {
                     un: arrival.user?.name,
-                    bg: arrival.budget,
+                    bg: budget,
                     dt: dateStr,
                     rm: arrival.remarks
                   }
