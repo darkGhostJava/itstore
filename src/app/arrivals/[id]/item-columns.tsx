@@ -9,10 +9,15 @@ import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { StatusBadge } from "@/components/shared/status-badge";
 
+// Extend Item type for grouping visualization
+export type ArrivalTableItem = Item & {
+  groupCount?: number;
+};
+
 export const useArrivalItemColumns = () => {
   const { t } = useTranslation('common');
 
-  const columns: ColumnDef<Item>[] = [
+  const columns: ColumnDef<ArrivalTableItem>[] = [
     {
       header: "#",
       cell: ({ row }) => row.index + 1,
@@ -61,6 +66,15 @@ export const useArrivalItemColumns = () => {
           return <span className="text-muted-foreground italic">N/A</span>;
         }
         return <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{sn}</code>;
+      },
+    },
+    {
+      id: "quantity",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('quantity')} />
+      ),
+      cell: ({ row }) => {
+        return <span className="font-medium">{row.original.groupCount || 1}</span>;
       },
     },
     {
