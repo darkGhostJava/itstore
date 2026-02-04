@@ -11,8 +11,9 @@ import { fetchArrivalById, fetchItemsByArrivalId } from "@/lib/data";
 import { useTranslation } from "react-i18next";
 import { format, isValid } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { useArrivalItemColumns, ArrivalTableItem } from "./item-columns";
-import { Package, Calendar, User, Wallet } from "lucide-react";
+import { useHardwareColumns, useConsumableColumns, ArrivalTableItem } from "./item-columns";
+import { Package, Calendar, User, Wallet, HardDrive, Printer } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ArrivalDetailPage() {
   const { t } = useTranslation('common');
@@ -27,7 +28,8 @@ export default function ArrivalDetailPage() {
   const [isLoadingItems, setIsLoadingItems] = React.useState(true);
   const [isMounted, setIsMounted] = React.useState(false);
   
-  const columns = useArrivalItemColumns();
+  const hardwareColumns = useHardwareColumns();
+  const consumableColumns = useConsumableColumns();
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -63,29 +65,28 @@ export default function ArrivalDetailPage() {
     }
   }, [arrivalId]);
 
-  // Group consumables within the current page of results
-  const processedItems = React.useMemo(() => {
+  // Split and process items
+  const hardwareItems = React.useMemo(() => {
+    return items.filter(item => item.article.type === 'HARDWARE');
+  }, [items]);
+
+  const consumableItemsGrouped = React.useMemo(() => {
     const result: ArrivalTableItem[] = [];
     const consumableGroups: Record<number, ArrivalTableItem> = {};
 
-    items.forEach((item) => {
-      if (item.article.type === 'CONSUMABLE') {
-        const articleId = item.article.id;
-        if (consumableGroups[articleId]) {
-          consumableGroups[articleId].groupCount = (consumableGroups[articleId].groupCount || 0) + 1;
-        } else {
-          consumableGroups[articleId] = { ...item, groupCount: 1 };
-          result.push(consumableGroups[articleId]);
-        }
+    items.filter(item => item.article.type === 'CONSUMABLE').forEach((item) => {
+      const articleId = item.article.id;
+      if (consumableGroups[articleId]) {
+        consumableGroups[articleId].groupCount = (consumableGroups[articleId].groupCount || 0) + 1;
       } else {
-        result.push({ ...item, groupCount: 1 });
+        consumableGroups[articleId] = { ...item, groupCount: 1 };
+        result.push(consumableGroups[articleId]);
       }
     });
 
     return result;
   }, [items]);
 
-  // Handle Spring Boot array dates [yyyy, mm, dd, hh, mm, ss] or standard strings
   const parseSafeDate = (dateVal: any): Date | null => {
     if (!dateVal) return null;
     if (Array.isArray(dateVal)) {
@@ -146,29 +147,72 @@ export default function ArrivalDetailPage() {
         </div>
 
         <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('arrived_articles')}</CardTitle>
-              <CardDescription>{t('arrived_articles_list_desc', 'List of received items. Consumables are grouped by article.')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DataTable 
-                columns={columns} 
-                data={processedItems}
-                pageCount={pageCount}
-                fetchData={fetchData}
-                isLoading={isLoadingItems}
-                filterKey="serialNumber" 
-                filterPlaceholder={t('filter_by_serial_number_placeholder')}
-                emptyStateMessage={
-                    <div className="flex flex-col items-center justify-center space-y-2 py-10">
-                        <Package className="h-12 w-12 text-muted-foreground" />
-                        <p className="text-muted-foreground">{t('no_items_found', 'No items found in this arrival.')}</p>
-                    </div>
-                }
-              />
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="hardware" className="w-full">
+            <div className="flex items-center justify-between mb-4">
+              <TabsList>
+                <TabsTrigger value="hardware" className="flex items-center gap-2">
+                  <HardDrive className="h-4 w-4" />
+                  {t('hardware')}
+                </TabsTrigger>
+                <TabsTrigger value="consumables" className="flex items-center gap-2">
+                  <Printer className="h-4 w-4" />
+                  {t('consumable')}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="hardware">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('hardware')}</CardTitle>
+                  <CardDescription>{t('arrived_hardware_desc', 'List of received hardware equipment with unique serial numbers.')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DataTable 
+                    columns={hardwareColumns} 
+                    data={hardwareItems}
+                    pageCount={pageCount}
+                    fetchData={fetchData}
+                    isLoading={isLoadingItems}
+                    filterKey="serialNumber" 
+                    filterPlaceholder={t('filter_by_serial_number_placeholder')}
+                    emptyStateMessage={
+                        <div className="flex flex-col items-center justify-center space-y-2 py-10">
+                            <HardDrive className="h-12 w-12 text-muted-foreground" />
+                            <p className="text-muted-foreground">{t('no_hardware_found', 'No hardware items found in this page.')}</p>
+                        </div>
+                    }
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="consumables">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('consumable')}</CardTitle>
+                  <CardDescription>{t('arrived_consumables_desc', 'Summary of received consumables grouped by article model.')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DataTable 
+                    columns={consumableColumns} 
+                    data={consumableItemsGrouped}
+                    pageCount={pageCount}
+                    fetchData={fetchData}
+                    isLoading={isLoadingItems}
+                    filterKey="serialNumber" 
+                    filterPlaceholder={t('filter_by_serial_number_placeholder')}
+                    emptyStateMessage={
+                        <div className="flex flex-col items-center justify-center space-y-2 py-10">
+                            <Printer className="h-12 w-12 text-muted-foreground" />
+                            <p className="text-muted-foreground">{t('no_consumables_found', 'No consumable items found in this page.')}</p>
+                        </div>
+                    }
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
