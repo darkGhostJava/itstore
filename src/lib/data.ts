@@ -240,6 +240,11 @@ export const fetchStructureById = async (id: number): Promise<Structure> => {
     return response.data;
 }
 
+export const fetchArticleById = async (id: number): Promise<Article> => {
+  const response = await api.get<Article>(`/articles/${id}`);
+  return response.data;
+}
+
 export const fetchItemsForArticle = async (articleId: number, options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
   const params = new URLSearchParams({
