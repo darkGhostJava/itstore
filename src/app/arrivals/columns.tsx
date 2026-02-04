@@ -32,7 +32,13 @@ export const useArrivalsColumns = () => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('date')} />
       ),
-      cell: ({ row }) => format(new Date(row.original.date), "PPP p"),
+      cell: ({ row }) => {
+        try {
+          return format(new Date(row.original.date), "PPP p");
+        } catch (e) {
+          return String(row.original.date);
+        }
+      },
     },
     {
       id: "article",
@@ -78,6 +84,10 @@ export const useArrivalsColumns = () => {
       id: "actions",
       cell: ({ row }) => {
         const arrival = row.original;
+        
+        // Serialize date if it's an array/object for the URL
+        const dateStr = Array.isArray(arrival.date) ? JSON.stringify(arrival.date) : arrival.date;
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -89,7 +99,15 @@ export const useArrivalsColumns = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
               <DropdownMenuItem asChild>
-                <Link href={`/arrivals/${arrival.id}`}>
+                <Link href={{
+                  pathname: `/arrivals/${arrival.id}`,
+                  query: {
+                    un: arrival.user?.name,
+                    bg: arrival.budget,
+                    dt: dateStr,
+                    rm: arrival.remarks
+                  }
+                }}>
                   <Eye className="mr-2 h-4 w-4" />
                   {t('view_details')}
                 </Link>

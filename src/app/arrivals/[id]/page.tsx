@@ -2,9 +2,9 @@
 "use client";
 
 import * as React from "react";
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table/data-table";
 import { Operation, Item } from "@/lib/definitions";
 import { fetchArrivalById, fetchItemsByArrivalId } from "@/lib/data";
@@ -15,9 +15,10 @@ import { useHardwareColumns, useConsumableColumns, ArrivalTableItem } from "./it
 import { Package, Calendar, User, Wallet, HardDrive, Printer } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function ArrivalDetailPage() {
+function ArrivalDetailContent() {
   const { t } = useTranslation('common');
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const arrivalId = params.id ? parseInt(params.id, 10) : null;
   
   const [arrival, setArrival] = React.useState<Operation | null>(null);
@@ -33,6 +34,13 @@ export default function ArrivalDetailPage() {
 
   React.useEffect(() => {
     setIsMounted(true);
+    
+    // Attempt to initialize arrival from transferred query params
+    const un = searchParams.get('un');
+    const bg = searchParams.get('bg');
+    const dt = searchParams.get('dt');
+    const rm = searchParams.get('rm');
+
     const getArrival = async () => {
       if (!arrivalId) return;
       try {
@@ -46,8 +54,23 @@ export default function ArrivalDetailPage() {
         setIsLoadingArrival(false);
       }
     };
-    getArrival();
-  }, [arrivalId]);
+
+    if (un && arrivalId) {
+      // Data was successfully transferred via search params
+      setArrival({
+        id: arrivalId,
+        user: { name: un } as any,
+        budget: bg || undefined,
+        date: dt || '',
+        remarks: rm || '',
+        type: 'ARRIVAL'
+      });
+      setIsLoadingArrival(false);
+    } else {
+      // Fallback: fetch from API if query params are missing (e.g. direct link)
+      getArrival();
+    }
+  }, [arrivalId, searchParams]);
 
   const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     if (!arrivalId) return;
@@ -65,11 +88,12 @@ export default function ArrivalDetailPage() {
     }
   }, [arrivalId]);
 
-  // Split and process items
+  // Split items
   const hardwareItems = React.useMemo(() => {
     return items.filter(item => item.article.type === 'HARDWARE');
   }, [items]);
 
+  // Group consumables per page
   const consumableItemsGrouped = React.useMemo(() => {
     const result: ArrivalTableItem[] = [];
     const consumableGroups: Record<number, ArrivalTableItem> = {};
@@ -89,6 +113,12 @@ export default function ArrivalDetailPage() {
 
   const parseSafeDate = (dateVal: any): Date | null => {
     if (!dateVal) return null;
+    if (typeof dateVal === 'string' && dateVal.startsWith('[')) {
+      try {
+        const arr = JSON.parse(dateVal);
+        return new Date(arr[0], arr[1] - 1, arr[2], arr[3] || 0, arr[4] || 0);
+      } catch (e) { return null; }
+    }
     if (Array.isArray(dateVal)) {
       return new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0);
     }
@@ -102,17 +132,15 @@ export default function ArrivalDetailPage() {
     return d ? format(d, "PPP p") : String(arrival.date);
   }, [arrival?.date]);
 
-  if (!isMounted || isLoadingArrival) {
-    return <div className="p-8 text-center">{t('loading', 'Loading details...')}</div>;
-  }
+  if (!isMounted) return null;
 
-  if (!arrival) {
+  if (!isLoadingArrival && !arrival) {
     notFound();
   }
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title={`${t('arrival_details', 'Arrival Details')} #${arrival.id}`} />
+      <PageHeader title={`${t('arrival_details', 'Arrival Details')} #${arrivalId}`} />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
         <div className="lg:col-span-1 space-y-6">
@@ -121,27 +149,37 @@ export default function ArrivalDetailPage() {
               <CardTitle>{t('information', 'Information')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">{t('date')}:</span>
-                <span>{formattedDate}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">{t('user')}:</span>
-                <span>{arrival.user?.name}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Wallet className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">{t('budget')}:</span>
-                <Badge variant="secondary">
-                  {arrival.budget ? t(`budget_${arrival.budget.toLowerCase()}` as any, arrival.budget) : 'N/A'}
-                </Badge>
-              </div>
-              <div className="pt-2 border-t text-sm">
-                <p className="font-semibold mb-1">{t('remarks')}:</p>
-                <p className="text-muted-foreground italic">{arrival.remarks || t('no_remarks')}</p>
-              </div>
+              {isLoadingArrival ? (
+                <div className="space-y-4">
+                  <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+                  <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+                  <div className="h-4 bg-muted animate-pulse rounded w-2/3" />
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-semibold">{t('date')}:</span>
+                    <span>{formattedDate}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-semibold">{t('user')}:</span>
+                    <span>{arrival?.user?.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-semibold">{t('budget')}:</span>
+                    <Badge variant="secondary">
+                      {arrival?.budget ? t(`budget_${arrival.budget.toLowerCase()}` as any, arrival.budget) : 'N/A'}
+                    </Badge>
+                  </div>
+                  <div className="pt-2 border-t text-sm">
+                    <p className="font-semibold mb-1">{t('remarks')}:</p>
+                    <p className="text-muted-foreground italic">{arrival?.remarks || t('no_remarks')}</p>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -165,7 +203,6 @@ export default function ArrivalDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>{t('hardware')}</CardTitle>
-                  <CardDescription>{t('arrived_hardware_desc', 'List of received hardware equipment with unique serial numbers.')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <DataTable 
@@ -191,7 +228,6 @@ export default function ArrivalDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>{t('consumable')}</CardTitle>
-                  <CardDescription>{t('arrived_consumables_desc', 'Summary of received consumables grouped by article model.')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <DataTable 
@@ -216,5 +252,13 @@ export default function ArrivalDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ArrivalDetailPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center">Loading details...</div>}>
+      <ArrivalDetailContent />
+    </React.Suspense>
   );
 }
