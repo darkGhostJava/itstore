@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, Check, ChevronsUpDown } from "lucide-react";
+import { PlusCircle, Trash2, Check, ChevronsUpDown, Search } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -400,45 +400,55 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
               />
 
               <div className="space-y-4">
-                <FormLabel>{t('articles_to_distribute')}</FormLabel>
+                <FormLabel className="text-lg font-bold">{t('articles_to_distribute')}</FormLabel>
                 <div className="space-y-4">
                   {fields.map((field, index) => {
-                    const articleType = form.getValues(`articles.${index}.article.type`);
+                    const article = (field as any).article as Article;
+                    const articleType = article.type;
                     const currentSerialsList = serials[index] || [];
                     const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
 
                     return (
-                      <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
-                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                      <div key={field.id} className="rounded-lg border bg-muted/30 p-4 space-y-4 relative shadow-sm">
+                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 hover:bg-destructive/10 hover:text-destructive" onClick={() => remove(index)}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
 
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm">{form.getValues(`articles.${index}.article.model`)}</p>
+                        <div className="flex items-center gap-2 pr-8">
+                          <p className="font-semibold text-sm">{article.model}</p>
                           <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
                             {t(articleType.toLowerCase() as "hardware" | "consumable")}
                           </Badge>
+                          <span className={cn("text-[10px] ml-auto font-bold px-2 py-0.5 rounded-full border", article.quantity === 0 ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-green-500/10 text-green-600 border-green-500/20")}>
+                            {t('stock')}: {article.quantity}
+                          </span>
                         </div>
 
                         {articleType === 'HARDWARE' && (
                           <FormItem>
                             <FormLabel>{t('serial_numbers')}</FormLabel>
                              <div className="relative">
-                                  <Input
-                                    id={`serial-search-${index}`}
-                                    placeholder={t('search_add_serial_placeholder')}
-                                    onChange={(e) => handleSerialSearch(e.target.value, form.getValues(`articles.${index}.article.id`), index)}
-                                    onBlur={() => setTimeout(() => setSerials(prev => ({ ...prev, [index]: [] })), 150)}
-                                  />
+                                  <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id={`serial-search-${index}`}
+                                            placeholder={t('search_add_serial_placeholder')}
+                                            onChange={(e) => handleSerialSearch(e.target.value, article.id, index)}
+                                            onBlur={() => setTimeout(() => setSerials(prev => ({ ...prev, [index]: [] })), 150)}
+                                            className="pl-9 bg-background"
+                                        />
+                                    </div>
+                                  </div>
                                   {currentSerialsList.length > 0 && (
-                                    <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-48 overflow-y-auto">
+                                    <div className="absolute z-10 w-full rounded border bg-background shadow-lg mt-1 max-h-48 overflow-y-auto">
                                       {currentSerialsList.map((serial) => (
                                         <div
                                           key={serial.id}
-                                          className="p-2 cursor-pointer hover:bg-muted"
+                                          className="p-3 cursor-pointer hover:bg-accent transition-colors border-b last:border-0"
                                           onMouseDown={() => handleSelectSerial(serial, index)}
                                         >
-                                          {serial.serialNumber}
+                                          <code className="text-sm font-mono">{serial.serialNumber}</code>
                                         </div>
                                       ))}
                                     </div>
@@ -446,17 +456,18 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                 </div>
                             <div className="mt-2 flex flex-wrap gap-2">
                               {addedSerials?.map((sn) => (
-                                <Badge key={sn} variant="secondary" className="flex items-center gap-1">
-                                  {sn}
+                                <Badge key={sn} variant="secondary" className="flex items-center gap-1.5 py-1 pl-2">
+                                  <span className="font-mono text-xs">{sn}</span>
                                   <button
                                     type="button"
-                                    className="ml-1 rounded-full text-destructive hover:text-red-500"
+                                    className="ml-1 h-4 w-4 rounded-full flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
                                     onClick={() => handleRemoveSerialNumber(index, sn)}
                                   >
                                     &times;
                                   </button>
                                 </Badge>
                               ))}
+                              {(!addedSerials || addedSerials.length === 0) && <p className="text-xs text-muted-foreground italic">{t('no_serials_added', 'No serial numbers selected.')}</p>}
                             </div>
                             <FormMessage />
                           </FormItem>
@@ -473,11 +484,16 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                   <Input
                                     type="number"
                                     min={1}
+                                    max={article.quantity}
                                     placeholder={t('enter_quantity_placeholder')}
                                     {...field}
+                                    className="bg-background"
                                     onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
                                   />
                                 </FormControl>
+                                <FormDescription className="text-[10px]">
+                                    {article.quantity === 0 ? t('out_of_stock', 'Out of stock') : t('max_available', 'Max available: {{count}}', { count: article.quantity })}
+                                </FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -488,7 +504,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   })}
                 </div>
 
-                <div className="relative space-y-2">
+                <div className="relative space-y-2 pt-2">
                   <div className="flex gap-2">
                     <Select
                       value={searchArticleType}
@@ -503,20 +519,23 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input
-                      id="article-search"
-                      placeholder={t('search_article_to_add_placeholder')}
-                      onChange={(e) => handleArticleSearch(e.target.value)}
-                      onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
-                      className="flex-1"
-                    />
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="article-search"
+                            placeholder={t('search_article_to_add_placeholder')}
+                            onChange={(e) => handleArticleSearch(e.target.value)}
+                            onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
+                            className="pl-9"
+                        />
+                    </div>
                   </div>
                   {searchedArticles.length > 0 && (
-                    <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
+                    <div className="absolute z-10 w-full rounded border bg-popover shadow-xl mt-1 max-h-56 overflow-y-auto">
                       {searchedArticles.map((article) => (
                         <div
                           key={article.id}
-                          className="p-2 cursor-pointer hover:bg-muted"
+                          className="p-3 flex items-center justify-between cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0"
                           onMouseDown={() => {
                             append({ article: article, serialNumbers: [], quantity: 1 });
                             setSearchedArticles([]);
@@ -524,7 +543,18 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                             if (articleInput) (articleInput as HTMLInputElement).value = '';
                           }}
                         >
-                          {article.model} ({t(article.type.toLowerCase() as "hardware" | "consumable")})
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">{article.model}</span>
+                            <span className="text-xs opacity-70">{article.designation}</span>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge variant={article.type === "HARDWARE" ? "outline" : "secondary"} className="text-[10px]">
+                                {t(article.type.toLowerCase() as any)}
+                            </Badge>
+                            <span className={cn("text-[10px] font-bold", article.quantity === 0 ? "text-destructive" : "text-green-600")}>
+                                {t('stock')}: {article.quantity}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -548,7 +578,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
               />
 
               <DialogFooter>
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                   {loading ? t('saving') : t('save_distribution')}
                 </Button>
               </DialogFooter>
