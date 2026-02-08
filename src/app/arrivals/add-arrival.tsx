@@ -29,8 +29,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, FileUp, X } from "lucide-react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { PlusCircle, Trash2, FileUp, X, Search } from "lucide-react";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { searchArticles } from "@/lib/data";
@@ -44,16 +44,16 @@ import { ErrorSummary } from "@/components/shared/error-summary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const articleArrivalSchema = z.object({
-  article: z.any().refine(val => val, { message: "Please select an article." }),
+  article: z.any().refine(val => val, { message: "article_is_required" }),
   serialNumbers: z.array(z.string()).optional(),
   quantity: z.number().optional(),
   file: z.any().optional(),
 });
 
 const arrivalFormSchema = z.object({
-  budget: z.string().min(1, "Please select a budget."),
+  budget: z.string().min(1, "budget_is_required"),
   remarks: z.string().optional(),
-  articles: z.array(articleArrivalSchema).min(1, "Please add at least one article."),
+  articles: z.array(articleArrivalSchema).min(1, "at_least_one_article_is_required"),
 });
 
 type ArrivalFormValues = z.infer<typeof arrivalFormSchema>;
@@ -85,36 +85,64 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
     name: "articles",
   });
 
+  // Watch fields to trigger re-renders correctly for conditional UI
+  const watchedArticles = useWatch({
+    control: form.control,
+    name: "articles",
+  });
+
   async function onSubmit(values: ArrivalFormValues) {
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("budget", values.budget);
-      formData.append("remark", values.remarks || "");
+      const hasFiles = values.articles.some(a => a.file);
 
-      values.articles.forEach((a, index) => {
-        const articleId = a.article.id;
-        if (a.article.type === 'HARDWARE') {
-          // Add manual serial numbers
-          if (a.serialNumbers && a.serialNumbers.length > 0) {
-            a.serialNumbers.forEach(sn => {
-              formData.append(`hardwares[${articleId}]`, sn);
-            });
-          }
-          // Add Excel file if present
-          if (a.file) {
-            formData.append(`hardwaresFile[${articleId}]`, a.file);
-          }
-        } else if (a.article.type === 'CONSUMABLE') {
-          formData.append(`consumables[${articleId}]`, (a.quantity || 1).toString());
-        }
-      });
+      if (hasFiles) {
+        // NEW API: multipart/form-data
+        const formData = new FormData();
+        formData.append("budget", values.budget);
+        formData.append("remark", values.remarks || "");
 
-      await api.post("/arrivals/with_file", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+        values.articles.forEach((a) => {
+          const articleId = a.article.id;
+          if (a.article.type === 'HARDWARE') {
+            if (a.serialNumbers && a.serialNumbers.length > 0) {
+              a.serialNumbers.forEach(sn => {
+                formData.append(`hardwares[${articleId}]`, sn);
+              });
+            }
+            if (a.file) {
+              formData.append(`hardwaresFile[${articleId}]`, a.file);
+            }
+          } else if (a.article.type === 'CONSUMABLE') {
+            formData.append(`consumables[${articleId}]`, (a.quantity || 1).toString());
+          }
+        });
+
+        await api.post("/arrivals/with_file", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } else {
+        // OLD API: standard JSON
+        const hardwares: Record<number, string[]> = {};
+        const consumables: Record<number, number> = {};
+
+        values.articles.forEach(a => {
+          if (a.article.type === 'HARDWARE') {
+            hardwares[a.article.id] = a.serialNumbers || [];
+          } else {
+            consumables[a.article.id] = a.quantity || 1;
+          }
+        });
+
+        await api.post("/arrivals", {
+          budget: values.budget,
+          remark: values.remarks || "",
+          hardwares,
+          consumables
+        });
+      }
 
       toast({
         title: t('arrival_added_toast_title'),
@@ -191,7 +219,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               
                {form.formState.isSubmitted && !form.formState.isValid && (
                 <ErrorSummary errors={form.formState.errors} />
@@ -221,32 +249,41 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
               />
 
               <div className="space-y-4">
-                <FormLabel>{t('arrived_articles')}</FormLabel>
+                <FormLabel className="text-lg font-bold">{t('arrived_articles')}</FormLabel>
                 <div className="space-y-4">
                   {fields.map((field, index) => {
-                    const article = form.getValues(`articles.${index}.article`);
+                    const article = watchedArticles?.[index]?.article;
+                    if (!article) return null;
+                    
                     const articleType = article.type;
-                    const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
-                    const uploadedFile = form.getValues(`articles.${index}.file`);
+                    const addedSerials = watchedArticles?.[index]?.serialNumbers || [];
+                    const uploadedFile = watchedArticles?.[index]?.file;
 
                     return (
-                      <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
-                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                      <div key={field.id} className="rounded-lg border bg-muted/30 p-4 space-y-4 relative shadow-sm">
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="icon" 
+                          className="absolute top-2 right-2 h-8 w-8 hover:bg-destructive/10 hover:text-destructive" 
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
 
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm">{article.model} - <span className="text-xs text-muted-foreground">{article.designation}</span></p>
-                          <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
+                        <div className="flex items-center gap-2 pr-8">
+                          <p className="font-semibold">{article.model}</p>
+                          <span className="text-xs text-muted-foreground">— {article.designation}</span>
+                          <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"} className="ml-auto">
                             {t(articleType.toLowerCase() as "hardware" | "consumable")}
                           </Badge>
                         </div>
 
                         {articleType === 'HARDWARE' && (
                           <Tabs defaultValue="manual" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2">
-                              <TabsTrigger value="manual">{t('manual_entry', 'Manual Entry')}</TabsTrigger>
-                              <TabsTrigger value="excel">{t('excel_import', 'Excel Import')}</TabsTrigger>
+                            <TabsList className="grid w-full grid-cols-2 bg-background/50">
+                              <TabsTrigger value="manual">{t('manual_entry')}</TabsTrigger>
+                              <TabsTrigger value="excel">{t('excel_import')}</TabsTrigger>
                             </TabsList>
                             <TabsContent value="manual" className="space-y-4 pt-4">
                               <FormItem>
@@ -262,31 +299,33 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                                       }
                                     }}
                                     placeholder={t('enter_serial_number_placeholder')}
+                                    className="bg-background"
                                   />
                                   <Button type="button" onClick={() => handleAddSerialNumber(index)}>{t('add')}</Button>
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                  {addedSerials?.map((sn) => (
-                                    <Badge key={sn} variant="secondary" className="flex items-center gap-1">
-                                      {sn}
+                                  {addedSerials.map((sn) => (
+                                    <Badge key={sn} variant="secondary" className="flex items-center gap-1 py-1 pl-2">
+                                      <span className="font-mono text-xs">{sn}</span>
                                       <button
                                         type="button"
-                                        className="ml-1 rounded-full text-destructive hover:text-red-500"
+                                        className="ml-1 h-4 w-4 rounded-full flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
                                         onClick={() => {
                                           const current = form.getValues(`articles.${index}.serialNumbers`) || [];
                                           update(index, { ...fields[index], serialNumbers: current.filter(s => s !== sn)});
                                         }}
                                       >
-                                        &times;
+                                        <X className="h-3 w-3" />
                                       </button>
                                     </Badge>
                                   ))}
+                                  {addedSerials.length === 0 && <p className="text-xs text-muted-foreground italic">{t('no_serials_added', 'No serial numbers added yet.')}</p>}
                                 </div>
                               </FormItem>
                             </TabsContent>
                             <TabsContent value="excel" className="space-y-4 pt-4">
                               <FormItem>
-                                <FormLabel>{t('upload_excel_file', 'Upload Excel File')}</FormLabel>
+                                <FormLabel>{t('upload_excel_file')}</FormLabel>
                                 <div className="flex items-center gap-4">
                                   <FormControl>
                                     <div className="flex items-center gap-2 w-full">
@@ -306,23 +345,28 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                                           />
                                           <label
                                             htmlFor={`file-upload-${index}`}
-                                            className="flex h-10 w-full cursor-pointer items-center justify-center rounded-md border border-dashed border-input bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                            className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-input bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                                           >
-                                            <FileUp className="mr-2 h-4 w-4" />
-                                            {t('select_excel_file', 'Select Excel File')}
+                                            <FileUp className="mb-2 h-6 w-6 text-primary" />
+                                            <span>{t('select_excel_file')}</span>
                                           </label>
                                         </div>
                                       ) : (
-                                        <div className="flex flex-1 items-center justify-between rounded-md border p-2 bg-muted/50">
-                                          <div className="flex items-center">
-                                            <FileUp className="mr-2 h-4 w-4 text-primary" />
-                                            <span className="text-sm font-medium truncate max-w-[200px]">{uploadedFile.name}</span>
+                                        <div className="flex flex-1 items-center justify-between rounded-md border p-3 bg-background">
+                                          <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded bg-primary/10">
+                                                <FileUp className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium truncate max-w-[200px]">{uploadedFile.name}</span>
+                                                <span className="text-[10px] text-muted-foreground">{(uploadedFile.size / 1024).toFixed(1)} KB</span>
+                                            </div>
                                           </div>
                                           <Button
                                             type="button"
                                             variant="ghost"
                                             size="icon"
-                                            className="h-6 w-6"
+                                            className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
                                             onClick={() => update(index, { ...fields[index], file: undefined })}
                                           >
                                             <X className="h-4 w-4" />
@@ -333,7 +377,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                                   </FormControl>
                                 </div>
                                 <p className="text-[0.7rem] text-muted-foreground">
-                                  {t('excel_format_hint', 'Serials will be read from the first column of the first sheet.')}
+                                  {t('excel_format_hint')}
                                 </p>
                               </FormItem>
                             </TabsContent>
@@ -353,6 +397,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                                     min={1}
                                     placeholder={t('enter_quantity_placeholder')}
                                     {...field}
+                                    className="bg-background"
                                     onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
                                   />
                                 </FormControl>
@@ -366,7 +411,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                   })}
                 </div>
 
-                <div className="relative space-y-2">
+                <div className="relative space-y-2 pt-2">
                   <div className="flex gap-2">
                     <Select
                       value={searchArticleType}
@@ -381,23 +426,32 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                         <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input
-                      id="article-search"
-                      placeholder={t('search_article_placeholder')}
-                      onChange={(e) => handleArticleSearch(e.target.value)}
-                      onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
-                      className="flex-1"
-                    />
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="article-search"
+                            placeholder={t('search_article_placeholder')}
+                            onChange={(e) => handleArticleSearch(e.target.value)}
+                            onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
+                            className="pl-9"
+                        />
+                    </div>
                   </div>
                   {searchedArticles.length > 0 && (
-                    <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
+                    <div className="absolute z-50 w-full rounded-md border bg-popover shadow-xl mt-1 max-h-56 overflow-y-auto">
                       {searchedArticles.map((article) => (
                         <div
                           key={article.id}
-                          className="p-2 cursor-pointer hover:bg-muted"
+                          className="p-3 flex items-center justify-between cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0"
                           onMouseDown={() => handleArticleSelect(article)}
                         >
-                          {article.model} ({t(article.type.toLowerCase() as "hardware" | "consumable")})
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">{article.model}</span>
+                            <span className="text-xs opacity-70">{article.designation}</span>
+                          </div>
+                          <Badge variant={article.type === "HARDWARE" ? "outline" : "secondary"} className="text-[10px]">
+                            {t(article.type.toLowerCase() as any)}
+                          </Badge>
                         </div>
                       ))}
                     </div>
@@ -422,8 +476,8 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                 )}
               />
 
-              <DialogFooter>
-                <Button type="submit" disabled={loading}>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                   {loading ? t('saving') : t('save_arrival')}
                 </Button>
               </DialogFooter>
