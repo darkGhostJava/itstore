@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -386,7 +385,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                           : "opacity-0"
                                       )}
                                     />
-                                    {person.grade} {person.firstName} {person.lastName}
+                                    {person.grade} {person.firstName} {person.lastName} {person.pseudo && `(${person.pseudo})`}
                                   </CommandItem>
                                 ))}
                               </CommandList>
