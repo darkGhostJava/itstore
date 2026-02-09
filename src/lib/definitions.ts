@@ -56,6 +56,7 @@ export type Operation = {
   person?: Person;
   items?: Item[];
   budget?: string;
+  isSigned?: boolean;
 };
 
 export type Distribution = {

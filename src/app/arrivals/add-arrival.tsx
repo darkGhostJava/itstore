@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, FileUp, X, Search } from "lucide-react";
+import { PlusCircle, Trash2, FileUp, X, Search, FileText } from "lucide-react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,6 +54,7 @@ const arrivalFormSchema = z.object({
   budget: z.string().min(1, "budget_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleArrivalSchema).min(1, "at_least_one_article_is_required"),
+  attestation: z.any().optional(),
 });
 
 type ArrivalFormValues = z.infer<typeof arrivalFormSchema>;
@@ -77,6 +78,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
       budget: "",
       remarks: "",
       articles: [],
+      attestation: undefined,
     },
   });
 
@@ -85,22 +87,30 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
     name: "articles",
   });
 
-  // Watch fields to trigger re-renders correctly for conditional UI
   const watchedArticles = useWatch({
     control: form.control,
     name: "articles",
   });
 
+  const watchedAttestation = useWatch({
+    control: form.control,
+    name: "attestation",
+  });
+
   async function onSubmit(values: ArrivalFormValues) {
     setLoading(true);
     try {
-      const hasFiles = values.articles.some(a => a.file);
+      const hasArticleFiles = values.articles.some(a => a.file);
+      const hasAttestation = !!values.attestation;
 
-      if (hasFiles) {
-        // NEW API: multipart/form-data
+      if (hasArticleFiles || hasAttestation) {
         const formData = new FormData();
         formData.append("budget", values.budget);
         formData.append("remark", values.remarks || "");
+        
+        if (hasAttestation) {
+          formData.append("attestation", values.attestation);
+        }
 
         values.articles.forEach((a) => {
           const articleId = a.article.id;
@@ -124,7 +134,6 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
           },
         });
       } else {
-        // OLD API: standard JSON
         const hardwares: Record<number, string[]> = {};
         const consumables: Record<number, number> = {};
 
@@ -460,6 +469,68 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                 <FormMessage>
                   {form.formState.errors.articles && typeof form.formState.errors.articles.message === 'string' && t(form.formState.errors.articles.message)}
                 </FormMessage>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                <FormField
+                  control={form.control}
+                  name="attestation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('arrival_attestation', 'Arrival Attestation')}</FormLabel>
+                      <FormControl>
+                        <div className="w-full">
+                          {!watchedAttestation ? (
+                            <div className="relative">
+                              <Input
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                className="hidden"
+                                id="arrival-attestation-upload"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    form.setValue("attestation", file);
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor="arrival-attestation-upload"
+                                className="flex h-24 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 hover:bg-muted/50 transition-colors"
+                              >
+                                <FileText className="mb-2 h-8 w-8 text-primary/60" />
+                                <span className="text-sm font-medium">{t('upload_arrival_attestation', 'Upload Attestation Document')}</span>
+                                <span className="text-xs text-muted-foreground mt-1">PDF, JPG, PNG (Max 5MB)</span>
+                              </label>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between rounded-lg border p-4 bg-primary/5 border-primary/20">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-full bg-primary/10">
+                                  <FileText className="h-5 w-5 text-primary" />
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-semibold truncate max-w-[250px]">{watchedAttestation.name}</span>
+                                  <span className="text-[10px] text-muted-foreground">{(watchedAttestation.size / 1024).toFixed(1)} KB</span>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                                onClick={() => form.setValue("attestation", undefined)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField

@@ -233,5 +233,9 @@
     "upload_excel_file": "Upload Excel File",
     "select_excel_file": "Select Excel File",
     "excel_format_hint": "Serials will be read from the first column of the first sheet.",
-    "arrival_details": "Arrival Details"
+    "arrival_details": "Arrival Details",
+    "arrival_attestation": "Arrival Attestation",
+    "upload_arrival_attestation": "Upload Attestation Document",
+    "uploaded": "Uploaded",
+    "none": "None"
 }

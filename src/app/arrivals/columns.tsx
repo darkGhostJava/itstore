@@ -10,16 +10,43 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye } from "lucide-react";
+import { MoreHorizontal, Eye, FileDown, CheckCircle2, XCircle } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { api } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 export const useArrivalsColumns = () => {
   const { t } = useTranslation('common');
+
+  const handleDownloadAttestation = async (id: number) => {
+    try {
+      const response = await api.get(`/arrivals/${id}/attestation`, {
+        responseType: "blob",
+      });
+      
+      const blob = new Blob([response.data], { type: response.headers['content-type'] });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `attestation_arrival_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: t('error'),
+        description: t('download_failed_toast_desc'),
+      });
+    }
+  };
 
   const columns: ColumnDef<Operation>[] = [
     {
@@ -83,11 +110,30 @@ export const useArrivalsColumns = () => {
       ),
       cell: ({ row }) => {
         const arrival = row.original;
-        // Try to get budget from operation level, or fallback to the first item's budget
         const budget = arrival.budget || arrival.items?.[0]?.budget;
         if (!budget) return 'N/A';
         const budgetKey = `budget_${budget.toLowerCase()}` as any;
         return <Badge variant="secondary">{t(budgetKey, budget)}</Badge>;
+      }
+    },
+    {
+      id: "attestation",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />
+      ),
+      cell: ({ row }) => {
+        const isSigned = row.original.isSigned;
+        return isSigned ? (
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="text-xs font-medium">{t('uploaded', 'Uploaded')}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-muted-foreground/50">
+            <XCircle className="h-4 w-4" />
+            <span className="text-xs">{t('none', 'None')}</span>
+          </div>
+        );
       }
     },
     {
@@ -100,8 +146,6 @@ export const useArrivalsColumns = () => {
       id: "actions",
       cell: ({ row }) => {
         const arrival = row.original;
-        
-        // Serialize date if it's an array/object for the URL
         const dateStr = Array.isArray(arrival.date) ? JSON.stringify(arrival.date) : arrival.date;
         const budget = arrival.budget || arrival.items?.[0]?.budget;
 
@@ -129,6 +173,12 @@ export const useArrivalsColumns = () => {
                   {t('view_details')}
                 </Link>
               </DropdownMenuItem>
+              {arrival.isSigned && (
+                <DropdownMenuItem onClick={() => handleDownloadAttestation(arrival.id)}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  {t('download_attestation')}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );

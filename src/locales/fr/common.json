@@ -233,5 +233,9 @@
     "upload_excel_file": "Charger un fichier Excel",
     "select_excel_file": "Sélectionner un fichier Excel",
     "excel_format_hint": "Les numéros de série seront lus à partir de la première colonne de la première feuille.",
-    "arrival_details": "Détails de l'Arrivage"
+    "arrival_details": "Détails de l'Arrivage",
+    "arrival_attestation": "Attestation d'Arrivage",
+    "upload_arrival_attestation": "Charger le document d'attestation",
+    "uploaded": "Chargé",
+    "none": "Aucune"
 }
