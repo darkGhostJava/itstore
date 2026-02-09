@@ -62,7 +62,11 @@ export const useArrivalsColumns = () => {
       ),
       cell: ({ row }) => {
         try {
-          return format(new Date(row.original.date), "PPP p");
+          const dateVal = row.original.date;
+          if (Array.isArray(dateVal)) {
+            return format(new Date(dateVal[0], dateVal[1] - 1, dateVal[2], dateVal[3] || 0, dateVal[4] || 0), "PPP p");
+          }
+          return format(new Date(dateVal), "PPP p");
         } catch (e) {
           return String(row.original.date);
         }
@@ -89,7 +93,7 @@ export const useArrivalsColumns = () => {
       ),
       cell: ({ row }) => {
         const items = row.original.items;
-        return items?.length ?? 0;
+        return <span className="font-medium">{items?.length ?? 0}</span>;
       }
     },
     {
@@ -110,7 +114,7 @@ export const useArrivalsColumns = () => {
       ),
       cell: ({ row }) => {
         const arrival = row.original;
-        const budget = arrival.budget || arrival.items?.[0]?.budget;
+        const budget = arrival.budget || arrival.items?.[0]?.budget || arrival.items?.[0]?.article?.budget;
         if (!budget) return 'N/A';
         const budgetKey = `budget_${budget.toLowerCase()}` as any;
         return <Badge variant="secondary">{t(budgetKey, budget)}</Badge>;
@@ -122,7 +126,7 @@ export const useArrivalsColumns = () => {
         <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />
       ),
       cell: ({ row }) => {
-        const isSigned = row.original.isSigned;
+        const isSigned = row.original.isSigned || !!row.original.decharge;
         return isSigned ? (
           <div className="flex items-center gap-2 text-green-600">
             <CheckCircle2 className="h-4 w-4" />
@@ -141,13 +145,14 @@ export const useArrivalsColumns = () => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('remarks')} />
       ),
+      cell: ({ row }) => <span className="text-muted-foreground italic truncate max-w-[150px] block">{row.original.remarks || t('no_remarks')}</span>
     },
     {
       id: "actions",
       cell: ({ row }) => {
         const arrival = row.original;
         const dateStr = Array.isArray(arrival.date) ? JSON.stringify(arrival.date) : arrival.date;
-        const budget = arrival.budget || arrival.items?.[0]?.budget;
+        const budget = arrival.budget || arrival.items?.[0]?.budget || arrival.items?.[0]?.article?.budget;
 
         return (
           <DropdownMenu>
@@ -173,7 +178,7 @@ export const useArrivalsColumns = () => {
                   {t('view_details')}
                 </Link>
               </DropdownMenuItem>
-              {arrival.isSigned && (
+              {(arrival.isSigned || !!arrival.decharge) && (
                 <DropdownMenuItem onClick={() => handleDownloadAttestation(arrival.id)}>
                   <FileDown className="mr-2 h-4 w-4" />
                   {t('download_attestation')}
