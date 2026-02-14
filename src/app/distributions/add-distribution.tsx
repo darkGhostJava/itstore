@@ -14,6 +14,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, Check, ChevronsUpDown, Search } from "lucide-react";
+import { PlusCircle, Trash2, Check, ChevronsUpDown, Search, AlertTriangle } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -407,6 +408,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                     const articleType = article.type;
                     const currentSerialsList = serials[index] || [];
                     const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
+                    const isLowStock = article.strategicStock ? article.quantity <= article.strategicStock : false;
 
                     return (
                       <div key={field.id} className="rounded-lg border bg-muted/30 p-4 space-y-4 relative shadow-sm">
@@ -415,13 +417,26 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         </Button>
 
                         <div className="flex items-center gap-2 pr-8">
-                          <p className="font-semibold text-sm">{article.model}</p>
-                          <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"}>
-                            {t(articleType.toLowerCase() as "hardware" | "consumable")}
-                          </Badge>
-                          <span className={cn("text-[10px] ml-auto font-bold px-2 py-0.5 rounded-full border", article.quantity === 0 ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-green-500/10 text-green-600 border-green-500/20")}>
-                            {t('stock')}: {article.quantity}
-                          </span>
+                          <div className="flex flex-col">
+                            <p className="font-semibold text-sm">{article.model}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"} className="text-[10px]">
+                                    {t(articleType.toLowerCase() as "hardware" | "consumable")}
+                                </Badge>
+                                {article.strategicStock ? (
+                                    <span className="text-[10px] text-muted-foreground">{t('strategic_stock')}: {article.strategicStock}</span>
+                                ) : null}
+                            </div>
+                          </div>
+                          <div className="ml-auto flex items-center gap-2">
+                            {isLowStock && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                            <span className={cn(
+                                "text-[10px] font-bold px-2 py-0.5 rounded-full border", 
+                                isLowStock ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-green-500/10 text-green-600 border-green-500/20"
+                            )}>
+                                {t('stock')}: {article.quantity}
+                            </span>
+                          </div>
                         </div>
 
                         {articleType === 'HARDWARE' && (
@@ -532,31 +547,42 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                   </div>
                   {searchedArticles.length > 0 && (
                     <div className="absolute z-10 w-full rounded border bg-popover shadow-xl mt-1 max-h-56 overflow-y-auto">
-                      {searchedArticles.map((article) => (
-                        <div
-                          key={article.id}
-                          className="p-3 flex items-center justify-between cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0"
-                          onMouseDown={() => {
-                            append({ article: article, serialNumbers: [], quantity: 1 });
-                            setSearchedArticles([]);
-                            const articleInput = document.getElementById('article-search');
-                            if (articleInput) (articleInput as HTMLInputElement).value = '';
-                          }}
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-medium text-sm">{article.model}</span>
-                            <span className="text-xs opacity-70">{article.designation}</span>
+                      {searchedArticles.map((article) => {
+                        const isLow = article.strategicStock ? article.quantity <= article.strategicStock : false;
+                        return (
+                          <div
+                            key={article.id}
+                            className="p-3 flex items-center justify-between cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0"
+                            onMouseDown={() => {
+                              append({ article: article, serialNumbers: [], quantity: 1 });
+                              setSearchedArticles([]);
+                              const articleInput = document.getElementById('article-search');
+                              if (articleInput) (articleInput as HTMLInputElement).value = '';
+                            }}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm">{article.model}</span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs opacity-70">{article.designation}</span>
+                                {article.strategicStock ? (
+                                    <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">S: {article.strategicStock}</span>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <Badge variant={article.type === "HARDWARE" ? "outline" : "secondary"} className="text-[10px]">
+                                  {t(article.type.toLowerCase() as any)}
+                              </Badge>
+                              <div className="flex items-center gap-1">
+                                {isLow && <AlertTriangle className="h-3 w-3 text-destructive" />}
+                                <span className={cn("text-[10px] font-bold", isLow ? "text-destructive" : "text-green-600")}>
+                                    {t('stock')}: {article.quantity}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex flex-col items-end gap-1">
-                            <Badge variant={article.type === "HARDWARE" ? "outline" : "secondary"} className="text-[10px]">
-                                {t(article.type.toLowerCase() as any)}
-                            </Badge>
-                            <span className={cn("text-[10px] font-bold", article.quantity === 0 ? "text-destructive" : "text-green-600")}>
-                                {t('stock')}: {article.quantity}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
                 </div>
