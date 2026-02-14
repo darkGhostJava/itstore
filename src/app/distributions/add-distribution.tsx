@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, Check, ChevronsUpDown, Search, AlertTriangle } from "lucide-react";
+import { PlusCircle, Trash2, Check, ChevronsUpDown, Search, AlertTriangle, ChevronRight, ChevronLeft, User, Package, FileText } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -50,6 +51,7 @@ import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 const articleDistributionSchema = z.object({
   article: z.any().refine(val => val, { message: "article_is_required" }),
@@ -71,8 +73,15 @@ interface AddDistributionProps {
   onSuccess?: () => void;
 }
 
+const steps = [
+  { id: "beneficiary", title: "Beneficiary", icon: User },
+  { id: "articles", title: "Articles", icon: Package },
+  { id: "review", title: "Review", icon: FileText },
+];
+
 export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(0);
   const { toast } = useToast();
   const [searchedArticles, setSearchedArticles] = useState<Article[]>([]);
   const [directions, setDirections] = useState<Structure[]>([]);
@@ -102,17 +111,17 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   });
 
   useEffect(() => {
-    if(open) {
+    if (open) {
       (async () => {
         const res = await getAllDirections();
         setDirections(res.data || []);
       })();
+      setStep(0);
     }
   }, [open]);
 
   const selectedDirectionId = form.watch("directionId");
 
-  // Load sub-directions and persons when the main direction changes
   useEffect(() => {
     form.setValue("subDirectionId", "");
     form.setValue("beneficiaryId", "");
@@ -120,13 +129,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     setPersons([]);
 
     if (selectedDirectionId) {
-      // 1. Load Sub-Directions
       (async () => {
         const res = await getSubDirectionsOfDirection(parseInt(selectedDirectionId, 10));
         setSubDirections(res.data || []);
       })();
       
-      // 2. Load Persons from the main structure (always use main structure for persons)
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
         setPersons(personsRes || []);
@@ -134,7 +141,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     }
   }, [selectedDirectionId, form]);
 
-  // Handle dynamic person search (always uses main structure ID)
   useEffect(() => {
     const fetchPersonsData = async () => {
         if (personSearch && selectedDirectionId) {
@@ -151,6 +157,17 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         return () => clearTimeout(debounce);
     }
   }, [personSearch, selectedDirectionId, isPersonPopoverOpen]);
+
+  const nextStep = async () => {
+    let fieldsToValidate: any[] = [];
+    if (step === 0) fieldsToValidate = ["directionId", "beneficiaryId"];
+    if (step === 1) fieldsToValidate = ["articles"];
+
+    const isValid = await form.trigger(fieldsToValidate);
+    if (isValid) setStep((s) => s + 1);
+  };
+
+  const prevStep = () => setStep((s) => s - 1);
 
   async function onSubmit(values: DistributionFormValues) {
     setLoading(true);
@@ -179,14 +196,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         responseType: "arraybuffer",
       });
 
-      const blob = new Blob([response.data], {
-        type: "application/pdf",
-      });
+      const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `decharge_${Date.now()}.pdf`;
-      link.target = "_blank";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -202,7 +216,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       setOpen(false);
       onSuccess?.();
     } catch (error) {
-      console.error("Error adding distribution:", error);
       toast({
         title: t('error'),
         description: t('add_distribution_error'),
@@ -233,384 +246,377 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
 
   const handleSelectSerial = (serial: Item, fieldIndex: number) => {
     const currentSerials = form.getValues(`articles.${fieldIndex}.serialNumbers`) || [];
-    if (!currentSerials.includes(serial.serialNumber)) {
-        const field = fields[fieldIndex];
+    if (!currentSerials.includes(serial.serialNumber!)) {
         update(fieldIndex, {
-            ...field,
-            serialNumbers: [...currentSerials, serial.serialNumber]
+            ...fields[fieldIndex],
+            serialNumbers: [...currentSerials, serial.serialNumber!]
         });
     }
     setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
-    const serialInput = document.getElementById(`serial-search-${fieldIndex}`);
-    if (serialInput) (serialInput as HTMLInputElement).value = '';
-  };
-  
-  const handleRemoveSerialNumber = (articleIndex: number, serialToRemove: string) => {
-    const currentSerials = form.getValues(`articles.${articleIndex}.serialNumbers`) || [];
-    const field = fields[articleIndex];
-    update(articleIndex, {
-        ...field,
-        serialNumbers: currentSerials.filter(sn => sn !== serialToRemove)
-    });
+    const serialInput = document.getElementById(`serial-search-${fieldIndex}`) as HTMLInputElement;
+    if (serialInput) serialInput.value = '';
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="hover:scale-105 transition-transform">
           <PlusCircle className="mr-2 h-4 w-4" />
           {t('add_distribution')}
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl overflow-hidden p-0 gap-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle>{t('add_new_distribution')}</DialogTitle>
           <DialogDescription>
             {t('add_new_distribution_desc')}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[70vh] pr-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="directionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('structure')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_structure_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {directions.map((structure) => (
-                            <SelectItem key={structure.id} value={structure.id.toString()}>
-                              {structure.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="subDirectionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('sub_direction')} <span className="text-xs text-muted-foreground">({t('optional')})</span></FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value}
-                        disabled={!selectedDirectionId || subDirections.length === 0}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {subDirections.map((sub) => (
-                            <SelectItem key={sub.id} value={sub.id.toString()}>
-                              {sub.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        {/* Wizard Progress */}
+        <div className="px-6 py-4 flex items-center justify-between bg-muted/30">
+          {steps.map((s, i) => (
+            <div key={s.id} className="flex items-center gap-2 flex-1 last:flex-initial">
+              <div className={cn(
+                "h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
+                step === i ? "bg-primary text-primary-foreground shadow-md" : (step > i ? "bg-green-500 text-white" : "bg-muted text-muted-foreground")
+              )}>
+                {step > i ? <Check className="h-4 w-4" /> : i + 1}
               </div>
+              <span className={cn("text-xs font-medium", step === i ? "text-primary" : "text-muted-foreground")}>
+                {t(s.id as any, s.title)}
+              </span>
+              {i < steps.length - 1 && <div className="h-px bg-border flex-1 mx-2" />}
+            </div>
+          ))}
+        </div>
 
-               <FormField
-                control={form.control}
-                name="beneficiaryId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>{t('beneficiary')}</FormLabel>
-                    <Popover open={isPersonPopoverOpen} onOpenChange={setPersonPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            disabled={!selectedDirectionId}
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? persons.find(
-                                  (person) => person.id.toString() === field.value
-                                )?.firstName + " " + persons.find(
-                                  (person) => person.id.toString() === field.value
-                                )?.lastName
-                              : t('select_beneficiary_placeholder')}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command filter={() => 1}>
-                          <CommandInput
-                            placeholder={t('search_person_placeholder')}
-                            onValueChange={setPersonSearch}
-                            disabled={!selectedDirectionId}
-                          />
-                           <ScrollArea className="max-h-56">
-                          <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                            <CommandGroup>
-                              <CommandList>
-                                {persons.map((person) => (
-                                  <CommandItem
-                                    value={`${person.firstName} ${person.lastName}`}
-                                    key={person.id}
-                                    onSelect={() => {
-                                      form.setValue("beneficiaryId", person.id.toString());
-                                      setPersonPopoverOpen(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        person.id.toString() === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    {person.grade} {person.firstName} {person.lastName} {person.pseudo && `(${person.pseudo})`}
-                                  </CommandItem>
-                                ))}
-                              </CommandList>
-                            </CommandGroup>
-                          </ScrollArea>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="space-y-4">
-                <FormLabel className="text-lg font-bold">{t('articles_to_distribute')}</FormLabel>
-                <div className="space-y-4">
-                  {fields.map((field, index) => {
-                    const article = (field as any).article as Article;
-                    const articleType = article.type;
-                    const currentSerialsList = serials[index] || [];
-                    const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
-                    const isLowStock = article.strategicStock ? article.quantity <= article.strategicStock : false;
-
-                    return (
-                      <div key={field.id} className="rounded-lg border bg-muted/30 p-4 space-y-4 relative shadow-sm">
-                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 hover:bg-destructive/10 hover:text-destructive" onClick={() => remove(index)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-
-                        <div className="flex items-center gap-2 pr-8">
-                          <div className="flex flex-col">
-                            <p className="font-semibold text-sm">{article.model}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                                <Badge variant={articleType === "HARDWARE" ? "default" : "secondary"} className="text-[10px]">
-                                    {t(articleType.toLowerCase() as "hardware" | "consumable")}
-                                </Badge>
-                                {article.strategicStock ? (
-                                    <span className="text-[10px] text-muted-foreground">{t('strategic_stock')}: {article.strategicStock}</span>
-                                ) : null}
-                            </div>
-                          </div>
-                          <div className="ml-auto flex items-center gap-2">
-                            {isLowStock && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                            <span className={cn(
-                                "text-[10px] font-bold px-2 py-0.5 rounded-full border", 
-                                isLowStock ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-green-500/10 text-green-600 border-green-500/20"
-                            )}>
-                                {t('stock')}: {article.quantity}
-                            </span>
-                          </div>
-                        </div>
-
-                        {articleType === 'HARDWARE' && (
+        <ScrollArea className="max-h-[60vh] p-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <AnimatePresence mode="wait">
+                {step === 0 && (
+                  <motion.div
+                    key="step0"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="directionId"
+                        render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('serial_numbers')}</FormLabel>
-                             <div className="relative">
-                                  <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id={`serial-search-${index}`}
-                                            placeholder={t('search_add_serial_placeholder')}
-                                            onChange={(e) => handleSerialSearch(e.target.value, article.id, index)}
-                                            onBlur={() => setTimeout(() => setSerials(prev => ({ ...prev, [index]: [] })), 150)}
-                                            className="pl-9 bg-background"
-                                        />
-                                    </div>
-                                  </div>
-                                  {currentSerialsList.length > 0 && (
-                                    <div className="absolute z-10 w-full rounded border bg-background shadow-lg mt-1 max-h-48 overflow-y-auto">
-                                      {currentSerialsList.map((serial) => (
-                                        <div
-                                          key={serial.id}
-                                          className="p-3 cursor-pointer hover:bg-accent transition-colors border-b last:border-0"
-                                          onMouseDown={() => handleSelectSerial(serial, index)}
-                                        >
-                                          <code className="text-sm font-mono">{serial.serialNumber}</code>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {addedSerials?.map((sn) => (
-                                <Badge key={sn} variant="secondary" className="flex items-center gap-1.5 py-1 pl-2">
-                                  <span className="font-mono text-xs">{sn}</span>
-                                  <button
-                                    type="button"
-                                    className="ml-1 h-4 w-4 rounded-full flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                                    onClick={() => handleRemoveSerialNumber(index, sn)}
-                                  >
-                                    &times;
-                                  </button>
-                                </Badge>
-                              ))}
-                              {(!addedSerials || addedSerials.length === 0) && <p className="text-xs text-muted-foreground italic">{t('no_serials_added', 'No serial numbers selected.')}</p>}
-                            </div>
+                            <FormLabel>{t('structure')}</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('select_structure_placeholder')} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {directions.map((structure) => (
+                                  <SelectItem key={structure.id} value={structure.id.toString()}>
+                                    {structure.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
+                      />
 
-                        {articleType === 'CONSUMABLE' && (
-                          <FormField
-                            control={form.control}
-                            name={`articles.${index}.quantity`}
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t('quantity')}</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    min={1}
-                                    max={article.quantity}
-                                    placeholder={t('enter_quantity_placeholder')}
-                                    {...field}
-                                    className="bg-background"
-                                    onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
-                                  />
-                                </FormControl>
-                                <FormDescription className="text-[10px]">
-                                    {article.quantity === 0 ? t('out_of_stock', 'Out of stock') : t('max_available', 'Max available: {{count}}', { count: article.quantity })}
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                      <FormField
+                        control={form.control}
+                        name="subDirectionId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('sub_direction')} <span className="text-xs text-muted-foreground">({t('optional')})</span></FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value}
+                              disabled={!selectedDirectionId || subDirections.length === 0}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('select_sub_direction_placeholder')} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {subDirections.map((sub) => (
+                                  <SelectItem key={sub.id} value={sub.id.toString()}>
+                                    {sub.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <div className="relative space-y-2 pt-2">
-                  <div className="flex gap-2">
-                    <Select
-                      value={searchArticleType}
-                      onValueChange={(value: "ALL" | "HARDWARE" | "CONSUMABLE") => setSearchArticleType(value)}
-                    >
-                      <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder={t('select_type_placeholder')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ALL">{t('all_types')}</SelectItem>
-                        <SelectItem value="HARDWARE">{t('hardware')}</SelectItem>
-                        <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="article-search"
-                            placeholder={t('search_article_to_add_placeholder')}
-                            onChange={(e) => handleArticleSearch(e.target.value)}
-                            onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
-                            className="pl-9"
-                        />
+                      />
                     </div>
-                  </div>
-                  {searchedArticles.length > 0 && (
-                    <div className="absolute z-10 w-full rounded border bg-popover shadow-xl mt-1 max-h-56 overflow-y-auto">
-                      {searchedArticles.map((article) => {
-                        const isLow = article.strategicStock ? article.quantity <= article.strategicStock : false;
-                        return (
-                          <div
-                            key={article.id}
-                            className="p-3 flex items-center justify-between cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0"
-                            onMouseDown={() => {
-                              append({ article: article, serialNumbers: [], quantity: 1 });
-                              setSearchedArticles([]);
-                              const articleInput = document.getElementById('article-search');
-                              if (articleInput) (articleInput as HTMLInputElement).value = '';
-                            }}
+
+                    <FormField
+                      control={form.control}
+                      name="beneficiaryId"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>{t('beneficiary')}</FormLabel>
+                          <Popover open={isPersonPopoverOpen} onOpenChange={setPersonPopoverOpen}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  disabled={!selectedDirectionId}
+                                  className={cn(
+                                    "w-full justify-between h-12 text-left",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value
+                                    ? persons.find((p) => p.id.toString() === field.value)?.firstName + " " + persons.find((p) => p.id.toString() === field.value)?.lastName
+                                    : t('select_beneficiary_placeholder')}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                              <Command filter={() => 1}>
+                                <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setPersonSearch} />
+                                <ScrollArea className="max-h-56">
+                                  <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                  <CommandGroup>
+                                    {persons.map((person) => (
+                                      <CommandItem
+                                        key={person.id}
+                                        onSelect={() => {
+                                          form.setValue("beneficiaryId", person.id.toString());
+                                          setPersonPopoverOpen(false);
+                                        }}
+                                      >
+                                        <Check className={cn("mr-2 h-4 w-4", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                        <div className="flex flex-col">
+                                          <span>{person.grade} {person.firstName} {person.lastName}</span>
+                                          {person.pseudo && <span className="text-[10px] text-muted-foreground italic">@{person.pseudo}</span>}
+                                        </div>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </ScrollArea>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+                )}
+
+                {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-6"
+                  >
+                    <div className="relative space-y-2">
+                      <FormLabel className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{t('search_article_to_add_placeholder')}</FormLabel>
+                      <div className="flex gap-2">
+                        <Select value={searchArticleType} onValueChange={(v: any) => setSearchArticleType(v)}>
+                          <SelectTrigger className="w-[140px] bg-background">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ALL">{t('all_types')}</SelectItem>
+                            <SelectItem value="HARDWARE">{t('hardware')}</SelectItem>
+                            <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder={t('search_article_placeholder')}
+                            onChange={(e) => handleArticleSearch(e.target.value)}
+                            className="pl-9 bg-background h-10"
+                          />
+                        </div>
+                      </div>
+                      
+                      <AnimatePresence>
+                        {searchedArticles.length > 0 && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="absolute z-50 w-full rounded-lg border bg-popover shadow-2xl mt-1 overflow-hidden"
                           >
-                            <div className="flex flex-col">
-                              <span className="font-medium text-sm">{article.model}</span>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs opacity-70">{article.designation}</span>
-                                {article.strategicStock ? (
-                                    <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">S: {article.strategicStock}</span>
-                                ) : null}
+                            <ScrollArea className="max-h-56">
+                              {searchedArticles.map((article) => {
+                                const isLow = article.strategicStock ? article.quantity <= article.strategicStock : article.quantity === 0;
+                                return (
+                                  <div
+                                    key={article.id}
+                                    className="p-3 flex items-center justify-between cursor-pointer hover:bg-accent transition-colors border-b last:border-0"
+                                    onMouseDown={() => {
+                                      append({ article, serialNumbers: [], quantity: 1 });
+                                      setSearchedArticles([]);
+                                    }}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-semibold text-sm">{article.model}</span>
+                                      <span className="text-[10px] text-muted-foreground">{article.designation}</span>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                      <Badge variant={article.type === "HARDWARE" ? "default" : "secondary"} className="text-[9px] h-4">
+                                        {t(article.type.toLowerCase() as any)}
+                                      </Badge>
+                                      <span className={cn("text-[10px] font-bold", isLow ? "text-destructive" : "text-green-600")}>
+                                        {t('stock')}: {article.quantity}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </ScrollArea>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="space-y-4 pt-2">
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('articles_to_distribute')} ({fields.length})</h4>
+                      {fields.length === 0 && (
+                        <div className="text-center py-8 border border-dashed rounded-lg bg-muted/10">
+                          <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                          <p className="text-xs text-muted-foreground">{t('no_articles_selected', 'Select articles from the search above.')}</p>
+                        </div>
+                      )}
+                      {fields.map((field, index) => {
+                        const article = (field as any).article as Article;
+                        const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
+                        return (
+                          <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            key={field.id} 
+                            className="rounded-xl border bg-card p-4 shadow-sm relative group hover:border-primary/30 transition-colors"
+                          >
+                            <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => remove(index)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                            
+                            <div className="flex flex-col gap-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm">{article.model}</span>
+                                <Badge variant="outline" className="text-[9px] h-4">{article.type}</Badge>
                               </div>
+
+                              {article.type === 'HARDWARE' ? (
+                                <div className="space-y-2">
+                                  <div className="relative">
+                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                    <Input
+                                      id={`serial-search-${index}`}
+                                      placeholder={t('search_add_serial_placeholder')}
+                                      onChange={(e) => handleSerialSearch(e.target.value, article.id, index)}
+                                      className="pl-8 h-8 text-xs bg-muted/30"
+                                    />
+                                    {serials[index]?.length > 0 && (
+                                      <div className="absolute z-10 w-full rounded border bg-background shadow-lg mt-1 max-h-32 overflow-y-auto">
+                                        {serials[index].map((s) => (
+                                          <div key={s.id} className="p-2 cursor-pointer hover:bg-accent text-xs font-mono" onMouseDown={() => handleSelectSerial(s, index)}>
+                                            {s.serialNumber}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {addedSerials?.map((sn) => (
+                                      <Badge key={sn} variant="secondary" className="px-2 py-0.5 text-[10px] font-mono gap-1">
+                                        {sn}
+                                        <button onClick={() => update(index, { ...fields[index], serialNumbers: addedSerials.filter(s => s !== sn) })} className="hover:text-destructive">×</button>
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : (
+                                <FormField
+                                  control={form.control}
+                                  name={`articles.${index}.quantity`}
+                                  render={({ field }) => (
+                                    <FormItem className="space-y-1">
+                                      <FormLabel className="text-[10px] font-bold">{t('quantity')}</FormLabel>
+                                      <FormControl>
+                                        <Input type="number" min={1} max={article.quantity} {...field} className="h-8 text-xs w-32" onChange={e => field.onChange(parseInt(e.target.value) || 1)} />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              )}
                             </div>
-                            <div className="flex flex-col items-end gap-1">
-                              <Badge variant={article.type === "HARDWARE" ? "outline" : "secondary"} className="text-[10px]">
-                                  {t(article.type.toLowerCase() as any)}
-                              </Badge>
-                              <div className="flex items-center gap-1">
-                                {isLow && <AlertTriangle className="h-3 w-3 text-destructive" />}
-                                <span className={cn("text-[10px] font-bold", isLow ? "text-destructive" : "text-green-600")}>
-                                    {t('stock')}: {article.quantity}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )
+                          </motion.div>
+                        );
                       })}
                     </div>
-                  )}
-                </div>
-                <FormMessage />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="remarks"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('remarks')}</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder={t('add_remarks_placeholder')} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  </motion.div>
                 )}
-              />
 
-              <DialogFooter>
-                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                  {loading ? t('saving') : t('save_distribution')}
-                </Button>
-              </DialogFooter>
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-6"
+                  >
+                    <div className="rounded-lg border bg-primary/5 p-4 space-y-2">
+                      <h4 className="text-xs font-bold text-primary uppercase tracking-widest">{t('summary', 'Summary')}</h4>
+                      <div className="text-sm">
+                        <p><span className="text-muted-foreground">{t('beneficiary')}:</span> <span className="font-semibold">{persons.find(p => p.id.toString() === form.getValues('beneficiaryId'))?.firstName} {persons.find(p => p.id.toString() === form.getValues('beneficiaryId'))?.lastName}</span></p>
+                        <p><span className="text-muted-foreground">{t('articles')}:</span> <span className="font-semibold">{fields.length} items</span></p>
+                      </div>
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="remarks"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('remarks')}</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder={t('add_remarks_placeholder')} {...field} className="min-h-[120px] bg-background" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </form>
           </Form>
         </ScrollArea>
+
+        <DialogFooter className="p-6 pt-2 flex flex-row items-center justify-between border-t bg-muted/10">
+          <Button variant="ghost" onClick={step === 0 ? () => setOpen(false) : prevStep} disabled={loading} className="gap-2">
+            {step === 0 ? t('cancel') : <><ChevronLeft className="h-4 w-4" /> {t('back')}</>}
+          </Button>
+          <Button 
+            onClick={step === steps.length - 1 ? form.handleSubmit(onSubmit) : nextStep} 
+            disabled={loading || (step === 1 && fields.length === 0)} 
+            className="gap-2 shadow-lg hover:shadow-primary/20 transition-all"
+          >
+            {loading ? t('saving') : (step === steps.length - 1 ? t('confirm_distribution', 'Finish & Download PDF') : <>{t('next')} <ChevronRight className="h-4 w-4" /></>)}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
