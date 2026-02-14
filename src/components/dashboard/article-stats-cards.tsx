@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 
 interface ArticleStatsCardsProps {
   type: "hardware" | "consumable";
@@ -27,7 +27,7 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
         setStatsData(data);
       } catch (error) {
         console.error(`Failed to fetch ${type} stats:`, error);
-        setStatsData({}); // Set to empty object on error
+        setStatsData({}); 
       }
     };
 
@@ -47,12 +47,12 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
 
   if (designations.length === 0) {
     return (
-      <Card>
+      <Card className="glass-card border-none bg-card/40">
         <CardHeader>
-          <CardTitle>{t('no_in_stock_items_title', { context: type })}</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('no_in_stock_items_title', { context: type })}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {t('no_in_stock_items_desc')}
           </p>
         </CardContent>
@@ -61,23 +61,25 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
-      {designations.map((stat) => (
-        <Link
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {designations.slice(0, 6).map((stat) => (
+        <motion.div
           key={stat.rawTitle}
-          href={`${linkHref}?query=${encodeURIComponent(stat.rawTitle)}`}
-          className="hover:shadow-lg transition-shadow rounded-lg"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <Card className="flex flex-col h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
-        </Link>
+          <Link href={`${linkHref}?query=${encodeURIComponent(stat.rawTitle)}`}>
+            <Card className="glass-card border-none bg-card/40 h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+                <CardTitle className="text-[10px] uppercase font-bold tracking-tight text-muted-foreground truncate">{stat.title}</CardTitle>
+                <stat.icon className="h-3 w-3 text-primary/60" />
+              </CardHeader>
+              <CardContent className="px-3 pb-3">
+                <div className="text-xl font-bold">{stat.value}</div>
+              </CardContent>
+            </Card>
+          </Link>
+        </motion.div>
       ))}
     </div>
   );
@@ -85,15 +87,15 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
 
 export function ArticleStatsCardsSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Card key={i} className="flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-4" />
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Card key={i} className="glass-card border-none bg-card/40">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-3" />
           </CardHeader>
-          <CardContent>
-            <Skeleton className="h-8 w-12" />
+          <CardContent className="px-3 pb-3">
+            <Skeleton className="h-6 w-8" />
           </CardContent>
         </Card>
       ))}

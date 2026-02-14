@@ -32,7 +32,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 207 90% 54%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -84,6 +84,12 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-md border-border/50 shadow-xl transition-all duration-300;
   }
 }
 

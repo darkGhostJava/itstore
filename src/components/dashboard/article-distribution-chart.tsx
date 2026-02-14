@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -69,13 +68,12 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
     if (data && data.activePayload && data.activePayload[0] && data.activePayload[0].payload) {
       const payload = data.activePayload[0].payload;
       if (payload.rawName) {
-        const queryKey = type === 'hardware' ? 'designation' : 'designation';
         router.push(`${linkHref}?query=${encodeURIComponent(payload.rawName)}`);
       }
     }
   };
   
-  const barColor = theme === 'dark' ? '#90CAF9' : '#1E88E5';
+  const barColor = theme === 'dark' ? 'hsl(var(--primary))' : 'hsl(var(--primary))';
   const labelColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
 
   if (loading) {
@@ -83,18 +81,18 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+    <Card className="glass-card border-none bg-card/40 overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardDescription className="text-xs">{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} margin={{ left: 0, right: 20, top: 20, bottom: 5 }} onClick={handleBarClick}>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData} margin={{ left: -20, right: 10, top: 20, bottom: 5 }} onClick={handleBarClick}>
              <XAxis 
               dataKey="name"
-              stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
-              fontSize={12}
+              stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
+              fontSize={10}
               tickLine={false}
               axisLine={false}
               interval={0}
@@ -103,22 +101,25 @@ export function ArticleDistributionChart({ type }: ArticleDistributionChartProps
               height={60}
             />
             <YAxis
-              stroke={theme === 'dark' ? '#f8fafc' : '#1e293b'}
-              fontSize={12}
+              stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
+              fontSize={10}
               tickLine={false}
               axisLine={false}
-              width={30}
+              width={40}
               allowDecimals={false}
             />
             <Tooltip
+              cursor={{ fill: 'rgba(var(--primary), 0.1)', radius: 4 }}
               contentStyle={{
-                backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
-                border: '1px solid #334155'
+                backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                borderRadius: '8px',
+                border: '1px solid rgba(var(--border), 0.2)',
+                backdropFilter: 'blur(8px)',
+                fontSize: '12px'
               }}
-               cursor={{ fill: theme === 'dark' ? '#334155' : '#e2e8f0', cursor: 'pointer' }}
             />
-            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]} className="cursor-pointer">
-                <LabelList dataKey="value" position="top" fill={labelColor} fontSize={12} />
+            <Bar dataKey="value" fill={barColor} radius={[4, 4, 0, 0]} className="cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
+                <LabelList dataKey="value" position="top" fill={labelColor} fontSize={10} fontWeight="bold" />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -134,13 +135,13 @@ interface ArticleDistributionChartSkeletonProps {
 
 export function ArticleDistributionChartSkeleton({ title = "Loading...", description = "Fetching data..." }: ArticleDistributionChartSkeletonProps) {
   return (
-    <Card>
+    <Card className="glass-card border-none bg-card/40">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-[350px] w-full" />
+        <Skeleton className="h-[300px] w-full" />
       </CardContent>
     </Card>
   );
