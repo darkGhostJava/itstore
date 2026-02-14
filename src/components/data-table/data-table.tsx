@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -15,6 +16,7 @@ import {
   getSortedRowModel,
   useReactTable,
   PaginationState,
+  OnChangeFn,
 } from "@tanstack/react-table"
 import { Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -90,6 +92,15 @@ export function DataTable<TData, TValue>({
   const [query, setQuery] = React.useState(initialQuery);
   const debouncedQuery = useDebounce(query, 500);
 
+  // We use a ref for fetchData to keep the fetching effect stable
+  const fetchDataRef = React.useRef(fetchData);
+  React.useEffect(() => {
+    fetchDataRef.current = fetchData;
+  }, [fetchData]);
+
+  // Track the last fetched parameters to prevent infinite loops
+  const lastFetchedParamsRef = React.useRef<string>("");
+
   const pagination = React.useMemo(
     () => ({
       pageIndex,
@@ -97,9 +108,15 @@ export function DataTable<TData, TValue>({
     }),
     [pageIndex, pageSize]
   );
-  
-  const prevSortingRef = React.useRef(sorting);
-  const prevDebouncedQueryRef = React.useRef(debouncedQuery);
+
+  const onSortingChange: OnChangeFn<SortingState> = React.useCallback((updater) => {
+    setSorting(updater);
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, []);
+
+  const onPaginationChange: OnChangeFn<PaginationState> = React.useCallback((updater) => {
+    setPagination(updater);
+  }, []);
 
   const table = useReactTable({
     data,
@@ -117,10 +134,10 @@ export function DataTable<TData, TValue>({
     manualSorting: true,
     manualFiltering: true,
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
+    onSortingChange: onSortingChange,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
+    onPaginationChange: onPaginationChange,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -129,12 +146,13 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
+  // Reset page when query changes
   React.useEffect(() => {
-    const sortChanged = JSON.stringify(prevSortingRef.current) !== JSON.stringify(sorting);
-    const queryChanged = prevDebouncedQueryRef.current !== debouncedQuery;
-    
-    const pageToFetch = (sortChanged || queryChanged) ? 0 : pageIndex;
-    
+    setPagination(p => ({ ...p, pageIndex: 0 }));
+  }, [debouncedQuery]);
+
+  // Main data fetching effect
+  React.useEffect(() => {
     let sortString: string | undefined = undefined;
     if (sorting.length > 0) {
       const sort = sorting[0];
@@ -142,16 +160,18 @@ export function DataTable<TData, TValue>({
       sortString = `${sort.id},${direction}`;
     }
 
-    fetchData({ pageIndex: pageToFetch, pageSize, query: debouncedQuery, sort: sortString });
+    const currentParams = JSON.stringify({ pageIndex, pageSize, debouncedQuery, sortString });
     
-    if (pageToFetch !== pageIndex) {
-      setPagination(p => ({ ...p, pageIndex: pageToFetch }));
+    if (currentParams !== lastFetchedParamsRef.current) {
+      lastFetchedParamsRef.current = currentParams;
+      fetchDataRef.current({ 
+        pageIndex, 
+        pageSize, 
+        query: debouncedQuery, 
+        sort: sortString 
+      });
     }
-
-    prevSortingRef.current = sorting;
-    prevDebouncedQueryRef.current = debouncedQuery;
-  }, [pageIndex, pageSize, debouncedQuery, sorting, fetchData]);
-
+  }, [pageIndex, pageSize, debouncedQuery, sorting]);
 
   return (
     <div className="space-y-4">
