@@ -48,19 +48,17 @@ interface DataTableProps<TData, TValue> {
   emptyStateMessage?: React.ReactNode;
 }
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.03
-    }
-  }
-};
+const MotionTableRow = motion(TableRow);
 
-const rowItem = {
+const rowVariants = {
   hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0 }
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.03,
+    },
+  }),
 };
 
 export function DataTable<TData, TValue>({
@@ -217,30 +215,26 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody className={cn(isLoading && "opacity-50 transition-opacity")}>
             {table.getRowModel().rows?.length ? (
-              <motion.tr
-                variants={container}
-                initial="hidden"
-                animate={isLoading ? "hidden" : "show"}
-                className="contents"
-              >
-                {table.getRowModel().rows.map((row) => (
-                  <motion.tr
-                    key={row.id}
-                    variants={rowItem}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </motion.tr>
-                ))}
-              </motion.tr>
+              table.getRowModel().rows.map((row, i) => (
+                <MotionTableRow
+                  key={row.id}
+                  custom={i}
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="show"
+                  data-state={row.getIsSelected() && "selected"}
+                  className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </MotionTableRow>
+              ))
             ) : (
               <TableRow>
                 <TableCell
