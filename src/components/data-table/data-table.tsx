@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -18,6 +17,7 @@ import {
   PaginationState,
 } from "@tanstack/react-table"
 import { Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   Table,
@@ -45,6 +45,21 @@ interface DataTableProps<TData, TValue> {
   initialQuery?: string;
   emptyStateMessage?: React.ReactNode;
 }
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.03
+    }
+  }
+};
+
+const rowItem = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 }
+};
 
 export function DataTable<TData, TValue>({
   columns = [],
@@ -83,7 +98,6 @@ export function DataTable<TData, TValue>({
     [pageIndex, pageSize]
   );
   
-  // Create refs to store previous sorting and query values
   const prevSortingRef = React.useRef(sorting);
   const prevDebouncedQueryRef = React.useRef(debouncedQuery);
 
@@ -116,11 +130,9 @@ export function DataTable<TData, TValue>({
   });
 
   React.useEffect(() => {
-    // Check if sorting or query has changed since the last render
     const sortChanged = JSON.stringify(prevSortingRef.current) !== JSON.stringify(sorting);
     const queryChanged = prevDebouncedQueryRef.current !== debouncedQuery;
     
-    // If sorting or filtering changed, we need to fetch page 0.
     const pageToFetch = (sortChanged || queryChanged) ? 0 : pageIndex;
     
     let sortString: string | undefined = undefined;
@@ -130,16 +142,12 @@ export function DataTable<TData, TValue>({
       sortString = `${sort.id},${direction}`;
     }
 
-    // Call the fetchData prop with the correct page index and other params.
     fetchData({ pageIndex: pageToFetch, pageSize, query: debouncedQuery, sort: sortString });
     
-    // If we're fetching a different page index than the one in state, update the state.
-    // This happens when a sort/filter change resets the page to 0.
     if (pageToFetch !== pageIndex) {
       setPagination(p => ({ ...p, pageIndex: pageToFetch }));
     }
 
-    // Update refs for the next render.
     prevSortingRef.current = sorting;
     prevDebouncedQueryRef.current = debouncedQuery;
   }, [pageIndex, pageSize, debouncedQuery, sorting, fetchData]);
@@ -155,12 +163,19 @@ export function DataTable<TData, TValue>({
         query={query}
         onQueryChange={setQuery}
       />
-      <div className="rounded-md border relative">
-         {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
+      <div className="rounded-md border relative bg-card overflow-hidden">
+         <AnimatePresence>
+           {isLoading && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-[2px]"
+            >
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </motion.div>
+          )}
+        </AnimatePresence>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -180,23 +195,32 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody className={cn(isLoading && "opacity-50")}>
+          <TableBody className={cn(isLoading && "opacity-50 transition-opacity")}>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              <motion.tr
+                variants={container}
+                initial="hidden"
+                animate={isLoading ? "hidden" : "show"}
+                className="contents"
+              >
+                {table.getRowModel().rows.map((row) => (
+                  <motion.tr
+                    key={row.id}
+                    variants={rowItem}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </motion.tr>
+                ))}
+              </motion.tr>
             ) : (
               <TableRow>
                 <TableCell
