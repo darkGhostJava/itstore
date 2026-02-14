@@ -81,7 +81,7 @@ export const useDistributionsColumns = () => {
     },
     {
       id: "structure",
-      accessorKey: "person.structure.name",
+      accessorKey: "structure.name",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('structure')} />,
       cell: ({ row }) => {
         const structure = row.original.person?.structure;
