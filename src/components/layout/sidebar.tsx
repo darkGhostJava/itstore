@@ -133,38 +133,31 @@ function SidebarNavItem({
   return (
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
-        <motion.div
-          initial={false}
-          animate={{ x: 0 }}
-          whileHover={{ x: 4 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        <Button
+          asChild
+          variant={isActive ? "secondary" : "ghost"}
+          className={cn(
+            "rounded-lg justify-start h-10 transition-all duration-300 w-full overflow-hidden",
+            isActive && "text-primary bg-primary/10 shadow-sm"
+          )}
         >
-          <Button
-            asChild
-            variant={isActive ? "secondary" : "ghost"}
-            className={cn(
-              "rounded-lg justify-start h-10 transition-all duration-300 w-full overflow-hidden",
-              isActive && "text-primary bg-primary/10 shadow-sm"
-            )}
-          >
-            <Link href={href} className="flex items-center">
-              <Icon className={cn("h-5 w-5 shrink-0", isExpanded ? "mr-4 ml-1" : "mx-auto")} />
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ delay: 0.05 }}
-                    className="whitespace-nowrap font-medium"
-                  >
-                    {label}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Link>
-          </Button>
-        </motion.div>
+          <Link href={href} className="flex items-center">
+            <Icon className={cn("h-5 w-5 shrink-0", isExpanded ? "mr-4 ml-1" : "mx-auto")} />
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ delay: 0.05 }}
+                  className="whitespace-nowrap font-medium"
+                >
+                  {label}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </Button>
       </TooltipTrigger>
       {!isExpanded && <TooltipContent side="right">{label}</TooltipContent>}
     </Tooltip>
