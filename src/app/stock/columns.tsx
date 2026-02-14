@@ -11,10 +11,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, AlertTriangle } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { TFunction } from "i18next";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export const StockColumns = (t: TFunction): ColumnDef<Article>[] => {
   return [
@@ -56,6 +57,31 @@ export const StockColumns = (t: TFunction): ColumnDef<Article>[] => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('quantity')} />
       ),
+      cell: ({ row }) => {
+        const quantity = row.original.quantity;
+        const strategicStock = row.original.strategicStock || 0;
+        const isLow = quantity <= strategicStock && strategicStock > 0;
+
+        return (
+          <div className="flex items-center gap-2">
+            <span className={cn("font-bold", isLow && "text-destructive")}>
+              {quantity}
+            </span>
+            {isLow && (
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      accessorKey: "strategicStock",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('strategic_stock')} />
+      ),
+      cell: ({ row }) => {
+        return <span className="text-muted-foreground">{row.original.strategicStock || 0}</span>;
+      }
     },
     {
       accessorKey: "budget",

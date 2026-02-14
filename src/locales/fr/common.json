@@ -237,5 +237,6 @@
     "arrival_attestation": "Attestation d'Arrivage",
     "upload_arrival_attestation": "Charger le document d'attestation",
     "uploaded": "Chargé",
-    "none": "Aucune"
+    "none": "Aucune",
+    "strategic_stock": "Stock Stratégique"
 }

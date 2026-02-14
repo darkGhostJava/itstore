@@ -42,6 +42,7 @@ const formSchema = z.object({
   designation: z.string().min(1, "designation_is_required"),
   type: z.enum(["HARDWARE", "CONSUMABLE"]),
   category: z.string().min(1, "category_is_required"),
+  strategicStock: z.number().min(0).default(0),
 });
 
 interface AddArticleProps {
@@ -61,6 +62,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
       designation: "",
       type: "HARDWARE",
       category: "",
+      strategicStock: 0,
     },
   });
 
@@ -131,27 +133,47 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('type')}</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('type')}</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('select_type_placeholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="HARDWARE">{t('hardware')}</SelectItem>
+                        <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="strategicStock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('strategic_stock')}</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('select_type_placeholder')} />
-                      </SelectTrigger>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)} 
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="HARDWARE">{t('hardware')}</SelectItem>
-                      <SelectItem value="CONSUMABLE">{t('consumable')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <FormField
               control={form.control}

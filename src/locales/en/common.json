@@ -134,7 +134,7 @@
     "add_distribution_error": "Failed to add distribution.",
     "article_is_required": "Please select an article.",
     "direction_is_required": "Please select a direction.",
-    "subdirection_is_required": "Please select a sub direction.",
+    "subdirection_is_required": "Veuillez sélectionner une sous-direction.",
     "beneficiary_is_required": "Please select a beneficiary.",
     "at_least_one_article_is_required": "Please add at least one article.",
     "attestation_not_found_toast_title": "Attestation Not Found",
@@ -237,5 +237,6 @@
     "arrival_attestation": "Arrival Attestation",
     "upload_arrival_attestation": "Upload Attestation Document",
     "uploaded": "Uploaded",
-    "none": "None"
+    "none": "None",
+    "strategic_stock": "Strategic Stock"
 }

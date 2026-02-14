@@ -7,6 +7,7 @@ export type Article = {
   category: string;
   quantity: number;
   budget?: string;
+  strategicStock?: number;
 };
 
 export type Item = {
