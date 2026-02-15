@@ -377,7 +377,7 @@ export const fetchReversals = async (options: { pageIndex: number; pageSize: num
   };
 }
 
-export const registerReversals = async (payload: { itemIds: number[]; personId: number; remarks: string; }) => {
+export const registerReversals = async (payload: { itemIds: number[]; personId: number; remarks: string; attestationId?: string; }) => {
   const response = await api.post("/refunds", payload, {
     responseType: "arraybuffer",
   });
@@ -412,7 +412,7 @@ export const fetchReparations = async (options: { pageIndex: number; pageSize: n
   };
 }
 
-export const registerReparations = async (payload: { itemId: number; remarks: string; userId: number; }[]) => {
+export const registerReparations = async (payload: { attestationId?: string; reparations: { itemId: number; remarks: string; userId: number; }[] }) => {
 
   const response = await api.post("/reparations", payload, {
     responseType: "arraybuffer",
