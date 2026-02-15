@@ -205,14 +205,22 @@ export const fetchPersons = async (options: { pageIndex: number; pageSize: numbe
 };
 
 export const searchPersons = async (query: string, structureId: string) => {
-  const response = await api.get<Person[]>("/persons/searchInStructure", {
+  const response = await api.get<any>("/persons/searchInStructure", {
     params: {
       query: query,
       structureId: structureId,
     }
   });
+  
+  let data: Person[] = [];
+  if (Array.isArray(response.data)) {
+    data = response.data;
+  } else if (response.data && Array.isArray(response.data.content)) {
+    data = response.data.content;
+  }
+
   return {
-    data: response.data as Person[],
+    data,
   };
 }
 
