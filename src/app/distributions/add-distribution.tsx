@@ -392,29 +392,32 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                               </FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
-                              <Command filter={() => 1}>
+                              <Command shouldFilter={false}>
                                 <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setPersonSearch} />
-                                <ScrollArea className="max-h-56">
-                                  <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                                  <CommandGroup>
-                                    {persons.map((person) => (
-                                      <CommandItem
-                                        key={person.id}
-                                        onSelect={() => {
-                                          form.setValue("beneficiaryId", person.id.toString());
-                                          setPersonPopoverOpen(false);
-                                        }}
-                                        className="py-3"
-                                      >
-                                        <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
-                                        <div className="flex flex-col">
-                                          <span className="font-semibold">{person.grade} {person.firstName} {person.lastName}</span>
-                                          {person.pseudo && <span className="text-[10px] text-primary/70 font-mono tracking-tighter">@{person.pseudo}</span>}
-                                        </div>
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </ScrollArea>
+                                <CommandList>
+                                  <ScrollArea className="max-h-56">
+                                    <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                    <CommandGroup>
+                                      {persons.map((person) => (
+                                        <CommandItem
+                                          key={person.id}
+                                          value={person.id.toString()}
+                                          onSelect={() => {
+                                            form.setValue("beneficiaryId", person.id.toString());
+                                            setPersonPopoverOpen(false);
+                                          }}
+                                          className="py-3"
+                                        >
+                                          <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                          <div className="flex flex-col">
+                                            <span className="font-semibold">{person.grade} {person.firstName} {person.lastName}</span>
+                                            {person.pseudo && <span className="text-[10px] text-primary/70 font-mono tracking-tighter">@{person.pseudo}</span>}
+                                          </div>
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </ScrollArea>
+                                </CommandList>
                               </Command>
                             </PopoverContent>
                           </Popover>
