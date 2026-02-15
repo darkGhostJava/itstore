@@ -129,11 +129,13 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     setPersons([]);
 
     if (selectedDirectionId) {
+      // Fetch sub-directions (Optional)
       (async () => {
         const res = await getSubDirectionsOfDirection(parseInt(selectedDirectionId, 10));
         setSubDirections(res.data || []);
       })();
       
+      // Fetch persons based ONLY on directionId as per business rule
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
         setPersons(personsRes || []);
@@ -144,6 +146,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   useEffect(() => {
     const fetchPersonsData = async () => {
         if (personSearch && selectedDirectionId) {
+            // Search persons within the selected direction
             const res = await searchPersons(personSearch, selectedDirectionId);
             setPersons(res.data || []);
         } else if (selectedDirectionId) {
@@ -189,6 +192,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         userId: 1,
         hardwares,
         consumables,
+        // Fallback to directionId if subDirectionId is not selected
         subDirectionId: values.subDirectionId ? parseInt(values.subDirectionId) : parseInt(values.directionId),
       };
 
@@ -260,7 +264,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="hover:scale-105 transition-transform">
+        <Button className="hover:scale-105 transition-transform shadow-lg">
           <PlusCircle className="mr-2 h-4 w-4" />
           {t('add_distribution')}
         </Button>
@@ -275,16 +279,16 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         </DialogHeader>
 
         {/* Wizard Progress */}
-        <div className="px-6 py-4 flex items-center justify-between bg-muted/30">
+        <div className="px-6 py-4 flex items-center justify-between bg-muted/30 border-y">
           {steps.map((s, i) => (
             <div key={s.id} className="flex items-center gap-2 flex-1 last:flex-initial">
               <div className={cn(
-                "h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
-                step === i ? "bg-primary text-primary-foreground shadow-md" : (step > i ? "bg-green-500 text-white" : "bg-muted text-muted-foreground")
+                "h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300",
+                step === i ? "bg-primary text-primary-foreground shadow-md scale-110" : (step > i ? "bg-green-500 text-white" : "bg-muted text-muted-foreground")
               )}>
                 {step > i ? <Check className="h-4 w-4" /> : i + 1}
               </div>
-              <span className={cn("text-xs font-medium", step === i ? "text-primary" : "text-muted-foreground")}>
+              <span className={cn("text-xs font-medium", step === i ? "text-primary font-bold" : "text-muted-foreground")}>
                 {t(s.id as any, s.title)}
               </span>
               {i < steps.length - 1 && <div className="h-px bg-border flex-1 mx-2" />}
@@ -302,18 +306,18 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-4"
+                    className="space-y-6"
                   >
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
                         name="directionId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('structure')}</FormLabel>
+                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('structure')}</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11">
                                   <SelectValue placeholder={t('select_structure_placeholder')} />
                                 </SelectTrigger>
                               </FormControl>
@@ -335,14 +339,16 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         name="subDirectionId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('sub_direction')} <span className="text-xs text-muted-foreground">({t('optional')})</span></FormLabel>
+                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              {t('sub_direction')} <span className="text-[10px] font-normal lowercase italic">({t('optional')})</span>
+                            </FormLabel>
                             <Select 
                               onValueChange={field.onChange} 
                               value={field.value}
                               disabled={!selectedDirectionId || subDirections.length === 0}
                             >
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11">
                                   <SelectValue placeholder={t('select_sub_direction_placeholder')} />
                                 </SelectTrigger>
                               </FormControl>
@@ -365,7 +371,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                       name="beneficiaryId"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel>{t('beneficiary')}</FormLabel>
+                          <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('beneficiary')}</FormLabel>
                           <Popover open={isPersonPopoverOpen} onOpenChange={setPersonPopoverOpen}>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -374,7 +380,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                   role="combobox"
                                   disabled={!selectedDirectionId}
                                   className={cn(
-                                    "w-full justify-between h-12 text-left",
+                                    "w-full justify-between h-12 text-left bg-background",
                                     !field.value && "text-muted-foreground"
                                   )}
                                 >
@@ -385,7 +391,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
                               <Command filter={() => 1}>
                                 <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setPersonSearch} />
                                 <ScrollArea className="max-h-56">
@@ -398,11 +404,12 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                           form.setValue("beneficiaryId", person.id.toString());
                                           setPersonPopoverOpen(false);
                                         }}
+                                        className="py-3"
                                       >
-                                        <Check className={cn("mr-2 h-4 w-4", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                        <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
                                         <div className="flex flex-col">
-                                          <span>{person.grade} {person.firstName} {person.lastName}</span>
-                                          {person.pseudo && <span className="text-[10px] text-muted-foreground italic">@{person.pseudo}</span>}
+                                          <span className="font-semibold">{person.grade} {person.firstName} {person.lastName}</span>
+                                          {person.pseudo && <span className="text-[10px] text-primary/70 font-mono tracking-tighter">@{person.pseudo}</span>}
                                         </div>
                                       </CommandItem>
                                     ))}
@@ -426,11 +433,11 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div className="relative space-y-2">
-                      <FormLabel className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{t('search_article_to_add_placeholder')}</FormLabel>
+                    <div className="relative space-y-3 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-primary/80">{t('search_article_to_add_placeholder')}</FormLabel>
                       <div className="flex gap-2">
                         <Select value={searchArticleType} onValueChange={(v: any) => setSearchArticleType(v)}>
-                          <SelectTrigger className="w-[140px] bg-background">
+                          <SelectTrigger className="w-[140px] h-10 bg-background border-none shadow-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -444,7 +451,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                           <Input
                             placeholder={t('search_article_placeholder')}
                             onChange={(e) => handleArticleSearch(e.target.value)}
-                            className="pl-9 bg-background h-10"
+                            className="pl-9 h-10 bg-background border-none shadow-sm"
                           />
                         </div>
                       </div>
@@ -455,7 +462,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="absolute z-50 w-full rounded-lg border bg-popover shadow-2xl mt-1 overflow-hidden"
+                            className="absolute z-50 w-full left-0 rounded-xl border bg-popover shadow-2xl mt-1 overflow-hidden"
                           >
                             <ScrollArea className="max-h-56">
                               {searchedArticles.map((article) => {
@@ -474,12 +481,15 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                       <span className="text-[10px] text-muted-foreground">{article.designation}</span>
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
-                                      <Badge variant={article.type === "HARDWARE" ? "default" : "secondary"} className="text-[9px] h-4">
+                                      <Badge variant={article.type === "HARDWARE" ? "default" : "secondary"} className="text-[9px] h-4 uppercase">
                                         {t(article.type.toLowerCase() as any)}
                                       </Badge>
-                                      <span className={cn("text-[10px] font-bold", isLow ? "text-destructive" : "text-green-600")}>
-                                        {t('stock')}: {article.quantity}
-                                      </span>
+                                      <div className="flex items-center gap-1">
+                                        <span className={cn("text-[10px] font-bold", isLow ? "text-destructive" : "text-green-600")}>
+                                          {t('stock')}: {article.quantity}
+                                        </span>
+                                        {isLow && <AlertTriangle className="h-2.5 w-2.5 text-destructive animate-pulse" />}
+                                      </div>
                                     </div>
                                   </div>
                                 )
@@ -491,80 +501,127 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                     </div>
 
                     <div className="space-y-4 pt-2">
-                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('articles_to_distribute')} ({fields.length})</h4>
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('articles_to_distribute')}</h4>
+                        <Badge variant="outline" className="text-[10px]">{fields.length} {t('articles')}</Badge>
+                      </div>
+                      
                       {fields.length === 0 && (
-                        <div className="text-center py-8 border border-dashed rounded-lg bg-muted/10">
-                          <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                          <p className="text-xs text-muted-foreground">{t('no_articles_selected', 'Select articles from the search above.')}</p>
+                        <div className="text-center py-12 border-2 border-dashed rounded-2xl bg-muted/10 opacity-60">
+                          <Package className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                          <p className="text-sm text-muted-foreground">{t('no_articles_selected', 'Select articles from the search above.')}</p>
                         </div>
                       )}
-                      {fields.map((field, index) => {
-                        const article = (field as any).article as Article;
-                        const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
-                        return (
-                          <motion.div 
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            key={field.id} 
-                            className="rounded-xl border bg-card p-4 shadow-sm relative group hover:border-primary/30 transition-colors"
-                          >
-                            <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => remove(index)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                            
-                            <div className="flex flex-col gap-3">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-sm">{article.model}</span>
-                                <Badge variant="outline" className="text-[9px] h-4">{article.type}</Badge>
-                              </div>
+                      
+                      <div className="space-y-4">
+                        {fields.map((field, index) => {
+                          const article = (field as any).article as Article;
+                          const addedSerials = form.getValues(`articles.${index}.serialNumbers`);
+                          const isLow = article.strategicStock ? article.quantity <= article.strategicStock : article.quantity === 0;
 
-                              {article.type === 'HARDWARE' ? (
-                                <div className="space-y-2">
-                                  <div className="relative">
-                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                                    <Input
-                                      id={`serial-search-${index}`}
-                                      placeholder={t('search_add_serial_placeholder')}
-                                      onChange={(e) => handleSerialSearch(e.target.value, article.id, index)}
-                                      className="pl-8 h-8 text-xs bg-muted/30"
-                                    />
-                                    {serials[index]?.length > 0 && (
-                                      <div className="absolute z-10 w-full rounded border bg-background shadow-lg mt-1 max-h-32 overflow-y-auto">
-                                        {serials[index].map((s) => (
-                                          <div key={s.id} className="p-2 cursor-pointer hover:bg-accent text-xs font-mono" onMouseDown={() => handleSelectSerial(s, index)}>
-                                            {s.serialNumber}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
+                          return (
+                            <motion.div 
+                              initial={{ scale: 0.95, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              key={field.id} 
+                              className="rounded-xl border bg-card p-4 shadow-sm relative group hover:border-primary/30 transition-all"
+                            >
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="icon" 
+                                className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full" 
+                                onClick={() => remove(index)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                              
+                              <div className="flex flex-col gap-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 rounded-lg bg-primary/10">
+                                    <Package className="h-5 w-5 text-primary" />
                                   </div>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {addedSerials?.map((sn) => (
-                                      <Badge key={sn} variant="secondary" className="px-2 py-0.5 text-[10px] font-mono gap-1">
-                                        {sn}
-                                        <button onClick={() => update(index, { ...fields[index], serialNumbers: addedSerials.filter(s => s !== sn) })} className="hover:text-destructive">×</button>
-                                      </Badge>
-                                    ))}
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-sm leading-tight">{article.model}</span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className="text-[10px] text-muted-foreground uppercase tracking-tight">{article.designation}</span>
+                                      <div className="flex items-center gap-1">
+                                        <span className={cn("text-[9px] font-bold uppercase", isLow ? "text-destructive" : "text-green-600")}>
+                                          {t('stock')}: {article.quantity}
+                                        </span>
+                                        {article.strategicStock! > 0 && (
+                                          <span className="text-[9px] text-muted-foreground italic">(threshold: {article.strategicStock})</span>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
-                              ) : (
-                                <FormField
-                                  control={form.control}
-                                  name={`articles.${index}.quantity`}
-                                  render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                      <FormLabel className="text-[10px] font-bold">{t('quantity')}</FormLabel>
-                                      <FormControl>
-                                        <Input type="number" min={1} max={article.quantity} {...field} className="h-8 text-xs w-32" onChange={e => field.onChange(parseInt(e.target.value) || 1)} />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              )}
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+
+                                {article.type === 'HARDWARE' ? (
+                                  <div className="space-y-3">
+                                    <div className="relative">
+                                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                      <Input
+                                        id={`serial-search-${index}`}
+                                        placeholder={t('search_add_serial_placeholder')}
+                                        onChange={(e) => handleSerialSearch(e.target.value, article.id, index)}
+                                        className="pl-9 h-9 text-xs bg-muted/30 border-none"
+                                      />
+                                      {serials[index]?.length > 0 && (
+                                        <div className="absolute z-10 w-full rounded-lg border bg-background shadow-xl mt-1 max-h-40 overflow-y-auto">
+                                          {serials[index].map((s) => (
+                                            <div 
+                                              key={s.id} 
+                                              className="p-2.5 cursor-pointer hover:bg-accent text-xs font-mono border-b last:border-0" 
+                                              onMouseDown={() => handleSelectSerial(s, index)}
+                                            >
+                                              {s.serialNumber}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 min-h-[1.5rem]">
+                                      {addedSerials?.map((sn) => (
+                                        <Badge key={sn} variant="secondary" className="px-2.5 py-1 text-[10px] font-mono gap-1.5 bg-secondary/50 border-none">
+                                          {sn}
+                                          <button 
+                                            type="button"
+                                            onClick={() => update(index, { ...fields[index], serialNumbers: addedSerials.filter(s => s !== sn) })} 
+                                            className="hover:text-destructive transition-colors"
+                                          >
+                                            ×
+                                          </button>
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <FormField
+                                    control={form.control}
+                                    name={`articles.${index}.quantity`}
+                                    render={({ field }) => (
+                                      <FormItem className="space-y-1.5">
+                                        <FormLabel className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{t('quantity')}</FormLabel>
+                                        <FormControl>
+                                          <Input 
+                                            type="number" 
+                                            min={1} 
+                                            max={article.quantity} 
+                                            {...field} 
+                                            className="h-9 text-xs w-32 bg-muted/30 border-none" 
+                                            onChange={e => field.onChange(parseInt(e.target.value) || 1)} 
+                                          />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -577,11 +634,19 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div className="rounded-lg border bg-primary/5 p-4 space-y-2">
-                      <h4 className="text-xs font-bold text-primary uppercase tracking-widest">{t('summary', 'Summary')}</h4>
-                      <div className="text-sm">
-                        <p><span className="text-muted-foreground">{t('beneficiary')}:</span> <span className="font-semibold">{persons.find(p => p.id.toString() === form.getValues('beneficiaryId'))?.firstName} {persons.find(p => p.id.toString() === form.getValues('beneficiaryId'))?.lastName}</span></p>
-                        <p><span className="text-muted-foreground">{t('articles')}:</span> <span className="font-semibold">{fields.length} items</span></p>
+                    <div className="rounded-2xl border bg-primary/5 p-5 space-y-4 shadow-sm border-primary/10">
+                      <h4 className="text-xs font-bold text-primary uppercase tracking-widest border-b border-primary/10 pb-2">{t('summary', 'Summary')}</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('beneficiary')}</p>
+                          <p className="font-semibold text-lg">
+                            {persons.find(p => p.id.toString() === form.getValues('beneficiaryId'))?.firstName} {persons.find(p => p.id.toString() === form.getValues('beneficiaryId'))?.lastName}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('articles')}</p>
+                          <p className="font-semibold text-lg">{fields.length} Items Selected</p>
+                        </div>
                       </div>
                     </div>
 
@@ -590,9 +655,13 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                       name="remarks"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t('remarks')}</FormLabel>
+                          <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('remarks')}</FormLabel>
                           <FormControl>
-                            <Textarea placeholder={t('add_remarks_placeholder')} {...field} className="min-h-[120px] bg-background" />
+                            <Textarea 
+                              placeholder={t('add_remarks_placeholder')} 
+                              {...field} 
+                              className="min-h-[150px] bg-muted/20 border-muted focus:bg-background transition-all rounded-xl" 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -605,14 +674,14 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
           </Form>
         </ScrollArea>
 
-        <DialogFooter className="p-6 pt-2 flex flex-row items-center justify-between border-t bg-muted/10">
-          <Button variant="ghost" onClick={step === 0 ? () => setOpen(false) : prevStep} disabled={loading} className="gap-2">
+        <DialogFooter className="p-6 pt-4 flex flex-row items-center justify-between border-t bg-muted/10">
+          <Button variant="ghost" onClick={step === 0 ? () => setOpen(false) : prevStep} disabled={loading} className="gap-2 rounded-xl">
             {step === 0 ? t('cancel') : <><ChevronLeft className="h-4 w-4" /> {t('back')}</>}
           </Button>
           <Button 
             onClick={step === steps.length - 1 ? form.handleSubmit(onSubmit) : nextStep} 
             disabled={loading || (step === 1 && fields.length === 0)} 
-            className="gap-2 shadow-lg hover:shadow-primary/20 transition-all"
+            className="gap-2 shadow-xl hover:shadow-primary/20 transition-all rounded-xl h-11 px-6"
           >
             {loading ? t('saving') : (step === steps.length - 1 ? t('confirm_distribution', 'Finish & Download PDF') : <>{t('next')} <ChevronRight className="h-4 w-4" /></>)}
           </Button>
