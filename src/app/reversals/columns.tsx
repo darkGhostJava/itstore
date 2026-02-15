@@ -113,20 +113,19 @@ export const useReversalsColumns = () => {
       ),
     },
     {
-      id: "isSigned",
-      accessorKey: "isSigned",
+      id: "attestation",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />,
       cell: ({ row }) => {
-        const isSigned = row.original.isSigned;
+        const isSigned = row.original.isSigned || !!row.original.dechargeId;
         return isSigned ? (
           <div className="flex items-center gap-2 text-green-600">
             <CheckCircle2 className="h-4 w-4" />
-            <span>{t('signed', 'Signed')}</span>
+            <span className="text-xs font-medium">{t('signed', 'Signed')}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-destructive">
+          <div className="flex items-center gap-2 text-muted-foreground/50">
             <XCircle className="h-4 w-4" />
-            <span>{t('not_signed', 'Not Signed')}</span>
+            <span className="text-xs">{t('none', 'None')}</span>
           </div>
         );
       },
