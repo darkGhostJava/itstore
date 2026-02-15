@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, FileDigit } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -45,6 +45,7 @@ import { Item, Person, Structure } from "@/lib/definitions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { useTranslation } from "react-i18next";
 
 const reparationItemSchema = z.object({
   item: z.any().refine(val => val, { message: "Please select an item." }),
@@ -54,6 +55,7 @@ const reparationItemSchema = z.object({
 const reparationFormSchema = z.object({
   structureId: z.string().min(1, "Please select a direction."),
   personId: z.string().min(1, "Please select the person returning the item."),
+  attestationId: z.string().optional(),
   reparations: z.array(reparationItemSchema).min(1, "Please add at least one item for repair."),
 });
 
@@ -64,6 +66,7 @@ interface AddReparationProps {
 }
 
 export function AddReparation({ onSuccess }: AddReparationProps) {
+  const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -76,6 +79,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
     defaultValues: {
       structureId: "",
       personId: "",
+      attestationId: "",
       reparations: [],
     },
   });
@@ -114,13 +118,16 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   async function onSubmit(values: ReparationFormValues) {
     setLoading(true);
     try {
-      const payload = values.reparations.map(rep => ({
+      const repairsPayload = values.reparations.map(rep => ({
         itemId: rep.item.id,
         remarks: rep.remarks,
         userId: 1, // Assuming a logged-in user
       }));
 
-      await registerReparations(payload);
+      await registerReparations({
+        attestationId: values.attestationId,
+        reparations: repairsPayload
+      });
 
       toast({
         title: "Repair(s) Registered",
@@ -157,13 +164,13 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Register for Repair
+          {t('reparation')}
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Register Items for Repair</DialogTitle>
+          <DialogTitle>{t('register_for_repair', 'Register Items for Repair')}</DialogTitle>
           <DialogDescription>
             Select who is returning the item, then find items by serial number to add for repair.
           </DialogDescription>
@@ -171,18 +178,18 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
         <ScrollArea className="max-h-[70vh] pr-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-               {/* Person Selection */}
-              <div className="grid grid-cols-2 gap-4">
+               {/* Metadata Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="structureId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Structure</FormLabel>
+                      <FormLabel>{t('structure')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a structure" />
+                            <SelectValue placeholder={t('select_structure_placeholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -198,43 +205,60 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                   )}
                 />
 
-                 <FormField
+                <FormField
                   control={form.control}
-                  name="personId"
+                  name="attestationId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Returned By</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={!selectedStructureId || persons.length === 0}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a person" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {persons.map((person) => (
-                            <SelectItem key={person.id} value={person.id.toString()}>
-                              {person.firstName} {person.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {!selectedStructureId && (
-                        <FormDescription>
-                            Please select a structure first.
-                        </FormDescription>
-                     )}
+                      <FormLabel className="flex items-center gap-2">
+                        <FileDigit className="h-3.5 w-3.5" />
+                        {t('attestation_id', 'Attestation ID')}
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., REP-2024-001" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="space-y-4">
-                <FormLabel>Items to Repair</FormLabel>
+              <FormField
+                control={form.control}
+                name="personId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('returned_by', 'Returned By')}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={!selectedStructureId || persons.length === 0}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('select_beneficiary_placeholder')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {persons.map((person) => (
+                          <SelectItem key={person.id} value={person.id.toString()}>
+                            {person.firstName} {person.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!selectedStructureId && (
+                      <FormDescription>
+                          {t('select_direction_first')}
+                      </FormDescription>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-4 pt-4 border-t">
+                <FormLabel>{t('items_to_repair', 'Items to Repair')}</FormLabel>
                 <div className="space-y-4">
                   {fields.map((field, index) => (
                     <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
@@ -244,8 +268,8 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       
                       <div>
                         <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
-                        <p className="text-sm">Serial Number: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
-                        <p className="text-sm">Current Status: <StatusBadge status={field.item.status} /></p>
+                        <p className="text-sm">{t('serial_number')}: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
+                        <p className="text-sm">{t('status')}: <StatusBadge status={field.item.status} /></p>
                       </div>
 
                       <FormField
@@ -253,7 +277,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                         name={`reparations.${index}.remarks`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Repair Remarks</FormLabel>
+                            <FormLabel>{t('repair_remarks', 'Repair Remarks')}</FormLabel>
                             <FormControl>
                               <Textarea
                                 placeholder="Describe the issue with this item..."
@@ -269,11 +293,11 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                 </div>
 
                 <div className="relative space-y-2">
-                  <FormLabel htmlFor="item-search">Add Item by Serial Number</FormLabel>
+                  <FormLabel htmlFor="item-search">{t('search_item_by_serial', 'Add Item by Serial Number')}</FormLabel>
                    <div className="relative">
                     <Input
                       id="item-search"
-                      placeholder="Search by serial number to add..."
+                      placeholder={t('search_add_serial_placeholder')}
                       onChange={(e) => handleItemSearch(e.target.value)}
                        onBlur={() => setTimeout(() => setSearchedItems([]), 150)}
                       className="flex-1"
@@ -284,7 +308,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                         {searchedItems.map((item) => (
                           <div
                             key={item.id}
-                            className="p-2 cursor-pointer hover:bg-muted"
+                            className="p-2 cursor-pointer hover:bg-muted text-sm"
                             onMouseDown={() => {
                               append({ item: item, remarks: "" });
                               setSearchedItems([]);
@@ -298,15 +322,15 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       </div>
                     )}
                   </div>
-                  {!selectedPersonId && <FormDescription>Please select a person to search for their items.</FormDescription>}
+                  {!selectedPersonId && <FormDescription>{t('select_person_to_search_items')}</FormDescription>}
                   <FormMessage>
                     {form.formState.errors.reparations && typeof form.formState.errors.reparations.message === 'string' && form.formState.errors.reparations.message}
                   </FormMessage>
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : "Save Repairs"}
+                <Button type="submit" disabled={loading || fields.length === 0}>
+                  {loading ? t('saving') : t('save_reversal')}
                 </Button>
               </DialogFooter>
             </form>
@@ -316,5 +340,3 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
     </Dialog>
   );
 }
-
-    

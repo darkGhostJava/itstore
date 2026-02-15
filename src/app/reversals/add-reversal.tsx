@@ -29,7 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Undo2, Check, ChevronsUpDown, Trash2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Undo2, Check, ChevronsUpDown, Trash2, Search, FileDigit } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -58,6 +59,7 @@ const reversalFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
   personId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().min(1, "remarks_are_required"),
+  attestationId: z.string().optional(),
   reversals: z.array(reversalItemSchema).min(1, "at_least_one_article_is_required"),
 });
 
@@ -89,6 +91,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
       structureId: "",
       personId: "",
       remarks: "",
+      attestationId: "",
       reversals: [],
     },
   });
@@ -161,6 +164,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         itemIds: values.reversals.map(rev => rev.item.id),
         personId: parseInt(values.personId, 10),
         remarks: values.remarks,
+        attestationId: values.attestationId,
       };
 
       await registerReversals(payload);
@@ -221,30 +225,49 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               
-              <FormField
-                control={form.control}
-                name="structureId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('structure')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="structureId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('structure')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('select_structure_placeholder')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {directions.map((structure) => (
+                            <SelectItem key={structure.id} value={structure.id.toString()}>
+                              {structure.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="attestationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <FileDigit className="h-3.5 w-3.5" />
+                        {t('attestation_id', 'Attestation ID')}
+                      </FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('select_structure_placeholder')} />
-                        </SelectTrigger>
+                        <Input placeholder="e.g., ATT-2024-001" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {directions.map((structure) => (
-                          <SelectItem key={structure.id} value={structure.id.toString()}>
-                            {structure.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
                <FormField
                 control={form.control}
@@ -276,7 +299,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command filter={() => 1}>
+                        <Command shouldFilter={false}>
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
                             onValueChange={setPersonSearch}
@@ -364,11 +387,11 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                                 <CommandGroup>
                                   <CommandList>
                                     {structureItems
-                                      .filter(item => item.serialNumber.toLowerCase().includes(itemSearch.toLowerCase()))
+                                      .filter(item => item.serialNumber?.toLowerCase().includes(itemSearch.toLowerCase()))
                                       .map((item) => (
                                       <CommandItem
                                         key={item.id}
-                                        value={item.serialNumber}
+                                        value={item.serialNumber || ''}
                                         onSelect={() => handleSelectItem(item)}
                                       >
                                         <div className="flex flex-col w-full">
