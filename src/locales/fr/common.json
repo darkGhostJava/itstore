@@ -238,5 +238,10 @@
     "upload_arrival_attestation": "Charger le document d'attestation",
     "uploaded": "Chargé",
     "none": "Aucune",
-    "strategic_stock": "Stock Stratégique"
+    "strategic_stock": "Stock Stratégique",
+    "attestation_id": "ID Attestation",
+    "search_item_in_structure": "Rechercher Article dans Structure",
+    "loading_items": "Chargement des articles...",
+    "no_items_found": "Aucun article trouvé.",
+    "no_reversals_found": "Aucun reversement enregistré pour le moment."
 }

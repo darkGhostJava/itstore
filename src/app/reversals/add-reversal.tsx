@@ -122,7 +122,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     if (selectedStructureId) {
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
-        // De-duplicate persons
         const uniquePersons = personsRes.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
         setPersons(uniquePersons);
       })();
@@ -132,7 +131,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         try {
           const res = await fetchItemsForStructure(parseInt(selectedStructureId, 10), { pageIndex: 0, pageSize: 1000 });
           const items = res.data || [];
-          // De-duplicate items
           const uniqueItems = items.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           setStructureItems(uniqueItems);
         } catch (error) {
@@ -266,7 +264,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
                         <FileDigit className="h-3.5 w-3.5" />
-                        {t('attestation_id', 'Attestation ID')}
+                        {t('attestation_id')}
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., ATT-2024-001" {...field} />
@@ -320,7 +318,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                                 {persons.map((person) => (
                                   <CommandItem
                                     value={person.id.toString()}
-                                    key={`person-${person.id}`}
+                                    key={`person-rev-${person.id}`}
                                     onSelect={() => {
                                       form.setValue("personId", person.id.toString());
                                       setPersonPopoverOpen(false);
@@ -363,15 +361,21 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                         
                         <div>
                             <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
-                            <p className="text-sm">{t('serial_number')}: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
-                            <p className="text-sm">{t('status')}: <StatusBadge status={field.item.status} /></p>
+                            <div className="text-sm flex items-center gap-2">
+                                <span>{t('serial_number')}:</span>
+                                <Badge variant="secondary">{field.item.serialNumber}</Badge>
+                            </div>
+                            <div className="text-sm flex items-center gap-2">
+                                <span>{t('status')}:</span>
+                                <StatusBadge status={field.item.status} />
+                            </div>
                         </div>
                         </div>
                     ))}
                     </div>
 
                     <div className="space-y-2">
-                        <FormLabel>{t('search_item_in_structure', 'Search Item in Structure')}</FormLabel>
+                        <FormLabel>{t('search_item_in_structure')}</FormLabel>
                         <Popover open={isItemPopoverOpen} onOpenChange={setItemPopoverOpen}>
                           <PopoverTrigger asChild>
                             <Button
@@ -380,7 +384,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                               disabled={isLoadingItems}
                               className="w-full justify-between"
                             >
-                              {isLoadingItems ? t('loading_items', 'Loading items...') : t('search_add_serial_placeholder')}
+                              {isLoadingItems ? t('loading_items') : t('search_add_serial_placeholder')}
                               <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -391,14 +395,14 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                                 onValueChange={setItemSearch}
                               />
                               <ScrollArea className="max-h-64">
-                                <CommandEmpty>{t('no_items_found', 'No items found.')}</CommandEmpty>
+                                <CommandEmpty>{t('no_items_found')}</CommandEmpty>
                                 <CommandGroup>
                                   <CommandList>
                                     {structureItems
                                       .filter(item => item.serialNumber?.toLowerCase().includes(itemSearch.toLowerCase()))
                                       .map((item) => (
                                       <CommandItem
-                                        key={`item-${item.id}`}
+                                        key={`item-rev-res-${item.id}`}
                                         value={item.id.toString()}
                                         onSelect={() => handleSelectItem(item)}
                                       >

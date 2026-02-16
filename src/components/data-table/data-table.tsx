@@ -48,7 +48,7 @@ interface DataTableProps<TData, TValue> {
   emptyStateMessage?: React.ReactNode;
 }
 
-const MotionTableRow = motion(TableRow);
+const MotionTableRow = motion.create(TableRow);
 
 const rowVariants = {
   hidden: { opacity: 0, y: 10 },
@@ -90,13 +90,11 @@ export function DataTable<TData, TValue>({
   const [query, setQuery] = React.useState(initialQuery);
   const debouncedQuery = useDebounce(query, 500);
 
-  // We use a ref for fetchData to keep the fetching effect stable
   const fetchDataRef = React.useRef(fetchData);
   React.useEffect(() => {
     fetchDataRef.current = fetchData;
   }, [fetchData]);
 
-  // Track the last fetched parameters to prevent infinite loops
   const lastFetchedParamsRef = React.useRef<string>("");
 
   const pagination = React.useMemo(
@@ -144,12 +142,10 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  // Reset page when query changes
   React.useEffect(() => {
     setPagination(p => ({ ...p, pageIndex: 0 }));
   }, [debouncedQuery]);
 
-  // Main data fetching effect
   React.useEffect(() => {
     let sortString: string | undefined = undefined;
     if (sorting.length > 0) {

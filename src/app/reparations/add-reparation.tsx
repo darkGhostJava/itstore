@@ -108,7 +108,6 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       setPersons([]);
       if (selectedStructureId) {
         const res = await getPersonsByIdStructure(parseInt(selectedStructureId));
-        // De-duplicate persons
         const uniquePersons = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
         setPersons(uniquePersons || []);
       }
@@ -123,7 +122,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       const repairsPayload = values.reparations.map(rep => ({
         itemId: rep.item.id,
         remarks: rep.remarks,
-        userId: 1, // Assuming a logged-in user
+        userId: 1,
       }));
 
       await registerReparations({
@@ -139,7 +138,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       form.reset();
       remove();
       setOpen(false);
-      onSuccess?.(); // Trigger refresh
+      onSuccess?.();
     } catch (error) {
       console.error("Error registering repair:", error);
       toast({
@@ -155,7 +154,6 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   const handleItemSearch = async (query: string) => {
     if (query.length > 1 && selectedPersonId) {
       const res = await searchItemsBySerialNumberAndPerson(parseInt(selectedPersonId), query);
-      // De-duplicate items
       const uniqueItems = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       setSearchedItems(uniqueItems);
     } else {
@@ -182,7 +180,6 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
         <ScrollArea className="max-h-[70vh] pr-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-               {/* Metadata Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -216,7 +213,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
                         <FileDigit className="h-3.5 w-3.5" />
-                        {t('attestation_id', 'Attestation ID')}
+                        {t('attestation_id')}
                       </FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., REP-2024-001" {...field} />
@@ -272,8 +269,14 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       
                       <div>
                         <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
-                        <p className="text-sm">{t('serial_number')}: <Badge variant="secondary">{field.item.serialNumber}</Badge></p>
-                        <p className="text-sm">{t('status')}: <StatusBadge status={field.item.status} /></p>
+                        <div className="text-sm flex items-center gap-2">
+                            <span>{t('serial_number')}:</span>
+                            <Badge variant="secondary">{field.item.serialNumber}</Badge>
+                        </div>
+                        <div className="text-sm flex items-center gap-2">
+                            <span>{t('status')}:</span>
+                            <StatusBadge status={field.item.status} />
+                        </div>
                       </div>
 
                       <FormField
@@ -311,7 +314,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
                         {searchedItems.map((item) => (
                           <div
-                            key={`rep-search-${item.id}`}
+                            key={`rep-search-item-${item.id}`}
                             className="p-2 cursor-pointer hover:bg-muted text-sm"
                             onMouseDown={() => {
                               append({ item: item, remarks: "" });
