@@ -122,14 +122,19 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     if (selectedStructureId) {
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
-        setPersons(personsRes || []);
+        // De-duplicate persons
+        const uniquePersons = personsRes.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+        setPersons(uniquePersons);
       })();
 
       (async () => {
         setIsLoadingItems(true);
         try {
           const res = await fetchItemsForStructure(parseInt(selectedStructureId, 10), { pageIndex: 0, pageSize: 1000 });
-          setStructureItems(res.data || []);
+          const items = res.data || [];
+          // De-duplicate items
+          const uniqueItems = items.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+          setStructureItems(uniqueItems);
         } catch (error) {
           console.error("Failed to fetch structure items", error);
           setStructureItems([]);
@@ -144,10 +149,13 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     const fetchBeneficiaries = async () => {
         if (personSearch && selectedStructureId) {
             const res = await searchPersons(personSearch, selectedStructureId);
-            setPersons(res.data || []);
+            const data = res.data || [];
+            const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+            setPersons(uniqueData);
         } else if (selectedStructureId) {
             const res = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
-            setPersons(res || []);
+            const uniqueData = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+            setPersons(uniqueData);
         }
     };
 
@@ -240,7 +248,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                         </FormControl>
                         <SelectContent>
                           {directions.map((structure) => (
-                            <SelectItem key={structure.id} value={structure.id.toString()}>
+                            <SelectItem key={`dir-${structure.id}`} value={structure.id.toString()}>
                               {structure.name}
                             </SelectItem>
                           ))}
@@ -311,8 +319,8 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                               <CommandList>
                                 {persons.map((person) => (
                                   <CommandItem
-                                    value={`${person.firstName} ${person.lastName}`}
-                                    key={person.id}
+                                    value={person.id.toString()}
+                                    key={`person-${person.id}`}
                                     onSelect={() => {
                                       form.setValue("personId", person.id.toString());
                                       setPersonPopoverOpen(false);
@@ -377,7 +385,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                            <Command>
+                            <Command shouldFilter={false}>
                               <CommandInput 
                                 placeholder={t('filter_by_serial_number_placeholder')} 
                                 onValueChange={setItemSearch}
@@ -390,8 +398,8 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                                       .filter(item => item.serialNumber?.toLowerCase().includes(itemSearch.toLowerCase()))
                                       .map((item) => (
                                       <CommandItem
-                                        key={item.id}
-                                        value={item.serialNumber || ''}
+                                        key={`item-${item.id}`}
+                                        value={item.id.toString()}
                                         onSelect={() => handleSelectItem(item)}
                                       >
                                         <div className="flex flex-col w-full">
