@@ -108,7 +108,9 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       setPersons([]);
       if (selectedStructureId) {
         const res = await getPersonsByIdStructure(parseInt(selectedStructureId));
-        setPersons(res || []);
+        // De-duplicate persons
+        const uniquePersons = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+        setPersons(uniquePersons || []);
       }
     };
     fetchPersons();
@@ -153,7 +155,9 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   const handleItemSearch = async (query: string) => {
     if (query.length > 1 && selectedPersonId) {
       const res = await searchItemsBySerialNumberAndPerson(parseInt(selectedPersonId), query);
-      setSearchedItems(res);
+      // De-duplicate items
+      const uniqueItems = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      setSearchedItems(uniqueItems);
     } else {
       setSearchedItems([]);
     }
@@ -194,7 +198,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                         </FormControl>
                         <SelectContent>
                           {directions.map((structure) => (
-                            <SelectItem key={structure.id} value={structure.id.toString()}>
+                            <SelectItem key={`rep-dir-${structure.id}`} value={structure.id.toString()}>
                               {structure.name}
                             </SelectItem>
                           ))}
@@ -241,7 +245,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       </FormControl>
                       <SelectContent>
                         {persons.map((person) => (
-                          <SelectItem key={person.id} value={person.id.toString()}>
+                          <SelectItem key={`rep-per-${person.id}`} value={person.id.toString()}>
                             {person.firstName} {person.lastName}
                           </SelectItem>
                         ))}
@@ -307,7 +311,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
                         {searchedItems.map((item) => (
                           <div
-                            key={item.id}
+                            key={`rep-search-${item.id}`}
                             className="p-2 cursor-pointer hover:bg-muted text-sm"
                             onMouseDown={() => {
                               append({ item: item, remarks: "" });

@@ -138,7 +138,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       // Fetch persons based ONLY on directionId as per business rule
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
-        setPersons(personsRes || []);
+        // De-duplicate just in case
+        const uniquePersons = personsRes.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+        setPersons(uniquePersons);
       })();
     }
   }, [selectedDirectionId, form]);
@@ -148,10 +150,13 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         if (personSearch && selectedDirectionId) {
             // Search persons within the selected direction
             const res = await searchPersons(personSearch, selectedDirectionId);
-            setPersons(res.data || []);
+            const data = res.data || [];
+            const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+            setPersons(uniqueData);
         } else if (selectedDirectionId) {
             const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
-            setPersons(personsRes || []);
+            const uniqueData = personsRes.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+            setPersons(uniqueData);
         }
     };
 
@@ -233,7 +238,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const handleArticleSearch = async (query: string) => {
     if (query.length > 1) {
       const res = await searchArticles(query, searchArticleType);
-      setSearchedArticles(res.data || []);
+      const data = res.data || [];
+      const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      setSearchedArticles(uniqueData);
     } else {
       setSearchedArticles([]);
     }
@@ -242,7 +249,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const handleSerialSearch = async (serialNumber: string, articleId: number, fieldIndex: number) => {
     if (serialNumber.length > 0 && articleId) {
       const res = await searchItemsBySerialNumber(serialNumber, articleId);
-      setSerials(prev => ({ ...prev, [fieldIndex]: res || [] }));
+      const data = res || [];
+      const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      setSerials(prev => ({ ...prev, [fieldIndex]: uniqueData }));
     } else {
       setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
     }
@@ -323,7 +332,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                               </FormControl>
                               <SelectContent>
                                 {directions.map((structure) => (
-                                  <SelectItem key={structure.id} value={structure.id.toString()}>
+                                  <SelectItem key={`dir-${structure.id}`} value={structure.id.toString()}>
                                     {structure.name}
                                   </SelectItem>
                                 ))}
@@ -354,7 +363,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                               </FormControl>
                               <SelectContent>
                                 {subDirections.map((sub) => (
-                                  <SelectItem key={sub.id} value={sub.id.toString()}>
+                                  <SelectItem key={`sub-${sub.id}`} value={sub.id.toString()}>
                                     {sub.name}
                                   </SelectItem>
                                 ))}
@@ -400,7 +409,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                     <CommandGroup>
                                       {persons.map((person) => (
                                         <CommandItem
-                                          key={person.id}
+                                          key={`person-${person.id}`}
                                           value={person.id.toString()}
                                           onSelect={() => {
                                             form.setValue("beneficiaryId", person.id.toString());
@@ -472,7 +481,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                 const isLow = article.strategicStock ? article.quantity <= article.strategicStock : article.quantity === 0;
                                 return (
                                   <div
-                                    key={article.id}
+                                    key={`art-${article.id}`}
                                     className="p-3 flex items-center justify-between cursor-pointer hover:bg-accent transition-colors border-b last:border-0"
                                     onMouseDown={() => {
                                       append({ article, serialNumbers: [], quantity: 1 });
@@ -574,7 +583,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                         <div className="absolute z-10 w-full rounded-lg border bg-background shadow-xl mt-1 max-h-40 overflow-y-auto">
                                           {serials[index].map((s) => (
                                             <div 
-                                              key={s.id} 
+                                              key={`ser-${s.id}`} 
                                               className="p-2.5 cursor-pointer hover:bg-accent text-xs font-mono border-b last:border-0" 
                                               onMouseDown={() => handleSelectSerial(s, index)}
                                             >
@@ -586,7 +595,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                     </div>
                                     <div className="flex flex-wrap gap-1.5 min-h-[1.5rem]">
                                       {addedSerials?.map((sn) => (
-                                        <Badge key={sn} variant="secondary" className="px-2.5 py-1 text-[10px] font-mono gap-1.5 bg-secondary/50 border-none">
+                                        <Badge key={`sel-ser-${sn}`} variant="secondary" className="px-2.5 py-1 text-[10px] font-mono gap-1.5 bg-secondary/50 border-none">
                                           {sn}
                                           <button 
                                             type="button"
