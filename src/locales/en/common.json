@@ -243,5 +243,10 @@
     "search_item_in_structure": "Search Item in Structure",
     "loading_items": "Loading items...",
     "no_items_found": "No items found.",
-    "no_reversals_found": "No reversals have been recorded yet."
+    "no_reversals_found": "No reversals have been recorded yet.",
+    "register_for_repair": "Register for Repair",
+    "items_to_repair": "Items to Repair",
+    "repair_remarks": "Repair Remarks",
+    "search_item_by_serial": "Search Item by Serial",
+    "returned_by": "Returned By"
 }

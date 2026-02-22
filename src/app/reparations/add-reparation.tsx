@@ -108,6 +108,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       setPersons([]);
       if (selectedStructureId) {
         const res = await getPersonsByIdStructure(parseInt(selectedStructureId));
+        // De-duplicate results
         const uniquePersons = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
         setPersons(uniquePersons || []);
       }
@@ -122,7 +123,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       const repairsPayload = values.reparations.map(rep => ({
         itemId: rep.item.id,
         remarks: rep.remarks,
-        userId: 1,
+        userId: 1, // Current logged in user ID
       }));
 
       await registerReparations({
@@ -154,6 +155,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   const handleItemSearch = async (query: string) => {
     if (query.length > 1 && selectedPersonId) {
       const res = await searchItemsBySerialNumberAndPerson(parseInt(selectedPersonId), query);
+      // De-duplicate results
       const uniqueItems = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       setSearchedItems(uniqueItems);
     } else {
@@ -267,15 +269,15 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       
-                      <div>
-                        <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
+                      <div className="space-y-1">
+                        <p className="font-semibold text-sm">{(field as any).item.article.model} - <span className="text-xs text-muted-foreground">{(field as any).item.article.designation}</span></p>
                         <div className="text-sm flex items-center gap-2">
                             <span>{t('serial_number')}:</span>
-                            <Badge variant="secondary">{field.item.serialNumber}</Badge>
+                            <Badge variant="secondary">{(field as any).item.serialNumber}</Badge>
                         </div>
                         <div className="text-sm flex items-center gap-2">
                             <span>{t('status')}:</span>
-                            <StatusBadge status={field.item.status} />
+                            <StatusBadge status={(field as any).item.status} />
                         </div>
                       </div>
 
