@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, FileDigit } from "lucide-react";
+import { PlusCircle, Trash2, FileDigit, Search } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -108,7 +108,6 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       setPersons([]);
       if (selectedStructureId) {
         const res = await getPersonsByIdStructure(parseInt(selectedStructureId));
-        // De-duplicate results
         const uniquePersons = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
         setPersons(uniquePersons || []);
       }
@@ -132,8 +131,8 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       });
 
       toast({
-        title: "Repair(s) Registered",
-        description: "The items have been successfully registered for repair.",
+        title: t('reparation_added_toast_title', 'Repair Registered'),
+        description: t('reparation_added_toast_desc', 'Items registered for repair successfully.'),
       });
 
       form.reset();
@@ -143,8 +142,8 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
     } catch (error) {
       console.error("Error registering repair:", error);
       toast({
-        title: "Error",
-        description: "Failed to register the items for repair.",
+        title: t('error'),
+        description: t('add_reparation_error', 'Failed to register repair.'),
         variant: "destructive",
       });
     } finally {
@@ -155,7 +154,6 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   const handleItemSearch = async (query: string) => {
     if (query.length > 1 && selectedPersonId) {
       const res = await searchItemsBySerialNumberAndPerson(parseInt(selectedPersonId), query);
-      // De-duplicate results
       const uniqueItems = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       setSearchedItems(uniqueItems);
     } else {
@@ -166,32 +164,33 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="hover:scale-105 transition-transform shadow-lg">
           <PlusCircle className="mr-2 h-4 w-4" />
           {t('reparation')}
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{t('register_for_repair', 'Register Items for Repair')}</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="p-6 pb-2">
+          <DialogTitle>{t('register_for_repair')}</DialogTitle>
           <DialogDescription>
-            Select who is returning the item, then find items by serial number to add for repair.
+            {t('register_for_repair_desc', 'Select beneficiary returning items and find them by serial number.')}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[70vh] pr-6">
+        
+        <ScrollArea className="flex-1 p-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="structureId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('structure')}</FormLabel>
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('structure')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11">
                             <SelectValue placeholder={t('select_structure_placeholder')} />
                           </SelectTrigger>
                         </FormControl>
@@ -213,12 +212,12 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                   name="attestationId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                         <FileDigit className="h-3.5 w-3.5" />
                         {t('attestation_id')}
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., REP-2024-001" {...field} />
+                        <Input placeholder="e.g., REP-2024-001" {...field} className="h-11" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -231,53 +230,50 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                 name="personId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('returned_by', 'Returned By')}</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('returned_by')}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                       disabled={!selectedStructureId || persons.length === 0}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11">
                           <SelectValue placeholder={t('select_beneficiary_placeholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {persons.map((person) => (
                           <SelectItem key={`rep-per-${person.id}`} value={person.id.toString()}>
-                            {person.firstName} {person.lastName}
+                            {person.grade} {person.firstName} {person.lastName}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    {!selectedStructureId && (
-                      <FormDescription>
-                          {t('select_direction_first')}
-                      </FormDescription>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
               <div className="space-y-4 pt-4 border-t">
-                <FormLabel>{t('items_to_repair', 'Items to Repair')}</FormLabel>
+                <FormLabel className="text-sm font-bold uppercase tracking-widest text-primary">{t('items_to_repair')}</FormLabel>
                 <div className="space-y-4">
                   {fields.map((field, index) => (
-                    <div key={field.id} className="rounded-md border p-4 space-y-4 relative">
-                       <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                    <div key={field.id} className="rounded-xl border bg-muted/30 p-4 space-y-4 relative shadow-sm hover:shadow-md transition-all group">
+                       <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => remove(index)}>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       
-                      <div className="space-y-1">
-                        <p className="font-semibold text-sm">{(field as any).item.article.model} - <span className="text-xs text-muted-foreground">{(field as any).item.article.designation}</span></p>
-                        <div className="text-sm flex items-center gap-2">
-                            <span>{t('serial_number')}:</span>
-                            <Badge variant="secondary">{(field as any).item.serialNumber}</Badge>
-                        </div>
-                        <div className="text-sm flex items-center gap-2">
-                            <span>{t('status')}:</span>
-                            <StatusBadge status={(field as any).item.status} />
+                      <div className="space-y-2">
+                        <p className="font-bold text-sm">{(field as any).item.article.model} — <span className="text-[10px] text-muted-foreground uppercase tracking-tight">{(field as any).item.article.designation}</span></p>
+                        <div className="flex flex-wrap gap-3 text-xs">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">{t('serial_number')}:</span>
+                                <code className="bg-background px-1.5 py-0.5 rounded border font-mono">{(field as any).item.serialNumber}</code>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">{t('status')}:</span>
+                                <StatusBadge status={(field as any).item.status} />
+                            </div>
                         </div>
                       </div>
 
@@ -286,11 +282,12 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                         name={`reparations.${index}.remarks`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('repair_remarks', 'Repair Remarks')}</FormLabel>
+                            <FormLabel className="text-[10px] font-bold uppercase">{t('repair_remarks')}</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Describe the issue with this item..."
+                                placeholder={t('repair_remarks_placeholder', 'Describe the issue with this item...')}
                                 {...field}
+                                className="bg-background resize-none min-h-[80px]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -301,44 +298,49 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                   ))}
                 </div>
 
-                <div className="relative space-y-2">
-                  <FormLabel htmlFor="item-search">{t('search_item_by_serial', 'Add Item by Serial Number')}</FormLabel>
+                <div className="relative space-y-3 pt-2 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                  <FormLabel htmlFor="item-search" className="text-xs font-bold uppercase tracking-widest text-primary/80">{t('search_item_by_serial')}</FormLabel>
                    <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="item-search"
                       placeholder={t('search_add_serial_placeholder')}
                       onChange={(e) => handleItemSearch(e.target.value)}
-                       onBlur={() => setTimeout(() => setSearchedItems([]), 150)}
-                      className="flex-1"
+                      onBlur={() => setTimeout(() => setSearchedItems([]), 150)}
+                      className="pl-9 h-11 bg-background border-none shadow-sm"
                       disabled={!selectedPersonId}
                     />
                     {searchedItems.length > 0 && (
-                      <div className="absolute z-10 w-full rounded border bg-background shadow-md mt-1 max-h-56 overflow-y-auto">
-                        {searchedItems.map((item) => (
-                          <div
-                            key={`rep-search-item-${item.id}`}
-                            className="p-2 cursor-pointer hover:bg-muted text-sm"
-                            onMouseDown={() => {
-                              append({ item: item, remarks: "" });
-                              setSearchedItems([]);
-                              const searchInput = document.getElementById('item-search');
-                              if (searchInput) (searchInput as HTMLInputElement).value = "";
-                            }}
-                          >
-                            {item.serialNumber} ({item.article.model}) - Status: {item.status}
-                          </div>
-                        ))}
+                      <div className="absolute z-50 w-full left-0 rounded-xl border bg-popover shadow-2xl mt-1 overflow-hidden">
+                        <ScrollArea className="max-h-56">
+                          {searchedItems.map((item) => (
+                            <div
+                              key={`rep-search-item-${item.id}`}
+                              className="p-3 flex items-center justify-between cursor-pointer hover:bg-accent border-b last:border-0"
+                              onMouseDown={() => {
+                                append({ item: item, remarks: "" });
+                                setSearchedItems([]);
+                                const searchInput = document.getElementById('item-search');
+                                if (searchInput) (searchInput as HTMLInputElement).value = "";
+                              }}
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-bold text-sm">{item.serialNumber}</span>
+                                <span className="text-[10px] text-muted-foreground">{item.article.model}</span>
+                              </div>
+                              <StatusBadge status={item.status} />
+                            </div>
+                          ))}
+                        </ScrollArea>
                       </div>
                     )}
                   </div>
-                  {!selectedPersonId && <FormDescription>{t('select_person_to_search_items')}</FormDescription>}
-                  <FormMessage>
-                    {form.formState.errors.reparations && typeof form.formState.errors.reparations.message === 'string' && form.formState.errors.reparations.message}
-                  </FormMessage>
+                  {!selectedPersonId && <p className="text-[10px] text-muted-foreground italic">{t('select_person_to_search_items')}</p>}
                 </div>
               </div>
-              <DialogFooter>
-                <Button type="submit" disabled={loading || fields.length === 0}>
+              
+              <DialogFooter className="pt-6 border-t">
+                <Button type="submit" disabled={loading || fields.length === 0} size="lg" className="w-full shadow-lg shadow-primary/20 h-12 text-sm font-bold tracking-widest uppercase">
                   {loading ? t('saving') : t('save_reversal')}
                 </Button>
               </DialogFooter>

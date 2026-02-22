@@ -19,15 +19,16 @@ import { ReformItemDialog } from "./reform-item-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
+import * as React from "react";
 
 type ReparationColumnProps = {
   onSuccess: () => void;
 }
 
-export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): ColumnDef<Operation>[] => {
+export const useReparationColumns = ({ onSuccess }: ReparationColumnProps): ColumnDef<Operation>[] => {
   const { t } = useTranslation('common');
 
-  return [
+  return React.useMemo<ColumnDef<Operation>[]>(() => [
     {
       header: "#",
       cell: ({ row }) => {
@@ -64,7 +65,13 @@ export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('date')} />
       ),
-      cell: ({ row }) => format(new Date(row.original.date), "PPP"),
+      cell: ({ row }) => {
+        try {
+            return format(new Date(row.original.date), "PPP");
+        } catch (e) {
+            return String(row.original.date);
+        }
+      }
     },
     {
       accessorKey: "remarks",
@@ -142,5 +149,5 @@ export const getReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
         );
       },
     },
-  ];
+  ], [t, onSuccess]);
 };

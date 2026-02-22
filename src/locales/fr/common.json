@@ -18,7 +18,7 @@
     "theme": "Thème",
     "toggle_theme": "Changer de thème",
     "log_out": "Déconnexion",
-    "app_title": "Tableau de Bord ITSM",
+    "app_title": "ITSM Dashboard",
     "toggle_menu": "Basculer le menu",
     "hardware": "Matériel",
     "consumable": "Consommable",
@@ -245,8 +245,12 @@
     "no_items_found": "Aucun article trouvé.",
     "no_reversals_found": "Aucun reversement enregistré pour le moment.",
     "register_for_repair": "Enregistrer pour Réparation",
+    "register_for_repair_desc": "Sélectionnez le bénéficiaire retournant les articles et trouvez-les par numéro de série.",
     "items_to_repair": "Articles à Réparer",
     "repair_remarks": "Remarques de Réparation",
+    "repair_remarks_placeholder": "Décrivez le problème avec cet article...",
     "search_item_by_serial": "Rechercher Article par Série",
-    "returned_by": "Retourné Par"
+    "returned_by": "Retourné Par",
+    "reparation_added_toast_title": "Réparation Enregistrée",
+    "reparation_added_toast_desc": "Les articles ont été enregistrés avec succès pour réparation."
 }

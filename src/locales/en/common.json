@@ -134,7 +134,7 @@
     "add_distribution_error": "Failed to add distribution.",
     "article_is_required": "Please select an article.",
     "direction_is_required": "Please select a direction.",
-    "subdirection_is_required": "Veuillez sélectionner une sous-direction.",
+    "subdirection_is_required": "Please select a sub-direction.",
     "beneficiary_is_required": "Please select a beneficiary.",
     "at_least_one_article_is_required": "Please add at least one article.",
     "attestation_not_found_toast_title": "Attestation Not Found",
@@ -245,8 +245,12 @@
     "no_items_found": "No items found.",
     "no_reversals_found": "No reversals have been recorded yet.",
     "register_for_repair": "Register for Repair",
+    "register_for_repair_desc": "Select beneficiary returning items and find them by serial number.",
     "items_to_repair": "Items to Repair",
     "repair_remarks": "Repair Remarks",
+    "repair_remarks_placeholder": "Describe the issue with this item...",
     "search_item_by_serial": "Search Item by Serial",
-    "returned_by": "Returned By"
+    "returned_by": "Returned By",
+    "reparation_added_toast_title": "Repair Registered",
+    "reparation_added_toast_desc": "The items have been successfully registered for repair."
 }

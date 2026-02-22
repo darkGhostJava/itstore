@@ -15,7 +15,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -131,6 +130,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         try {
           const res = await fetchItemsForStructure(parseInt(selectedStructureId, 10), { pageIndex: 0, pageSize: 1000 });
           const items = res.data || [];
+          // Ensure items are unique by ID
           const uniqueItems = items.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           setStructureItems(uniqueItems);
         } catch (error) {
@@ -220,27 +220,27 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle>{t('add_new_reversal')}</DialogTitle>
           <DialogDescription>
             {t('add_reversal_desc')}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[70vh] pr-6">
+        <ScrollArea className="flex-1 p-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="structureId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('structure')}</FormLabel>
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('structure')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11">
                             <SelectValue placeholder={t('select_structure_placeholder')} />
                           </SelectTrigger>
                         </FormControl>
@@ -262,12 +262,12 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                   name="attestationId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                         <FileDigit className="h-3.5 w-3.5" />
                         {t('attestation_id')}
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., ATT-2024-001" {...field} />
+                        <Input placeholder="e.g., ATT-2024-001" {...field} className="h-11" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -280,7 +280,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                 name="personId"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>{t('beneficiary')}</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('beneficiary')}</FormLabel>
                     <Popover open={isPersonPopoverOpen} onOpenChange={setPersonPopoverOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -289,7 +289,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                             role="combobox"
                             disabled={!selectedStructureId}
                             className={cn(
-                              "w-full justify-between",
+                              "w-full justify-between h-11 text-left",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -304,7 +304,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                         <Command shouldFilter={false}>
                           <CommandInput
                             placeholder={t('search_person_placeholder')}
@@ -350,45 +350,47 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
 
               {selectedStructureId && (
                 <div className="space-y-4 pt-4 border-t">
-                    <FormLabel>{t('articles_to_return')}</FormLabel>
+                    <FormLabel className="text-sm font-bold uppercase tracking-widest text-primary">{t('articles_to_return')}</FormLabel>
                     
                     <div className="space-y-4">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="rounded-md border p-4 space-y-2 relative">
-                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6" onClick={() => remove(index)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                        <div key={`rev-item-${field.item.id}`} className="rounded-xl border bg-muted/30 p-4 space-y-2 relative group hover:shadow-sm transition-all">
+                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => remove(index)}>
+                            <Trash2 className="h-4 w-4" />
                             </Button>
                         
                         <div>
-                            <p className="font-semibold text-sm">{field.item.article.model} - <span className="text-xs text-muted-foreground">{field.item.article.designation}</span></p>
-                            <div className="text-sm flex items-center gap-2">
-                                <span>{t('serial_number')}:</span>
-                                <Badge variant="secondary">{field.item.serialNumber}</Badge>
-                            </div>
-                            <div className="text-sm flex items-center gap-2">
-                                <span>{t('status')}:</span>
-                                <StatusBadge status={field.item.status} />
+                            <p className="font-bold text-sm">{field.item.article.model} — <span className="text-[10px] text-muted-foreground uppercase">{field.item.article.designation}</span></p>
+                            <div className="flex gap-3 text-xs mt-1.5">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-muted-foreground">{t('serial_number')}:</span>
+                                    <Badge variant="secondary" className="px-1.5 py-0 h-5 font-mono">{field.item.serialNumber}</Badge>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-muted-foreground">{t('status')}:</span>
+                                    <StatusBadge status={field.item.status} />
+                                </div>
                             </div>
                         </div>
                         </div>
                     ))}
                     </div>
 
-                    <div className="space-y-2">
-                        <FormLabel>{t('search_item_in_structure')}</FormLabel>
+                    <div className="relative space-y-3 pt-2 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-primary/80">{t('search_item_in_structure')}</FormLabel>
                         <Popover open={isItemPopoverOpen} onOpenChange={setItemPopoverOpen}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
                               role="combobox"
                               disabled={isLoadingItems}
-                              className="w-full justify-between"
+                              className="w-full justify-between h-11 bg-background border-none shadow-sm"
                             >
                               {isLoadingItems ? t('loading_items') : t('search_add_serial_placeholder')}
                               <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
                             <Command shouldFilter={false}>
                               <CommandInput 
                                 placeholder={t('filter_by_serial_number_placeholder')} 
@@ -405,13 +407,14 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                                         key={`item-rev-res-${item.id}`}
                                         value={item.id.toString()}
                                         onSelect={() => handleSelectItem(item)}
+                                        className="p-3 border-b last:border-0"
                                       >
                                         <div className="flex flex-col w-full">
                                           <div className="flex justify-between items-center w-full">
-                                            <span className="font-medium">{item.serialNumber}</span>
+                                            <span className="font-bold">{item.serialNumber}</span>
                                             <Badge variant="outline" className="text-[10px]">{item.article.model}</Badge>
                                           </div>
-                                          <span className="text-xs text-muted-foreground">{item.article.designation}</span>
+                                          <span className="text-[10px] text-muted-foreground">{item.article.designation}</span>
                                         </div>
                                       </CommandItem>
                                     ))}
@@ -431,17 +434,17 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                 name="remarks"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('remarks')}</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('remarks')}</FormLabel>
                     <FormControl>
-                      <Textarea placeholder={t('add_remarks_placeholder')} {...field} />
+                      <Textarea placeholder={t('add_remarks_placeholder')} {...field} className="bg-background resize-none min-h-[100px]" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <DialogFooter>
-                <Button type="submit" disabled={loading || !selectedPersonId || fields.length === 0}>
+              <DialogFooter className="pt-6 border-t">
+                <Button type="submit" disabled={loading || !selectedPersonId || fields.length === 0} size="lg" className="w-full shadow-lg shadow-primary/20 h-12 text-sm font-bold tracking-widest uppercase">
                   {loading ? t('saving') : t('save_reversal')}
                 </Button>
               </DialogFooter>
