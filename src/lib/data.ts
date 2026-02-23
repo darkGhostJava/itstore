@@ -504,3 +504,27 @@ export const getStructureDistributionStats = async (params: { from?: string; to?
   const response = await api.get("stats/structures/distribution", { params });
   return response.data;
 };
+
+// Generic export function for Word reports
+const downloadWordReport = async (endpoint: string, filename: string) => {
+  const response = await api.get(endpoint, {
+    responseType: 'blob',
+  });
+  const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
+export const exportArrivalsStats = () => downloadWordReport('/arrivals/export/word', `arrivals_report_${Date.now()}.docx`);
+export const exportDistributionsStats = () => downloadWordReport('/distributions/export/word', `distributions_report_${Date.now()}.docx`);
+export const exportReversalsStats = () => downloadWordReport('/refunds/export/word', `reversals_report_${Date.now()}.docx`);
+export const exportReparationsStats = () => downloadWordReport('/reparations/export/word', `reparations_report_${Date.now()}.docx`);
+export const exportStockStats = () => downloadWordReport('/items/stock/export/word', `stock_report_${Date.now()}.docx`);
+export const exportHardwareStats = () => downloadWordReport('/items/hardware/export/word', `hardware_report_${Date.now()}.docx`);
+export const exportConsumablesStats = () => downloadWordReport('/items/consumables/export/word', `consumables_report_${Date.now()}.docx`);

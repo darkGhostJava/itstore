@@ -252,5 +252,7 @@
     "search_item_by_serial": "Rechercher Article par Série",
     "returned_by": "Retourné Par",
     "reparation_added_toast_title": "Réparation Enregistrée",
-    "reparation_added_toast_desc": "Les articles ont été enregistrés avec succès pour réparation."
+    "reparation_added_toast_desc": "Les articles ont été enregistrés avec succès pour réparation.",
+    "export_to_word": "Exporter Stats",
+    "exporting": "Exportation..."
 }

@@ -252,5 +252,7 @@
     "search_item_by_serial": "Search Item by Serial",
     "returned_by": "Returned By",
     "reparation_added_toast_title": "Repair Registered",
-    "reparation_added_toast_desc": "The items have been successfully registered for repair."
+    "reparation_added_toast_desc": "The items have been successfully registered for repair.",
+    "export_to_word": "Export Stats",
+    "exporting": "Exporting..."
 }

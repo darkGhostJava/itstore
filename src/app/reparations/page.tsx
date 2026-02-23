@@ -5,17 +5,21 @@ import * as React from "react";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/data-table/data-table";
 import { useReparationColumns } from "./columns";
-import { fetchReparations } from "@/lib/data";
+import { fetchReparations, exportReparationsStats } from "@/lib/data";
 import type { Operation } from "@/lib/definitions";
 import { AddReparation } from "./add-reparation";
 import { useTranslation } from "react-i18next";
-import { Wrench } from "lucide-react";
+import { Wrench, FileDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ReparationsPage() {
   const [data, setData] = React.useState<Operation[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isExporting, setIsExporting] = React.useState(false);
   const { t } = useTranslation('common');
+  const { toast } = useToast();
 
   const fetchDataRef = React.useRef<((options: { pageIndex: number; pageSize: number; query?: string; sort?:string; }) => Promise<void>) | null>(null);
 
@@ -42,6 +46,18 @@ export default function ReparationsPage() {
     }
   }, []);
 
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportReparationsStats();
+      toast({ title: "Success", description: "Report downloaded successfully." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Export Failed", description: "Could not generate report." });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const columns = useReparationColumns({ onSuccess: handleSuccess });
 
   return (
@@ -49,7 +65,13 @@ export default function ReparationsPage() {
       <PageHeader
         title={t('reparations')}
         actions={
-          <AddReparation onSuccess={handleSuccess} />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+              <FileDown className="mr-2 h-4 w-4" />
+              {isExporting ? t('exporting') : t('export_to_word')}
+            </Button>
+            <AddReparation onSuccess={handleSuccess} />
+          </div>
         }
       />
       <DataTable 
