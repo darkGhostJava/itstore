@@ -348,8 +348,8 @@ export const fetchDistributions = async (options: { pageIndex: number; pageSize:
 
   if (query) params.append('query', query);
   if (sort) params.append('sort', sort);
-  if (from) params.append('from', from);
-  if (to) params.append('to', to);
+  if (from) params.append('startDate', from);
+  if (to) params.append('endDate', to);
 
   const response = await api.get<PaginatedResponse<Distribution>>(`/distributions?${params.toString()}`);
   
@@ -367,8 +367,8 @@ export const fetchReversals = async (options: { pageIndex: number; pageSize: num
   });
   if (query) params.append('query', query);
   if (sort) params.append('sort', sort);
-  if (from) params.append('from', from);
-  if (to) params.append('to', to);
+  if (from) params.append('startDate', from);
+  if (to) params.append('endDate', to);
 
   const response = await api.get<PaginatedResponse<Refund>>(`/refunds?${params.toString()}`);
   return {
@@ -404,8 +404,8 @@ export const fetchReparations = async (options: { pageIndex: number; pageSize: n
   });
   if (query) params.append('query', query);
   if (sort) params.append('sort', sort);
-  if (from) params.append('from', from);
-  if (to) params.append('to', to);
+  if (from) params.append('startDate', from);
+  if (to) params.append('endDate', to);
 
   const response = await api.get<PaginatedResponse<Operation>>(`/reparations?${params.toString()}`);
   return {
