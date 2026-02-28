@@ -1,25 +1,26 @@
-
 "use client";
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
-import { fetchItems, exportConsumablesStats } from "@/lib/data";
-import type { Item } from "@/lib/definitions";
-import { ItemsTable } from "@/components/shared/items-table";
+import { DataTable } from "@/components/data-table/data-table";
+import { fetchArticles, exportConsumablesStats } from "@/lib/data";
+import type { Article } from "@/lib/definitions";
 import { AddArticle } from "../articles/add-article";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
+import { FileDown, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { StockColumns } from "../stock/columns";
 
 function ConsumablesPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
   const { t } = useTranslation("common");
   const { toast } = useToast();
+  const columns = React.useMemo(() => StockColumns(t), [t]);
 
-  const [data, setData] = React.useState<Item[]>([]);
+  const [data, setData] = React.useState<Article[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isExporting, setIsExporting] = React.useState(false);
@@ -29,7 +30,7 @@ function ConsumablesPageContent() {
   const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     setIsLoading(true);
     try {
-      const result = await fetchItems("CONSUMABLE", { pageIndex, pageSize, query, sort });
+      const result = await fetchArticles({ pageIndex, pageSize, query, sort, type: "CONSUMABLE" });
       setData(result.data);
       setPageCount(result.pageCount);
     }
@@ -46,9 +47,7 @@ function ConsumablesPageContent() {
   
   const handleSuccess = () => {
     if (fetchDataRef.current) {
-       const currentPageIndex = 0; 
-       const currentPageSize = 10;
-       fetchDataRef.current({ pageIndex: currentPageIndex, pageSize: currentPageSize });
+       fetchDataRef.current({ pageIndex: 0, pageSize: 10, query: initialQuery });
     }
   };
 
@@ -56,7 +55,7 @@ function ConsumablesPageContent() {
     setIsExporting(true);
     try {
       await exportConsumablesStats();
-      toast({ title: "Success", description: "Report downloaded successfully." });
+      toast({ title: t('success', 'Success'), description: "Report downloaded successfully." });
     } catch (error) {
       toast({ variant: "destructive", title: "Export Failed", description: "Could not generate report." });
     } finally {
@@ -78,15 +77,21 @@ function ConsumablesPageContent() {
           </div>
         }
       />
-      <ItemsTable
-        itemType="CONSUMABLE"
+      <DataTable
+        columns={columns}
         data={data}
         pageCount={pageCount}
         fetchData={fetchData}
         isLoading={isLoading}
-        initialQuery={initialQuery}
         filterKey="designation"
-        t={t}
+        filterPlaceholder={t('filter_by_designation_placeholder')}
+        initialQuery={initialQuery}
+        emptyStateMessage={
+            <div className="flex flex-col items-center justify-center space-y-2">
+                <Printer className="h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No consumable articles found.</p>
+            </div>
+        }
       />
     </div>
   );

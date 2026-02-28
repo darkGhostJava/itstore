@@ -112,7 +112,6 @@ export const getPersonsByIdStructure = async (idStructure: number): Promise<Pers
   } else if (response.data && Array.isArray(response.data.content)) {
     data = response.data.content;
   }
-  // Ensure unique by ID
   return data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
 };
 
@@ -218,7 +217,6 @@ export const searchPersons = async (query: string, structureId: string) => {
     data = response.data.content;
   }
 
-  // Ensure unique by ID
   const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
 
   return {
@@ -504,7 +502,6 @@ export const getStructureDistributionStats = async (params: { from?: string; to?
   return response.data;
 };
 
-// Generic export function for Word reports with date filters
 const downloadWordReport = async (endpoint: string, filename: string, params?: { startDate?: string; endDate?: string }) => {
   const urlParams = new URLSearchParams();
   if (params?.startDate) urlParams.append('startDate', params.startDate);

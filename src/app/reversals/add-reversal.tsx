@@ -127,7 +127,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         try {
           const res = await fetchItemsForStructure(parseInt(selectedStructureId, 10), { pageIndex: 0, pageSize: 1000 });
           const items = res.data || [];
-          // Ensure unique by ID
           const uniqueItems = items.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           setStructureItems(uniqueItems);
         } catch (error) {
@@ -353,9 +352,9 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                             <Trash2 className="h-4 w-4" />
                             </Button>
                         
-                        <div>
+                        <div className="flex flex-col gap-2">
                             <div className="font-bold text-sm">{field.item.article.model} — <span className="text-[10px] text-muted-foreground uppercase">{field.item.article.designation}</span></div>
-                            <div className="flex gap-3 text-xs mt-1.5">
+                            <div className="flex flex-wrap gap-3 text-xs mt-1.5">
                                 <div className="flex items-center gap-1.5">
                                     <span className="text-muted-foreground">{t('serial_number')}:</span>
                                     <Badge variant="secondary" className="px-1.5 py-0 h-5 font-mono">{field.item.serialNumber}</Badge>
