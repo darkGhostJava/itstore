@@ -1,4 +1,3 @@
-
 import { api } from './api';
 import type { Article, Item, Person, Structure, Operation, Distribution, Refund, Stats } from './definitions';
 
@@ -8,7 +7,6 @@ type PaginatedResponse<T> = {
   size: number;
   totalElements: number;
   totalPages: number;
-
 };
 
 export const getStats = async (): Promise<Stats> => {

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -264,7 +263,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                         </Button>
                       
                       <div className="space-y-2">
-                        <p className="font-bold text-sm">{(field as any).item.article.model} — <span className="text-[10px] text-muted-foreground uppercase tracking-tight">{(field as any).item.article.designation}</span></p>
+                        <div className="font-bold text-sm">{(field as any).item.article.model} — <span className="text-[10px] text-muted-foreground uppercase tracking-tight">{(field as any).item.article.designation}</span></div>
                         <div className="flex flex-wrap gap-3 text-xs">
                             <div className="flex items-center gap-1.5">
                                 <span className="text-muted-foreground">{t('serial_number')}:</span>
