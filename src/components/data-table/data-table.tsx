@@ -39,13 +39,15 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   pageCount: number
-  fetchData: (options: { pageIndex: number, pageSize: number, query?: string, sort?: string }) => void
+  fetchData: (options: { pageIndex: number, pageSize: number, query?: string, sort?: string, from?: string, to?: string }) => void
   isLoading?: boolean
   filterKey?: string
   filterPlaceholder?: string
   facetedFilters?: React.ReactNode
   initialQuery?: string;
   emptyStateMessage?: React.ReactNode;
+  startDate?: string;
+  endDate?: string;
 }
 
 const MotionTableRow = motion.create(TableRow);
@@ -71,7 +73,9 @@ export function DataTable<TData, TValue>({
   filterPlaceholder,
   facetedFilters,
   initialQuery = "",
-  emptyStateMessage = "No data available."
+  emptyStateMessage = "No data available.",
+  startDate,
+  endDate
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -144,7 +148,7 @@ export function DataTable<TData, TValue>({
 
   React.useEffect(() => {
     setPagination(p => ({ ...p, pageIndex: 0 }));
-  }, [debouncedQuery]);
+  }, [debouncedQuery, startDate, endDate]);
 
   React.useEffect(() => {
     let sortString: string | undefined = undefined;
@@ -154,7 +158,7 @@ export function DataTable<TData, TValue>({
       sortString = `${sort.id},${direction}`;
     }
 
-    const currentParams = JSON.stringify({ pageIndex, pageSize, debouncedQuery, sortString });
+    const currentParams = JSON.stringify({ pageIndex, pageSize, debouncedQuery, sortString, startDate, endDate });
     
     if (currentParams !== lastFetchedParamsRef.current) {
       lastFetchedParamsRef.current = currentParams;
@@ -162,10 +166,12 @@ export function DataTable<TData, TValue>({
         pageIndex, 
         pageSize, 
         query: debouncedQuery, 
-        sort: sortString 
+        sort: sortString,
+        from: startDate,
+        to: endDate
       });
     }
-  }, [pageIndex, pageSize, debouncedQuery, sorting]);
+  }, [pageIndex, pageSize, debouncedQuery, sorting, startDate, endDate]);
 
   return (
     <div className="space-y-4">

@@ -338,20 +338,18 @@ export const fetchArrivals = async (options: { pageIndex: number; pageSize: numb
   };
 }
 
-export const fetchDistributions = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string; }) => {
-  const { pageIndex, pageSize, query, sort } = options;
+export const fetchDistributions = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string; from?: string; to?: string; }) => {
+  const { pageIndex, pageSize, query, sort, from, to } = options;
   
   const params = new URLSearchParams({
       page: pageIndex.toString(),
       size: pageSize.toString(),
   });
 
-  if (query) {
-      params.append('query', query);
-  }
-  if (sort) {
-      params.append('sort', sort);
-  }
+  if (query) params.append('query', query);
+  if (sort) params.append('sort', sort);
+  if (from) params.append('from', from);
+  if (to) params.append('to', to);
 
   const response = await api.get<PaginatedResponse<Distribution>>(`/distributions?${params.toString()}`);
   
@@ -361,14 +359,16 @@ export const fetchDistributions = async (options: { pageIndex: number; pageSize:
   };
 }
 
-export const fetchReversals = async (options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
-  const { pageIndex, pageSize, query, sort } = options;
+export const fetchReversals = async (options: { pageIndex: number; pageSize: number; query?: string; sort?: string; from?: string; to?: string; }) => {
+  const { pageIndex, pageSize, query, sort, from, to } = options;
   const params = new URLSearchParams({
     page: pageIndex.toString(),
     size: pageSize.toString(),
   });
   if (query) params.append('query', query);
   if (sort) params.append('sort', sort);
+  if (from) params.append('from', from);
+  if (to) params.append('to', to);
 
   const response = await api.get<PaginatedResponse<Refund>>(`/refunds?${params.toString()}`);
   return {
@@ -396,14 +396,16 @@ export const registerReversals = async (payload: { itemIds: number[]; personId: 
   return response;
 }
 
-export const fetchReparations = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
-  const { pageIndex, pageSize, query, sort } = options;
+export const fetchReparations = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string; from?: string; to?: string; }) => {
+  const { pageIndex, pageSize, query, sort, from, to } = options;
   const params = new URLSearchParams({
     page: pageIndex.toString(),
     size: pageSize.toString(),
   });
   if (query) params.append('query', query);
   if (sort) params.append('sort', sort);
+  if (from) params.append('from', from);
+  if (to) params.append('to', to);
 
   const response = await api.get<PaginatedResponse<Operation>>(`/reparations?${params.toString()}`);
   return {
