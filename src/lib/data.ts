@@ -106,13 +106,14 @@ export const getSubDirectionsOfDirection = async (directionId: number) => {
 
 export const getPersonsByIdStructure = async (idStructure: number): Promise<Person[]> => {
   const response = await api.get<any>(`/persons/structure/${idStructure}`);
+  let data: Person[] = [];
   if (Array.isArray(response.data)) {
-    return response.data;
+    data = response.data;
+  } else if (response.data && Array.isArray(response.data.content)) {
+    data = response.data.content;
   }
-  if (response.data && Array.isArray(response.data.content)) {
-    return response.data.content;
-  }
-  return [];
+  // Ensure unique by ID
+  return data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
 };
 
 export async function searchArticles(query: string, type: string | "ALL") {
@@ -217,8 +218,11 @@ export const searchPersons = async (query: string, structureId: string) => {
     data = response.data.content;
   }
 
+  // Ensure unique by ID
+  const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+
   return {
-    data,
+    data: uniqueData,
   };
 }
 
@@ -476,11 +480,6 @@ export const markItemAsReformed = async (itemId: number, userId: number) => {
   return response;
 }
 
-export const fetchItemById = async (id: number): Promise<Item> => {
-  const response = await api.get<Item>(`/items/${id}`);
-  return response.data;
-}
-
 export const fetchOperationsForItem = async (itemId: number, options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
   
@@ -505,9 +504,15 @@ export const getStructureDistributionStats = async (params: { from?: string; to?
   return response.data;
 };
 
-// Generic export function for Word reports
-const downloadWordReport = async (endpoint: string, filename: string) => {
-  const response = await api.get(endpoint, {
+// Generic export function for Word reports with date filters
+const downloadWordReport = async (endpoint: string, filename: string, params?: { startDate?: string; endDate?: string }) => {
+  const urlParams = new URLSearchParams();
+  if (params?.startDate) urlParams.append('startDate', params.startDate);
+  if (params?.endDate) urlParams.append('endDate', params.endDate);
+  
+  const queryString = urlParams.toString() ? `?${urlParams.toString()}` : '';
+  
+  const response = await api.get(endpoint + queryString, {
     responseType: 'blob',
   });
   const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
@@ -521,10 +526,10 @@ const downloadWordReport = async (endpoint: string, filename: string) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const exportArrivalsStats = () => downloadWordReport('/arrivals/export/word', `arrivals_report_${Date.now()}.docx`);
-export const exportDistributionsStats = () => downloadWordReport('/distributions/export/word', `distributions_report_${Date.now()}.docx`);
-export const exportReversalsStats = () => downloadWordReport('/refunds/export/word', `reversals_report_${Date.now()}.docx`);
-export const exportReparationsStats = () => downloadWordReport('/reparations/export/word', `reparations_report_${Date.now()}.docx`);
+export const exportArrivalsStats = (dates?: { startDate?: string; endDate?: string }) => downloadWordReport('/arrivals/export/word', `arrivals_report_${Date.now()}.docx`, dates);
+export const exportDistributionsStats = (dates?: { startDate?: string; endDate?: string }) => downloadWordReport('/distributions/export/word', `distributions_report_${Date.now()}.docx`, dates);
+export const exportReversalsStats = (dates?: { startDate?: string; endDate?: string }) => downloadWordReport('/refunds/export/word', `reversals_report_${Date.now()}.docx`, dates);
+export const exportReparationsStats = (dates?: { startDate?: string; endDate?: string }) => downloadWordReport('/reparations/export/word', `reparations_report_${Date.now()}.docx`, dates);
 export const exportStockStats = () => downloadWordReport('/items/stock/export/word', `stock_report_${Date.now()}.docx`);
 export const exportHardwareStats = () => downloadWordReport('/items/hardware/export/word', `hardware_report_${Date.now()}.docx`);
 export const exportConsumablesStats = () => downloadWordReport('/items/consumables/export/word', `consumables_report_${Date.now()}.docx`);

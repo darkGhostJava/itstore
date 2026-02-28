@@ -14,7 +14,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -107,8 +106,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       setPersons([]);
       if (selectedStructureId) {
         const res = await getPersonsByIdStructure(parseInt(selectedStructureId));
-        const uniquePersons = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-        setPersons(uniquePersons || []);
+        setPersons(res || []);
       }
     };
     fetchPersons();
@@ -153,8 +151,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   const handleItemSearch = async (query: string) => {
     if (query.length > 1 && selectedPersonId) {
       const res = await searchItemsBySerialNumberAndPerson(parseInt(selectedPersonId), query);
-      const uniqueItems = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-      setSearchedItems(uniqueItems);
+      setSearchedItems(res);
     } else {
       setSearchedItems([]);
     }
@@ -334,7 +331,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                       </div>
                     )}
                   </div>
-                  {!selectedPersonId && <p className="text-[10px] text-muted-foreground italic">{t('select_person_to_search_items')}</p>}
+                  {!selectedPersonId && <div className="text-[10px] text-muted-foreground italic">{t('select_person_to_search_items')}</div>}
                 </div>
               </div>
               

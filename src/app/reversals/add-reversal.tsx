@@ -100,7 +100,6 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   });
   
   const selectedStructureId = form.watch("structureId");
-  const selectedPersonId = form.watch("personId");
 
   useEffect(() => {
     if (open) {
@@ -120,8 +119,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     if (selectedStructureId) {
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
-        const uniquePersons = personsRes.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-        setPersons(uniquePersons);
+        setPersons(personsRes);
       })();
 
       (async () => {
@@ -129,7 +127,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         try {
           const res = await fetchItemsForStructure(parseInt(selectedStructureId, 10), { pageIndex: 0, pageSize: 1000 });
           const items = res.data || [];
-          // Ensure items are unique by ID
+          // Ensure unique by ID
           const uniqueItems = items.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           setStructureItems(uniqueItems);
         } catch (error) {
@@ -146,13 +144,10 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
     const fetchBeneficiaries = async () => {
         if (personSearch && selectedStructureId) {
             const res = await searchPersons(personSearch, selectedStructureId);
-            const data = res.data || [];
-            const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-            setPersons(uniqueData);
+            setPersons(res.data || []);
         } else if (selectedStructureId) {
             const res = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
-            const uniqueData = res.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-            setPersons(uniqueData);
+            setPersons(res);
         }
     };
 
@@ -359,7 +354,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                             </Button>
                         
                         <div>
-                            <p className="font-bold text-sm">{field.item.article.model} — <span className="text-[10px] text-muted-foreground uppercase">{field.item.article.designation}</span></p>
+                            <div className="font-bold text-sm">{field.item.article.model} — <span className="text-[10px] text-muted-foreground uppercase">{field.item.article.designation}</span></div>
                             <div className="flex gap-3 text-xs mt-1.5">
                                 <div className="flex items-center gap-1.5">
                                     <span className="text-muted-foreground">{t('serial_number')}:</span>
@@ -443,7 +438,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
               />
 
               <DialogFooter className="pt-6 border-t">
-                <Button type="submit" disabled={loading || !selectedPersonId || fields.length === 0} size="lg" className="w-full shadow-lg shadow-primary/20 h-12 text-sm font-bold tracking-widest uppercase">
+                <Button type="submit" disabled={loading || !selectedStructureId || fields.length === 0} size="lg" className="w-full shadow-lg shadow-primary/20 h-12 text-sm font-bold tracking-widest uppercase">
                   {loading ? t('saving') : t('save_reversal')}
                 </Button>
               </DialogFooter>

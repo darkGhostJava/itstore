@@ -47,10 +47,13 @@ export default function DistributionsPage() {
     }
   };
 
+  const fromDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd'T'HH:mm:ss") : undefined;
+  const toDate = dateRange?.to ? format(add(dateRange.to, { days: 1 }), "yyyy-MM-dd'T'HH:mm:ss") : undefined;
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      await exportDistributionsStats();
+      await exportDistributionsStats({ startDate: fromDate, endDate: toDate });
       toast({ title: "Success", description: "Report downloaded successfully." });
     } catch (error) {
       toast({ variant: "destructive", title: "Export Failed", description: "Could not generate report." });
@@ -58,9 +61,6 @@ export default function DistributionsPage() {
       setIsExporting(false);
     }
   };
-
-  const fromDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd'T'HH:mm:ss") : undefined;
-  const toDate = dateRange?.to ? format(add(dateRange.to, { days: 1 }), "yyyy-MM-dd'T'HH:mm:ss") : undefined;
 
   return (
     <div className="flex flex-col gap-8">
