@@ -1,3 +1,4 @@
+"use client";
 
 import Link from "next/link";
 import {
@@ -14,6 +15,7 @@ import {
   Boxes,
   Printer,
   Undo2,
+  Search,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -77,7 +79,25 @@ export function Header() {
         <Breadcrumbs />
       </div>
       <div className="relative ml-auto flex-1 md:grow-0">
-        {/* Search could go here */}
+        <Button
+          variant="outline"
+          className="relative h-9 w-full justify-start rounded-[0.5rem] bg-background text-sm font-normal text-muted-foreground shadow-none sm:pr-12 md:w-40 lg:w-64"
+          onClick={() => {
+            const e = new KeyboardEvent("keydown", {
+              key: "k",
+              ctrlKey: true,
+              bubbles: true,
+              cancelable: true,
+            });
+            document.dispatchEvent(e);
+          }}
+        >
+          <Search className="mr-2 h-4 w-4" />
+          <span className="inline-flex">{t('search_hint', 'Search...')}</span>
+          <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+            <span className="text-xs">⌘</span>K
+          </kbd>
+        </Button>
       </div>
       <UserNav />
     </header>

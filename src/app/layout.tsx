@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { KeycloakProvider } from "@/components/providers/keycloak-provider";
+import { CommandMenu } from "@/components/layout/command-menu";
 import "@/lib/i18n";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/lib/i18n";
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </AnimatePresence>
                 </div>
               </div>
+              <CommandMenu />
               <Toaster />
             </ThemeProvider>
           </KeycloakProvider>

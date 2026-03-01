@@ -272,5 +272,9 @@
     "operation_history_structure_desc": "Full movement log for assets in this structure.",
     "name": "Name",
     "manager": "Manager",
-    "no_manager_assigned": "No manager assigned."
+    "no_manager_assigned": "No manager assigned.",
+    "command_menu_placeholder": "Type a command or search (Items, Persons, Structures)...",
+    "quick_navigation": "Quick Navigation",
+    "searching": "Searching...",
+    "search_hint": "Search..."
 }

@@ -272,5 +272,9 @@
     "operation_history_structure_desc": "Journal complet des mouvements pour les actifs de cette structure.",
     "name": "Nom",
     "manager": "Responsable",
-    "no_manager_assigned": "Aucun responsable assigné."
+    "no_manager_assigned": "Aucun responsable assigné.",
+    "command_menu_placeholder": "Tapez une commande ou recherchez (Articles, Personnes, Structures)...",
+    "quick_navigation": "Navigation Rapide",
+    "searching": "Recherche...",
+    "search_hint": "Rechercher..."
 }
