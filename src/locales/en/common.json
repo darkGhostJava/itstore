@@ -253,16 +253,5 @@
     "reparation_added_toast_title": "Repair Registered",
     "reparation_added_toast_desc": "The items have been successfully registered for repair.",
     "export_to_word": "Export Stats",
-    "exporting": "Exporting...",
-    "article_details": "Article Details",
-    "specifications": "Specifications",
-    "current_stock": "Current Stock",
-    "low_stock_alert": "Low Stock Warning",
-    "low_stock_desc": "Inventory is below the strategic threshold.",
-    "quick_stats": "Quick Stats",
-    "available_units": "Available Units",
-    "individual_items": "Individual Items",
-    "hardware_items_desc": "Tracking all instances of this model.",
-    "inventory_details": "Inventory Details",
-    "consumable_items_desc": "Detailed inventory metrics."
+    "exporting": "Exporting..."
 }

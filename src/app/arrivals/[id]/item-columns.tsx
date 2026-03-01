@@ -1,12 +1,9 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Item } from "@/lib/definitions";
-import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
-import Link from "next/link";
 import { StatusBadge } from "@/components/shared/status-badge";
 
 export type ArrivalTableItem = Item & {
@@ -31,9 +28,7 @@ export const useHardwareColumns = () => {
         const article = row.original.article;
         return (
           <div className="flex flex-col">
-            <Link href={`/articles/${article.id}`} className="font-semibold hover:underline">
-              {article.model}
-            </Link>
+            <span className="font-semibold">{article.model}</span>
             <span className="text-xs text-muted-foreground">{article.designation}</span>
           </div>
         );
@@ -82,9 +77,7 @@ export const useConsumableColumns = () => {
         const article = row.original.article;
         return (
           <div className="flex flex-col">
-            <Link href={`/articles/${article.id}`} className="font-semibold hover:underline">
-              {article.model}
-            </Link>
+            <span className="font-semibold">{article.model}</span>
             <span className="text-xs text-muted-foreground">{article.designation}</span>
           </div>
         );

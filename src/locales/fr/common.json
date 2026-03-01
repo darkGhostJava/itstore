@@ -253,16 +253,5 @@
     "reparation_added_toast_title": "Réparation Enregistrée",
     "reparation_added_toast_desc": "Les articles ont été enregistrés avec succès pour réparation.",
     "export_to_word": "Exporter Stats",
-    "exporting": "Exportation...",
-    "article_details": "Détails de l'Article",
-    "specifications": "Spécifications",
-    "current_stock": "Stock Actuel",
-    "low_stock_alert": "Alerte de Stock Bas",
-    "low_stock_desc": "Le stock est inférieur au seuil stratégique.",
-    "quick_stats": "Aperçu Rapide",
-    "available_units": "Unités Disponibles",
-    "individual_items": "Articles Individuels",
-    "hardware_items_desc": "Suivi de toutes les instances de ce modèle.",
-    "inventory_details": "Détails de l'Inventaire",
-    "consumable_items_desc": "Métriques d'inventaire détaillées."
+    "exporting": "Exportation..."
 }

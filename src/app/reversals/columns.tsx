@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -12,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, CheckCircle2, XCircle } from "lucide-react";
+import { MoreHorizontal, CheckCircle2, XCircle, Eye } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
@@ -31,7 +30,13 @@ export const useReversalsColumns = () => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t('date')} />
       ),
-      cell: ({ row }) => row.original.date ? format(new Date(row.original.date), "PPP") : "N/A",
+      cell: ({ row }) => {
+        try {
+          return row.original.date ? format(new Date(row.original.date), "PPP") : "N/A";
+        } catch (e) {
+          return String(row.original.date);
+        }
+      }
     },
     {
       id: "article",
@@ -41,11 +46,11 @@ export const useReversalsColumns = () => {
       cell: ({ row }) => {
         const item = row.original.item;
         if (!item) return "N/A";
-        const article = item.article;
         return (
-            <Button variant="link" asChild className="p-0 h-auto">
-                <Link href={`/articles/${article.id}`}>{article.model} - {article.designation}</Link>
-            </Button>
+          <div className="flex flex-col">
+            <span className="font-semibold">{item.article.model}</span>
+            <span className="text-xs text-muted-foreground">{item.article.designation}</span>
+          </div>
         );
       },
     },
@@ -59,7 +64,7 @@ export const useReversalsColumns = () => {
         const item = row.original.item;
         if (!item) return "N/A";
         return (
-            <Button variant="link" asChild className="p-0 h-auto">
+            <Button variant="link" asChild className="p-0 h-auto font-mono text-xs">
                 <Link href={`/items/${item.id}`}>{item.serialNumber}</Link>
             </Button>
         );
@@ -106,13 +111,6 @@ export const useReversalsColumns = () => {
       cell: ({ row }) => row.original.user?.name || t('unknown'),
     },
     {
-      id: "remarks",
-      accessorKey: "remarks",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t('remarks')} />
-      ),
-    },
-    {
       id: "attestation",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />,
       cell: ({ row }) => {
@@ -143,7 +141,10 @@ export const useReversalsColumns = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-              <DropdownMenuItem>{t('view_details')}</DropdownMenuItem>
+              <DropdownMenuItem>
+                <Eye className="mr-2 h-4 w-4" />
+                {t('view_details')}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );

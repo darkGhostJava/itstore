@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -13,7 +12,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, CheckCircle2, XCircle } from "lucide-react";
+import { MoreHorizontal, CheckCircle2, XCircle, Eye } from "lucide-react";
 import { UploadAttestation } from "./upload-attestation";
 import { DownloadAttestation } from "./download-attestation";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -33,7 +32,13 @@ export const useDistributionsColumns = () => {
       id: "date",
       accessorKey: "date",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('date')} />,
-      cell: ({ row }) => format(new Date(row.original.date), "PPP"),
+      cell: ({ row }) => {
+        try {
+          return format(new Date(row.original.date), "PPP");
+        } catch (e) {
+          return String(row.original.date);
+        }
+      },
     },
     {
       id: "article",
@@ -44,9 +49,10 @@ export const useDistributionsColumns = () => {
         const item = row.original.item;
         if (!item) return "N/A";
         return (
-             <Button variant="link" asChild className="p-0 h-auto">
-                <Link href={`/articles/${item.article.id}`}>{item.article.model} - {item.article.designation}</Link>
-            </Button>
+          <div className="flex flex-col">
+            <span className="font-semibold">{item.article.model}</span>
+            <span className="text-xs text-muted-foreground">{item.article.designation}</span>
+          </div>
         )
       },
     },
@@ -59,7 +65,7 @@ export const useDistributionsColumns = () => {
         const item = row.original.item;
         if (!item) return "N/A";
         return (
-            <Button variant="link" asChild className="p-0 h-auto">
+            <Button variant="link" asChild className="p-0 h-auto font-mono text-xs">
                 <Link href={`/items/${item.id}`}>{item.serialNumber}</Link>
             </Button>
         )
@@ -81,7 +87,7 @@ export const useDistributionsColumns = () => {
     },
     {
       id: "structure",
-      accessorKey: "structure.name",
+      accessorKey: "person.structure.name",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('structure')} />,
       cell: ({ row }) => {
         const structure = row.original.person?.structure;
@@ -100,11 +106,6 @@ export const useDistributionsColumns = () => {
       cell: ({ row }) => row.original.user?.name || "N/A",
     },
     {
-      id: "remarks",
-      accessorKey: "remarks",
-      header: ({ column }) => <DataTableColumnHeader column={column} title={t('remarks')} />,
-    },
-    {
       id: "isSigned",
       accessorKey: "isSigned",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t('attestation_status', 'Attestation')} />,
@@ -113,12 +114,12 @@ export const useDistributionsColumns = () => {
         return isSigned ? (
           <div className="flex items-center gap-2 text-green-600">
             <CheckCircle2 className="h-4 w-4" />
-            <span>{t('signed', 'Signed')}</span>
+            <span className="text-xs font-medium">{t('signed', 'Signed')}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-destructive">
+          <div className="flex items-center gap-2 text-muted-foreground/50">
             <XCircle className="h-4 w-4" />
-            <span>{t('not_signed', 'Not Signed')}</span>
+            <span className="text-xs">{t('not_signed', 'Not Signed')}</span>
           </div>
         );
       },
@@ -137,7 +138,10 @@ export const useDistributionsColumns = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-              <DropdownMenuItem>{t('view_details')}</DropdownMenuItem>
+              <DropdownMenuItem>
+                <Eye className="mr-2 h-4 w-4" />
+                {t('view_details')}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <UploadAttestation distribution={distribution} />
               <DownloadAttestation distribution={distribution} />

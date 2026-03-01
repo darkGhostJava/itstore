@@ -117,8 +117,9 @@ export const getPersonsByIdStructure = async (idStructure: number): Promise<Pers
 
 export async function searchArticles(query: string, type: string | "ALL") {
   if (!query) return { data: [] };
-  const res = await api.get(`/articles/searchByName/${encodeURIComponent(type)}/${encodeURIComponent(query)}`);
-  return res;
+  const res = await api.get<Article[]>(`/articles/searchByName/${encodeURIComponent(type)}/${encodeURIComponent(query)}`);
+  const unique = (res.data || []).filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+  return { data: unique };
 }
 
 export async function searchItems(serialNumber: string): Promise<Item[]> {
@@ -128,7 +129,7 @@ export async function searchItems(serialNumber: string): Promise<Item[]> {
 }
 
 export async function searchItemsBySerialNumber(serialNumber: string, articleId: number) {
-  const res = await api.get(`/items/search/${articleId}/${serialNumber}`);
+  const res = await api.get<Item[]>(`/items/search/${articleId}/${serialNumber}`);
   return res.data;
 }
 
@@ -229,26 +230,6 @@ export const fetchPersonById = async (id: number): Promise<Person> => {
   return response.data;
 }
 
-export const fetchStructures = async (options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
-  const { pageIndex, pageSize, query, sort } = options;
-  const params = new URLSearchParams({
-    page: pageIndex.toString(),
-    size: pageSize.toString(),
-  });
-  if (query) params.append('query', query);
-  if (sort) params.append('sort', sort);
-
-  const response = await api.get<PaginatedResponse<Structure>>(`/structures?${params.toString()}`);
-
-  return {
-    data: response.data.content as Structure[],
-    pageCount: response.data.totalPages,
-    page: response.data.page,
-    size: response.data.size,
-    totalElements: response.data.totalElements,
-  };
-};
-
 export const fetchStructureTree = async (): Promise<Structure> => {
   const response = await api.get<Structure>("/structures/tree");
   return response.data;
@@ -283,11 +264,6 @@ export const fetchItemsForArticle = async (articleId: number, options: { pageInd
     data: response.data.content,
     pageCount: response.data.totalPages,
   };
-}
-
-export const fetchAllItems = async () => {
-  const response = await api.get<Item[]>('/items/all');
-  return response.data;
 }
 
 export const fetchItemsForPerson = async (personId: number, options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
@@ -415,7 +391,6 @@ export const fetchReparations = async (options: { pageIndex: number; pageSize: n
 }
 
 export const registerReparations = async (payload: { attestationId?: string; reparations: { itemId: number; remarks: string; userId: number; }[] }) => {
-
   const response = await api.post("/reparations", payload, {
     responseType: "arraybuffer",
   });
@@ -433,11 +408,9 @@ export const registerReparations = async (payload: { attestationId?: string; rep
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
   return response;
-
 }
 
 export const markItemAsRepaired = async (itemId: number, userId: number) => {
-
   const response = await api.put(`/items/repaired/${itemId}/${userId}`, null, {
     responseType: "arraybuffer",
   });
@@ -455,7 +428,6 @@ export const markItemAsRepaired = async (itemId: number, userId: number) => {
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
   return response;
-
 }
 
 export const markItemAsReformed = async (itemId: number, userId: number) => {

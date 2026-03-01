@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -12,14 +11,13 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, History } from "lucide-react";
 import { StatusBadge } from "./status-badge";
 import Link from "next/link";
 import { RepairItemDialog } from "@/app/reparations/repair-item-dialog";
 import { ReformItemDialog } from "@/app/reparations/reform-item-dialog";
 import { DataTableColumnHeader } from "../data-table/data-table-column-header";
 import { TFunction } from "i18next";
-
 
 type ItemsColumnProps = {
   onSuccess: () => void;
@@ -42,7 +40,7 @@ export const getItemsColumns = ({ onSuccess, t }: ItemsColumnProps): ColumnDef<I
     ),
     cell: ({ row }) => {
       const { article } = row.original;
-      return <Link href={`/articles/${article.id}`} className="hover:underline">{article.model}</Link>;
+      return <span className="font-semibold">{article.model}</span>;
     },
   },
    {
@@ -65,7 +63,7 @@ export const getItemsColumns = ({ onSuccess, t }: ItemsColumnProps): ColumnDef<I
     cell: ({ row }) => {
         const item = row.original;
         return (
-            <Button variant="link" asChild className="p-0 h-auto">
+            <Button variant="link" asChild className="p-0 h-auto font-mono text-xs">
                 <Link href={`/items/${item.id}`}>
                     {item.serialNumber}
                 </Link>
@@ -113,7 +111,10 @@ export const getItemsColumns = ({ onSuccess, t }: ItemsColumnProps): ColumnDef<I
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link href={`/items/${item.id}`}>{t('view_history', 'View History')}</Link>
+              <Link href={`/items/${item.id}`}>
+                <History className="mr-2 h-4 w-4" />
+                {t('view_history', 'View History')}
+              </Link>
             </DropdownMenuItem>
              {isUnderRepair && (
               <>
