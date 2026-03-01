@@ -7,7 +7,7 @@ export default function ArticleDetailPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to stock since article detail view is retired
+    // Definitive removal: redirect all Article Detail requests to Stock
     router.replace("/stock");
   }, [router]);
 

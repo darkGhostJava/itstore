@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, FileDigit, Search } from "lucide-react";
+import { PlusCircle, Trash2, Hash, Search } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -127,8 +127,8 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       });
 
       toast({
-        title: t('reparation_added_toast_title', 'Repair Registered'),
-        description: t('reparation_added_toast_desc', 'Items registered for repair successfully.'),
+        title: t('reparation_added_toast_title'),
+        description: t('reparation_added_toast_desc'),
       });
 
       form.reset();
@@ -139,7 +139,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       console.error("Error registering repair:", error);
       toast({
         title: t('error'),
-        description: t('add_reparation_error', 'Failed to register repair.'),
+        description: t('add_reparation_error'),
         variant: "destructive",
       });
     } finally {
@@ -169,7 +169,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>{t('register_for_repair')}</DialogTitle>
           <DialogDescription>
-            {t('register_for_repair_desc', 'Select beneficiary returning items and find them by serial number.')}
+            {t('register_for_repair_desc')}
           </DialogDescription>
         </DialogHeader>
         
@@ -208,7 +208,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <FileDigit className="h-3.5 w-3.5" />
+                        <Hash className="h-3.5 w-3.5" />
                         {t('attestation_id')}
                       </FormLabel>
                       <FormControl>
@@ -280,7 +280,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                             <FormLabel className="text-[10px] font-bold uppercase">{t('repair_remarks')}</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder={t('repair_remarks_placeholder', 'Describe the issue with this item...')}
+                                placeholder={t('repair_remarks_placeholder')}
                                 {...field}
                                 className="bg-background resize-none min-h-[80px]"
                               />
@@ -336,7 +336,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
               
               <DialogFooter className="pt-6 border-t">
                 <Button type="submit" disabled={loading || fields.length === 0} size="lg" className="w-full shadow-lg shadow-primary/20 h-12 text-sm font-bold tracking-widest uppercase">
-                  {loading ? t('saving') : t('save_reversal')}
+                  {loading ? t('saving') : t('register_for_repair')}
                 </Button>
               </DialogFooter>
             </form>

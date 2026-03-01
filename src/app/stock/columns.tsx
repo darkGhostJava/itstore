@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -13,17 +12,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, AlertTriangle } from "lucide-react";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export const StockColumns = (t: TFunction): ColumnDef<Article>[] => {
+export const useStockColumns = (): ColumnDef<Article>[] => {
+  const { t } = useTranslation('common');
+
   return [
     {
       header: "#",
-      cell: ({ row }) => {
-        return row.index + 1;
-      },
+      cell: ({ row }) => row.index + 1,
     },
     {
       accessorKey: "model",
@@ -98,8 +97,6 @@ export const StockColumns = (t: TFunction): ColumnDef<Article>[] => {
     {
       id: "actions",
       cell: ({ row }) => {
-        const article = row.original;
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -110,7 +107,7 @@ export const StockColumns = (t: TFunction): ColumnDef<Article>[] => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-              <DropdownMenuItem>Edit Article</DropdownMenuItem>
+              <DropdownMenuItem>{t('edit_article', 'Edit Article')}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );

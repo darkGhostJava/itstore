@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Undo2, Check, ChevronsUpDown, Trash2, Search, FileDigit } from "lucide-react";
+import { Undo2, Check, ChevronsUpDown, Trash2, Search, Hash } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -197,8 +197,8 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         setItemSearch("");
     } else {
         toast({
-            title: t('item_already_added', 'Item already added'),
-            description: t('item_already_added_desc', 'This item is already in the list to be returned.'),
+            title: t('item_already_added'),
+            description: t('item_already_added_desc'),
             variant: "destructive"
         });
     }
@@ -256,7 +256,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <FileDigit className="h-3.5 w-3.5" />
+                        <Hash className="h-3.5 w-3.5" />
                         {t('attestation_id')}
                       </FormLabel>
                       <FormControl>

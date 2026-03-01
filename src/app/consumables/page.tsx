@@ -11,14 +11,14 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { FileDown, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { StockColumns } from "../stock/columns";
+import { useStockColumns } from "../stock/columns";
 
 function ConsumablesPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
   const { t } = useTranslation("common");
   const { toast } = useToast();
-  const columns = React.useMemo(() => StockColumns(t), [t]);
+  const columns = useStockColumns();
 
   const [data, setData] = React.useState<Article[]>([]);
   const [pageCount, setPageCount] = React.useState(0);
@@ -30,6 +30,7 @@ function ConsumablesPageContent() {
   const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     setIsLoading(true);
     try {
+      // Consumables page now fetches Articles (aggregated quantities)
       const result = await fetchArticles({ pageIndex, pageSize, query, sort, type: "CONSUMABLE" });
       setData(result.data);
       setPageCount(result.pageCount);
@@ -55,9 +56,9 @@ function ConsumablesPageContent() {
     setIsExporting(true);
     try {
       await exportConsumablesStats();
-      toast({ title: t('success', 'Success'), description: "Report downloaded successfully." });
+      toast({ title: t('success', 'Success'), description: t('report_downloaded', 'Report downloaded successfully.') });
     } catch (error) {
-      toast({ variant: "destructive", title: "Export Failed", description: "Could not generate report." });
+      toast({ variant: "destructive", title: t('error'), description: t('export_failed', 'Could not generate report.') });
     } finally {
       setIsExporting(false);
     }
@@ -87,9 +88,9 @@ function ConsumablesPageContent() {
         filterPlaceholder={t('filter_by_designation_placeholder')}
         initialQuery={initialQuery}
         emptyStateMessage={
-            <div className="flex flex-col items-center justify-center space-y-2">
-                <Printer className="h-12 w-12 text-muted-foreground" />
-                <p className="text-muted-foreground">No consumable articles found.</p>
+            <div className="flex flex-col items-center justify-center space-y-2 py-12">
+                <Printer className="h-12 w-12 text-muted-foreground/30" />
+                <p className="text-muted-foreground">{t('no_consumables_found', 'No consumable articles found.')}</p>
             </div>
         }
       />
@@ -99,7 +100,7 @@ function ConsumablesPageContent() {
 
 export default function ConsumablesPage() {
     return (
-        <React.Suspense fallback={<div>Loading...</div>}>
+        <React.Suspense fallback={<div className="p-8 text-center">Loading consumables...</div>}>
             <ConsumablesPageContent />
         </React.Suspense>
     )

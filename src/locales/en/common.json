@@ -167,7 +167,7 @@
     "search_person_placeholder": "Search person...",
     "no_person_found": "No person found.",
     "add_person": "Add Person",
-    "add_new_person": "Add New Article",
+    "add_new_person": "Add New Person",
     "add_new_person_desc": "Enter the details for the new person.",
     "first_name": "First Name",
     "last_name": "Last Name",
@@ -253,5 +253,13 @@
     "reparation_added_toast_title": "Repair Registered",
     "reparation_added_toast_desc": "The items have been successfully registered for repair.",
     "export_to_word": "Export Stats",
-    "exporting": "Exporting..."
+    "exporting": "Exporting...",
+    "item_history": "Item History",
+    "operation_history": "Operation History",
+    "operation_history_desc": "Complete log of all movements for this serial number.",
+    "specifications": "Specifications",
+    "item_id": "Item ID",
+    "meta_info": "Meta Info",
+    "recorded_on": "Recorded On",
+    "no_history_found": "No history found for this item."
 }

@@ -250,6 +250,11 @@ export const fetchArticleById = async (id: number): Promise<Article> => {
   return response.data;
 }
 
+export const fetchItemById = async (id: number): Promise<Item> => {
+  const response = await api.get<Item>(`/items/${id}`);
+  return response.data;
+}
+
 export const fetchItemsForArticle = async (articleId: number, options: { pageIndex: number; pageSize: number; query?: string; sort?:string }) => {
   const { pageIndex, pageSize, query, sort } = options;
   const params = new URLSearchParams({

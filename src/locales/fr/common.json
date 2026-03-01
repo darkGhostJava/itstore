@@ -113,7 +113,7 @@
     "category_switch": "Switch",
     "serial_number": "Numéro de série",
     "beneficiary": "Bénéficiaire",
-    "upload_attestation": "Télécharger l'attestation",
+    "upload_attestation": "Charger l'attestation",
     "download_attestation": "Télécharger l'attestation",
     "filter_by_serial_number_placeholder": "Filtrer par numéro de série...",
     "add_distribution": "Ajouter une Distribution",
@@ -167,7 +167,7 @@
     "search_person_placeholder": "Rechercher une personne...",
     "no_person_found": "Aucune personne trouvée.",
     "add_person": "Ajouter une Personne",
-    "add_new_person": "Ajouter un Nouvel Article",
+    "add_new_person": "Ajouter une Nouvelle Personne",
     "add_new_person_desc": "Entrez les détails de la nouvelle personne.",
     "first_name": "Prénom",
     "last_name": "Nom",
@@ -253,5 +253,13 @@
     "reparation_added_toast_title": "Réparation Enregistrée",
     "reparation_added_toast_desc": "Les articles ont été enregistrés avec succès pour réparation.",
     "export_to_word": "Exporter Stats",
-    "exporting": "Exportation..."
+    "exporting": "Exportation...",
+    "item_history": "Historique de l'Article",
+    "operation_history": "Historique des Opérations",
+    "operation_history_desc": "Journal complet de tous les mouvements pour ce numéro de série.",
+    "specifications": "Spécifications",
+    "item_id": "ID Article",
+    "meta_info": "Méta Info",
+    "recorded_on": "Enregistré le",
+    "no_history_found": "Aucun historique trouvé pour cet article."
 }
