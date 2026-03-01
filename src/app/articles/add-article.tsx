@@ -37,13 +37,15 @@ import { api } from "@/lib/api";
 import categories from "@/lib/article-categories.json";
 import { useTranslation } from "react-i18next";
 
-const formSchema = z.object({
+const articleFormSchema = z.object({
   model: z.string().min(1, "model_is_required"),
   designation: z.string().min(1, "designation_is_required"),
   type: z.enum(["HARDWARE", "CONSUMABLE"]),
   category: z.string().min(1, "category_is_required"),
-  strategicStock: z.number().min(0).default(0),
+  strategicStock: z.coerce.number().min(0).default(0),
 });
+
+type ArticleFormValues = z.infer<typeof articleFormSchema>;
 
 interface AddArticleProps {
   onSuccess?: () => void;
@@ -55,8 +57,8 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
   const { toast } = useToast();
   const { t } = useTranslation('common');
   
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ArticleFormValues>({
+    resolver: zodResolver(articleFormSchema),
     defaultValues: {
       model: "",
       designation: "",
@@ -66,7 +68,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: ArticleFormValues) {
     setLoading(true);
     try {
       await api.post("/articles", values);
@@ -76,7 +78,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
       });
       setOpen(false);
       form.reset();
-      onSuccess?.(); // Trigger refresh
+      onSuccess?.();
     } catch (error) {
        toast({
         title: t('error'),
@@ -91,7 +93,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="shadow-lg hover:scale-105 transition-transform">
           <PlusCircle className="mr-2 h-4 w-4" />
           {t('add_article')}
         </Button>
@@ -114,7 +116,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
                   <FormControl>
                     <Input placeholder={t('model_placeholder')} {...field} />
                   </FormControl>
-                  <FormMessage>{form.formState.errors.model && t(form.formState.errors.model.message as string)}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -128,7 +130,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
                   <FormControl>
                     <Input placeholder={t('designation_placeholder')} {...field} />
                   </FormControl>
-                  <FormMessage>{form.formState.errors.designation && t(form.formState.errors.designation.message as string)}</FormMessage>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -165,8 +167,7 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
                     <FormControl>
                       <Input 
                         type="number" 
-                        {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -190,18 +191,18 @@ export function AddArticle({ onSuccess }: AddArticleProps) {
                     <SelectContent>
                       {categories.categories.map((category) => (
                         <SelectItem key={category} value={category}>
-                          {t(`category_${category.toLowerCase()}` as any)}
+                          {t(`category_${category.toLowerCase()}` as any, category)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                   <FormMessage>{form.formState.errors.category && t(form.formState.errors.category.message as string)}</FormMessage>
+                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <DialogFooter>
-              <Button type="submit" disabled={loading}>
+            <DialogFooter className="pt-4">
+              <Button type="submit" disabled={loading} className="w-full">
                 {loading ? t('saving') : t('save_article')}
               </Button>
             </DialogFooter>

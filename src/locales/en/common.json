@@ -1,3 +1,4 @@
+
 {
     "dashboard": "Dashboard",
     "total_articles": "Total Articles",
@@ -167,7 +168,7 @@
     "search_person_placeholder": "Search person...",
     "no_person_found": "No person found.",
     "add_person": "Add Person",
-    "add_new_person": "Add New Person",
+    "add_new_person": "Add New Article",
     "add_new_person_desc": "Enter the details for the new person.",
     "first_name": "First Name",
     "last_name": "Last Name",
@@ -253,5 +254,16 @@
     "reparation_added_toast_title": "Repair Registered",
     "reparation_added_toast_desc": "The items have been successfully registered for repair.",
     "export_to_word": "Export Stats",
-    "exporting": "Exporting..."
+    "exporting": "Exporting...",
+    "article_details": "Article Details",
+    "specifications": "Specifications",
+    "current_stock": "Current Stock",
+    "low_stock_alert": "Low Stock Warning",
+    "low_stock_desc": "Inventory is below the strategic threshold.",
+    "quick_stats": "Quick Stats",
+    "available_units": "Available Units",
+    "individual_items": "Individual Items",
+    "hardware_items_desc": "Tracking all instances of this model.",
+    "inventory_details": "Inventory Details",
+    "consumable_items_desc": "Detailed inventory metrics."
 }

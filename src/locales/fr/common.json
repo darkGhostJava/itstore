@@ -1,3 +1,4 @@
+
 {
     "dashboard": "Tableau de Bord",
     "total_articles": "Articles Totaux",
@@ -167,7 +168,7 @@
     "search_person_placeholder": "Rechercher une personne...",
     "no_person_found": "Aucune personne trouvée.",
     "add_person": "Ajouter une Personne",
-    "add_new_person": "Ajouter une Nouvelle Personne",
+    "add_new_person": "Ajouter un Nouvel Article",
     "add_new_person_desc": "Entrez les détails de la nouvelle personne.",
     "first_name": "Prénom",
     "last_name": "Nom",
@@ -253,5 +254,16 @@
     "reparation_added_toast_title": "Réparation Enregistrée",
     "reparation_added_toast_desc": "Les articles ont été enregistrés avec succès pour réparation.",
     "export_to_word": "Exporter Stats",
-    "exporting": "Exportation..."
+    "exporting": "Exportation...",
+    "article_details": "Détails de l'Article",
+    "specifications": "Spécifications",
+    "current_stock": "Stock Actuel",
+    "low_stock_alert": "Alerte de Stock Bas",
+    "low_stock_desc": "Le stock est inférieur au seuil stratégique.",
+    "quick_stats": "Aperçu Rapide",
+    "available_units": "Unités Disponibles",
+    "individual_items": "Articles Individuels",
+    "hardware_items_desc": "Suivi de toutes les instances de ce modèle.",
+    "inventory_details": "Détails de l'Inventaire",
+    "consumable_items_desc": "Métriques d'inventaire détaillées."
 }
