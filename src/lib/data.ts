@@ -139,8 +139,15 @@ export async function searchItemsBySerialNumberAndPerson(personId: number, seria
   return res.data;
 }
 
-export const fetchOperations = async (options: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
-  const { pageIndex, pageSize, query, sort } = options;
+export const fetchOperations = async (options: { 
+  pageIndex: number; 
+  pageSize: number; 
+  query?: string; 
+  sort?: string; 
+  personId?: number;
+  structureId?: number;
+}) => {
+  const { pageIndex, pageSize, query, sort, personId, structureId } = options;
 
   const params = new URLSearchParams({
     page: pageIndex.toString(),
@@ -148,6 +155,8 @@ export const fetchOperations = async (options: { pageIndex: number; pageSize: nu
   });
   if (query) params.append('query', query);
   if (sort) params.append('sort', sort);
+  if (personId) params.append('personId', personId.toString());
+  if (structureId) params.append('structureId', structureId.toString());
 
   const response = await api.get<PaginatedResponse<Operation>>(`/operations?${params.toString()}`);
   return {

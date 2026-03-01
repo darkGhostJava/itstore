@@ -266,5 +266,11 @@
     "critical_stock_desc": "Articles actuellement sous le seuil de stock stratégique.",
     "no_critical_stock": "Tous les articles sont actuellement au-dessus de leurs seuils stratégiques.",
     "low_stock_warning": "{{count}} restants",
-    "out_of_stock": "EN RUPTURE"
+    "out_of_stock": "EN RUPTURE",
+    "distributed_items_desc": "Tous les articles actuellement assignés à cette personne.",
+    "items_in_structure_desc": "Tous les articles actuellement assignés à cette structure.",
+    "operation_history_structure_desc": "Journal complet des mouvements pour les actifs de cette structure.",
+    "name": "Nom",
+    "manager": "Responsable",
+    "no_manager_assigned": "Aucun responsable assigné."
 }

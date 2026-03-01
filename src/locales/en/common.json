@@ -266,5 +266,11 @@
     "critical_stock_desc": "Articles currently below strategic stock threshold.",
     "no_critical_stock": "All articles are currently above their strategic thresholds.",
     "low_stock_warning": "{{count}} left",
-    "out_of_stock": "OUT OF STOCK"
+    "out_of_stock": "OUT OF STOCK",
+    "distributed_items_desc": "All items currently assigned to this person.",
+    "items_in_structure_desc": "All items currently assigned to this structure.",
+    "operation_history_structure_desc": "Full movement log for assets in this structure.",
+    "name": "Name",
+    "manager": "Manager",
+    "no_manager_assigned": "No manager assigned."
 }
