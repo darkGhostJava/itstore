@@ -1,4 +1,3 @@
-
 {
     "dashboard": "Tableau de Bord",
     "total_articles": "Articles Totaux",
@@ -77,8 +76,8 @@
     "designation": "Désignation",
     "type": "Type",
     "category": "Catégorie",
-    "model_placeholder": "ex: Dell Latitude 7490",
-    "designation_placeholder": "ex: Ordinateur portable",
+    "model_placeholder": "ex: Jean",
+    "designation_placeholder": "ex: Dupont",
     "select_category_placeholder": "Sélectionnez une catégorie",
     "save_article": "Enregistrer l'Article",
     "article_added_toast_title": "Article Ajouté",

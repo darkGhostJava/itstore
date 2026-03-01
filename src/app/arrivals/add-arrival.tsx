@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -71,6 +70,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
   const [serialNumberInputs, setSerialNumberInputs] = useState<Record<number, string>>({});
   const { t } = useTranslation('common');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ArrivalFormValues>({
     resolver: zodResolver(arrivalFormSchema),
@@ -186,8 +186,9 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
   const handleArticleSelect = (article: Article) => {
     append({ article: article, serialNumbers: [], quantity: 1 });
     setSearchedArticles([]);
-    const articleInput = document.getElementById('article-search') as HTMLInputElement;
-    if (articleInput) articleInput.value = '';
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
   }
 
   const handleAddSerialNumber = (index: number) => {
@@ -468,7 +469,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            id="article-search"
+                            ref={searchInputRef}
                             placeholder={t('search_article_placeholder')}
                             onChange={(e) => handleArticleSearch(e.target.value)}
                             onBlur={() => setTimeout(() => setSearchedArticles([]), 150)}
