@@ -7,7 +7,7 @@ export default function ArticlesPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect Article List requests to Stock
+    // Redirect Article List requests to Stock since specific model views are retired
     router.replace("/stock");
   }, [router]);
 

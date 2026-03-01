@@ -62,7 +62,7 @@ export function ArticleStatsCards({ type }: ArticleStatsCardsProps) {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      {designations.slice(0, 6).map((stat) => (
+      {designations.map((stat) => (
         <motion.div
           key={stat.rawTitle}
           whileHover={{ scale: 1.02 }}
