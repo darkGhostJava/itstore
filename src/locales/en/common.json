@@ -261,5 +261,10 @@
     "item_id": "Item ID",
     "meta_info": "Meta Info",
     "recorded_on": "Recorded On",
-    "no_history_found": "No history found for this item."
+    "no_history_found": "No history found for this item.",
+    "critical_stock_title": "Strategic Alerts",
+    "critical_stock_desc": "Articles currently below strategic stock threshold.",
+    "no_critical_stock": "All articles are currently above their strategic thresholds.",
+    "low_stock_warning": "{{count}} left",
+    "out_of_stock": "OUT OF STOCK"
 }

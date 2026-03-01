@@ -10,6 +10,7 @@ import { ArticleStatsCards } from "@/components/dashboard/article-stats-cards";
 import AuthGuard from "@/components/providers/auth-guard";
 import { useTranslation } from "react-i18next";
 import { StructureDistributionWrapper } from "@/components/dashboard/structure-distribution-charts";
+import { CriticalStockAlerts } from "@/components/dashboard/critical-stock-alerts";
 import { motion } from "framer-motion";
 
 const container = {
@@ -46,6 +47,13 @@ export default function DashboardPage() {
         <motion.div variants={item}>
           <Suspense fallback={<StatsCardsSkeleton />}>
             <StatsCards />
+          </Suspense>
+        </motion.div>
+
+        {/* Strategic Alerts: High Priority section */}
+        <motion.div variants={item}>
+          <Suspense fallback={<div className="h-32 w-full bg-muted animate-pulse rounded-xl" />}>
+            <CriticalStockAlerts />
           </Suspense>
         </motion.div>
 
@@ -94,7 +102,7 @@ export default function DashboardPage() {
             </motion.div>
         </div>
 
-        {/* Bottom Row: Activity & Detailed History Bento */}
+        {/* Activity & History Row */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <motion.div variants={item} className="lg:col-span-8 h-full">
             <Suspense fallback={<OperationsChartSkeleton />}>

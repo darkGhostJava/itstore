@@ -261,5 +261,10 @@
     "item_id": "ID Article",
     "meta_info": "Méta Info",
     "recorded_on": "Enregistré le",
-    "no_history_found": "Aucun historique trouvé pour cet article."
+    "no_history_found": "Aucun historique trouvé pour cet article.",
+    "critical_stock_title": "Alertes Stratégiques",
+    "critical_stock_desc": "Articles actuellement sous le seuil de stock stratégique.",
+    "no_critical_stock": "Tous les articles sont actuellement au-dessus de leurs seuils stratégiques.",
+    "low_stock_warning": "{{count}} restants",
+    "out_of_stock": "EN RUPTURE"
 }
