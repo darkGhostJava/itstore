@@ -12,7 +12,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { HardDrive, History as HistoryIcon, Calendar, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export default function ItemHistoryPage() {
+function ItemHistoryContent() {
   const { t } = useTranslation('common');
   const params = useParams<{ id: string }>();
   const itemId = params.id ? parseInt(params.id, 10) : null;
@@ -94,7 +94,9 @@ export default function ItemHistoryPage() {
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('designation')}</p>
-                <p className="text-sm">{t(`category_${item.article.designation.toLowerCase().replace(/ /g, "_")}` as any, item.article.designation)}</p>
+                <p className="text-sm">
+                  {t(`category_${item.article.designation.toLowerCase().replace(/ /g, "_")}` as any, item.article.designation)}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('status')}</p>
@@ -156,5 +158,13 @@ export default function ItemHistoryPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ItemHistoryPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center">Loading history...</div>}>
+      <ItemHistoryContent />
+    </React.Suspense>
   );
 }

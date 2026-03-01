@@ -12,13 +12,14 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, CheckCircle2, XCircle } from "lucide-react";
+import { MoreHorizontal, CheckCircle2, XCircle, Eye } from "lucide-react";
 import { RepairItemDialog } from "./repair-item-dialog";
 import { ReformItemDialog } from "./reform-item-dialog";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { useTranslation } from "react-i18next";
 import * as React from "react";
+import Link from "next/link";
 
 type ReparationColumnProps = {
   onSuccess: () => void;
@@ -55,8 +56,15 @@ export const useReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
       ),
        cell: ({ row }) => {
         const items = (row.original as any).items as Item[] | undefined;
-        if (!items || items.length === 0) return "N/A";
-        return items[0]?.serialNumber || 'N/A';
+        const item = items?.[0];
+        if (!item) return "N/A";
+        return (
+          <Button variant="link" asChild className="p-0 h-auto font-mono text-xs">
+            <Link href={`/items/${item.id}`}>
+              {item.serialNumber}
+            </Link>
+          </Button>
+        );
       },
     },
     {
@@ -125,10 +133,6 @@ export const useReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
         const items = (row.original as any).items as Item[] | undefined;
         const item = items?.[0];
         
-        if (!item || item.status !== 'UNDER_REPAIR') {
-          return null;
-        }
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -139,10 +143,17 @@ export const useReparationColumns = ({ onSuccess }: ReparationColumnProps): Colu
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
-              <DropdownMenuItem>{t('view_details')}</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <RepairItemDialog item={item} onSuccess={onSuccess} />
-              <ReformItemDialog item={item} onSuccess={onSuccess} />
+              <DropdownMenuItem>
+                <Eye className="mr-2 h-4 w-4" />
+                {t('view_details')}
+              </DropdownMenuItem>
+              {item && item.status === 'UNDER_REPAIR' && (
+                <>
+                  <DropdownMenuSeparator />
+                  <RepairItemDialog item={item} onSuccess={onSuccess} />
+                  <ReformItemDialog item={item} onSuccess={onSuccess} />
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );

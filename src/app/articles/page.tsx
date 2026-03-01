@@ -7,7 +7,7 @@ export default function ArticlesPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Definitive removal: redirect all Article List requests to Stock
+    // Redirect Article List requests to Stock
     router.replace("/stock");
   }, [router]);
 

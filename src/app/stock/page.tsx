@@ -1,11 +1,10 @@
-
 "use client";
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable } from "@/components/data-table/data-table";
-import { StockColumns } from "./columns";
+import { useStockColumns } from "./columns";
 import { fetchItemsInStock, exportStockStats } from "@/lib/data";
 import type { Article } from "@/lib/definitions";
 import { AddArticle } from "../articles/add-article";
@@ -18,7 +17,7 @@ function StockPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || "";
   const { t } = useTranslation("common");
-  const columns = React.useMemo(() => StockColumns(t), [t]);
+  const columns = useStockColumns();
   const { toast } = useToast();
 
   const [data, setData] = React.useState<Article[]>([]);
@@ -48,10 +47,7 @@ function StockPageContent() {
   
   const handleSuccess = () => {
     if (fetchDataRef.current) {
-       const currentPageIndex = 0; 
-       const currentPageSize = 10;
-       const currentQuery = initialQuery; 
-       fetchDataRef.current({ pageIndex: currentPageIndex, pageSize: currentPageSize, query: currentQuery });
+       fetchDataRef.current({ pageIndex: 0, pageSize: 10, query: initialQuery });
     }
   };
 
@@ -59,9 +55,9 @@ function StockPageContent() {
     setIsExporting(true);
     try {
       await exportStockStats();
-      toast({ title: "Success", description: "Report downloaded successfully." });
+      toast({ title: t('success', 'Success'), description: t('report_downloaded', 'Report downloaded successfully.') });
     } catch (error) {
-      toast({ variant: "destructive", title: "Export Failed", description: "Could not generate report." });
+      toast({ variant: "destructive", title: t('error'), description: t('export_failed', 'Could not generate report.') });
     } finally {
       setIsExporting(false);
     }
@@ -91,9 +87,9 @@ function StockPageContent() {
         filterPlaceholder={t('filter_by_designation_placeholder')}
         initialQuery={initialQuery}
         emptyStateMessage={
-            <div className="flex flex-col items-center justify-center space-y-2">
-                <Boxes className="h-12 w-12 text-muted-foreground" />
-                <p className="text-muted-foreground">No items found in stock.</p>
+            <div className="flex flex-col items-center justify-center space-y-2 py-12">
+                <Boxes className="h-12 w-12 text-muted-foreground/30" />
+                <p className="text-muted-foreground">{t('no_items_found_in_stock', 'No items found in stock.')}</p>
             </div>
         }
       />
@@ -101,10 +97,9 @@ function StockPageContent() {
   );
 }
 
-
 export default function StockPage() {
   return (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense fallback={<div className="p-8 text-center">Loading stock...</div>}>
       <StockPageContent />
     </React.Suspense>
   )
