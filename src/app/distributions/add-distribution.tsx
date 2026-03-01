@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -44,6 +43,7 @@ import {
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Article, Item, Person, Structure } from "@/lib/definitions";
+import { ArticleSchema } from "@/lib/schemas";
 import { api } from "@/lib/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +54,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const articleDistributionSchema = z.object({
-  article: z.any().refine(val => val, { message: "article_is_required" }),
+  article: ArticleSchema,
   serialNumbers: z.array(z.string()).optional(),
   quantity: z.number().optional(),
 });
@@ -138,9 +138,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       // Fetch persons based ONLY on directionId as per business rule
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
-        // De-duplicate just in case
-        const uniquePersons = personsRes.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-        setPersons(uniquePersons);
+        setPersons(personsRes);
       })();
     }
   }, [selectedDirectionId, form]);
@@ -150,13 +148,10 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         if (personSearch && selectedDirectionId) {
             // Search persons within the selected direction
             const res = await searchPersons(personSearch, selectedDirectionId);
-            const data = res.data || [];
-            const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-            setPersons(uniqueData);
+            setPersons(res.data || []);
         } else if (selectedDirectionId) {
             const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
-            const uniqueData = personsRes.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-            setPersons(uniqueData);
+            setPersons(personsRes);
         }
     };
 
@@ -238,9 +233,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const handleArticleSearch = async (query: string) => {
     if (query.length > 1) {
       const res = await searchArticles(query, searchArticleType);
-      const data = res.data || [];
-      const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-      setSearchedArticles(uniqueData);
+      setSearchedArticles(res.data || []);
     } else {
       setSearchedArticles([]);
     }
@@ -249,9 +242,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const handleSerialSearch = async (serialNumber: string, articleId: number, fieldIndex: number) => {
     if (serialNumber.length > 0 && articleId) {
       const res = await searchItemsBySerialNumber(serialNumber, articleId);
-      const data = res || [];
-      const uniqueData = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-      setSerials(prev => ({ ...prev, [fieldIndex]: uniqueData }));
+      setSerials(prev => ({ ...prev, [fieldIndex]: res || [] }));
     } else {
       setSerials(prev => ({ ...prev, [fieldIndex]: [] }));
     }

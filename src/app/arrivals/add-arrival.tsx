@@ -34,6 +34,7 @@ import * as z from "zod";
 import { searchArticles } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Article } from "@/lib/definitions";
+import { ArticleSchema } from "@/lib/schemas";
 import { api } from "@/lib/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -43,17 +44,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
 
 const articleArrivalSchema = z.object({
-  article: z.any().refine(val => val, { message: "article_is_required" }),
+  article: ArticleSchema,
   serialNumbers: z.array(z.string()).optional(),
   quantity: z.number().optional(),
-  file: z.any().optional(),
+  file: z.instanceof(File).optional(),
 });
 
 const arrivalFormSchema = z.object({
   budget: z.string().min(1, "budget_is_required"),
   remarks: z.string().optional(),
   articles: z.array(articleArrivalSchema).min(1, "at_least_one_article_is_required"),
-  attestation: z.any().optional(),
+  attestation: z.instanceof(File).optional(),
 });
 
 type ArrivalFormValues = z.infer<typeof arrivalFormSchema>;
@@ -109,7 +110,7 @@ export function AddArrival({ onSuccess }: AddArrivalProps) {
         formData.append("remark", values.remarks || "");
         
         if (hasAttestation) {
-          formData.append("attestation", values.attestation);
+          formData.append("attestation", values.attestation!);
         }
 
         values.articles.forEach((a) => {

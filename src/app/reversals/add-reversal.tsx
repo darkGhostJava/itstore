@@ -41,6 +41,7 @@ import {
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Item, Person, Structure } from "@/lib/definitions";
+import { ItemSchema } from "@/lib/schemas";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -50,7 +51,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 
 const reversalItemSchema = z.object({
-  item: z.any().refine(val => val, { message: "article_is_required" }),
+  item: ItemSchema,
 });
 
 const reversalFormSchema = z.object({
@@ -126,9 +127,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         setIsLoadingItems(true);
         try {
           const res = await fetchItemsForStructure(parseInt(selectedStructureId, 10), { pageIndex: 0, pageSize: 1000 });
-          const items = res.data || [];
-          const uniqueItems = items.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-          setStructureItems(uniqueItems);
+          setStructureItems(res.data || []);
         } catch (error) {
           console.error("Failed to fetch structure items", error);
           setStructureItems([]);

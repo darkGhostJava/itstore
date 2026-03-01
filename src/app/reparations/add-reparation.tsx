@@ -40,12 +40,13 @@ import {
 } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Item, Person, Structure } from "@/lib/definitions";
+import { ItemSchema } from "@/lib/schemas";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useTranslation } from "react-i18next";
 
 const reparationItemSchema = z.object({
-  item: z.any().refine(val => val, { message: "Please select an item." }),
+  item: ItemSchema,
   remarks: z.string().min(1, "Remarks are required."),
 });
 
