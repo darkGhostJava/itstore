@@ -36,7 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Item, Person, Structure } from "@/lib/definitions";
 import { getAllDirections, getPersonsByIdStructure, registerReversals, searchPersons, getSubDirectionsOfDirection } from "@/lib/data";
 import { api } from "@/lib/api";
-import { ArrowRightLeft, Undo2, Check, ChevronsUpDown, User, Package, Hash, Building2 } from "lucide-react";
+import { ArrowRightLeft, Undo2, Check, ChevronsUpDown, User, Package, Hash } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -73,10 +73,16 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
   
   const [directions, setDirections] = useState<Structure[]>([]);
   const [subDirections, setSubDirections] = useState<Structure[]>([]);
-  const [persons, setPersons] = useState<Person[]>([]);
   
-  const [personSearch, setPersonSearch] = useState("");
-  const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
+  // Distribution Specific States
+  const [distPersons, setDistPersons] = useState<Person[]>([]);
+  const [distSearch, setDistSearch] = useState("");
+  const [isDistPopoverOpen, setDistPopoverOpen] = useState(false);
+
+  // Refund Specific States
+  const [refundPersons, setRefundPersons] = useState<Person[]>([]);
+  const [refundSearch, setRefundSearch] = useState("");
+  const [isRefundPopoverOpen, setRefundPopoverOpen] = useState(false);
 
   const isInStock = item.status === 'IN_STOCK' || item.status === 'IN_STOCK_NEW' || item.status === 'REPAIRED';
   const isDistributed = item.status === 'DISTRIBUTED';
@@ -91,7 +97,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
     defaultValues: { structureId: "", personId: "", remarks: "", attestationId: "" },
   });
 
-  // Load directions on open
+  // Load directions globally when either modal opens
   useEffect(() => {
     if (distributeOpen || refundOpen) {
       (async () => {
@@ -105,54 +111,72 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
     }
   }, [distributeOpen, refundOpen]);
 
-  // Handle Distribution structure selection
-  const selectedDirectionId = distributeForm.watch("directionId");
+  // DISTRIBUTION: Handle direction change
+  const selectedDistDirectionId = distributeForm.watch("directionId");
   useEffect(() => {
-    if (selectedDirectionId) {
+    if (selectedDistDirectionId) {
       (async () => {
         const [subRes, personsRes] = await Promise.all([
-          getSubDirectionsOfDirection(parseInt(selectedDirectionId, 10)),
-          getPersonsByIdStructure(parseInt(selectedDirectionId, 10))
+          getSubDirectionsOfDirection(parseInt(selectedDistDirectionId, 10)),
+          getPersonsByIdStructure(parseInt(selectedDistDirectionId, 10))
         ]);
         setSubDirections(subRes.data || []);
-        setPersons(personsRes || []);
+        setDistPersons(personsRes || []);
       })();
     } else {
       setSubDirections([]);
-      setPersons([]);
+      setDistPersons([]);
     }
-  }, [selectedDirectionId]);
+  }, [selectedDistDirectionId]);
 
-  // Handle Refund structure selection
-  const refundDirectionId = refundForm.watch("structureId");
+  // DISTRIBUTION: Person search logic
   useEffect(() => {
-    if (refundDirectionId) {
-      (async () => {
-        const personsRes = await getPersonsByIdStructure(parseInt(refundDirectionId, 10));
-        setPersons(personsRes || []);
-      })();
-    } else {
-      setPersons([]);
-    }
-  }, [refundDirectionId]);
-
-  // Person search logic for distribution
-  useEffect(() => {
-    const fetchPersonsData = async () => {
-        if (personSearch && selectedDirectionId) {
-            const res = await searchPersons(personSearch, selectedDirectionId);
-            setPersons(res.data || []);
-        } else if (selectedDirectionId) {
-            const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
-            setPersons(personsRes);
+    const fetchDistData = async () => {
+        if (distSearch && selectedDistDirectionId) {
+            const res = await searchPersons(distSearch, selectedDistDirectionId);
+            setDistPersons(res.data || []);
+        } else if (selectedDistDirectionId) {
+            const personsRes = await getPersonsByIdStructure(parseInt(selectedDistDirectionId, 10));
+            setDistPersons(personsRes);
         }
     };
 
-    if (isPersonPopoverOpen && selectedDirectionId) {
-        const debounce = setTimeout(fetchPersonsData, 300);
+    if (isDistPopoverOpen && selectedDistDirectionId) {
+        const debounce = setTimeout(fetchDistData, 300);
         return () => clearTimeout(debounce);
     }
-  }, [personSearch, selectedDirectionId, isPersonPopoverOpen]);
+  }, [distSearch, selectedDistDirectionId, isDistPopoverOpen]);
+
+  // REFUND: Handle direction change
+  const selectedRefundDirectionId = refundForm.watch("structureId");
+  useEffect(() => {
+    if (selectedRefundDirectionId) {
+      (async () => {
+        const personsRes = await getPersonsByIdStructure(parseInt(selectedRefundDirectionId, 10));
+        setRefundPersons(personsRes || []);
+      })();
+    } else {
+      setRefundPersons([]);
+    }
+  }, [selectedRefundDirectionId]);
+
+  // REFUND: Person search logic
+  useEffect(() => {
+    const fetchRefundData = async () => {
+        if (refundSearch && selectedRefundDirectionId) {
+            const res = await searchPersons(refundSearch, selectedRefundDirectionId);
+            setRefundPersons(res.data || []);
+        } else if (selectedRefundDirectionId) {
+            const personsRes = await getPersonsByIdStructure(parseInt(selectedRefundDirectionId, 10));
+            setRefundPersons(personsRes);
+        }
+    };
+
+    if (isRefundPopoverOpen && selectedRefundDirectionId) {
+        const debounce = setTimeout(fetchRefundData, 300);
+        return () => clearTimeout(debounce);
+    }
+  }, [refundSearch, selectedRefundDirectionId, isRefundPopoverOpen]);
 
   async function onDistributeSubmit(values: z.infer<typeof distributeFormSchema>) {
     setLoading(true);
@@ -232,7 +256,6 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
             </DialogHeader>
 
             <ScrollArea className="max-h-[80vh] p-6 pt-2">
-              {/* Item Summary Card */}
               <div className="mb-6 p-4 rounded-xl border bg-muted/30 flex items-center gap-4">
                 <div className="p-2.5 rounded-lg bg-background shadow-sm border border-border/50">
                   <Package className="h-5 w-5 text-primary" />
@@ -277,7 +300,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                           <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                             {t('sub_direction')} <span className="lowercase italic font-normal">({t('optional')})</span>
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDirectionId || subDirections.length === 0}>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistDirectionId || subDirections.length === 0}>
                             <FormControl>
                               <SelectTrigger className="h-11">
                                 <SelectValue placeholder={t('select_sub_direction_placeholder')} />
@@ -301,17 +324,17 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('beneficiary')}</FormLabel>
-                        <Popover open={isPersonPopoverOpen} onOpenChange={setPersonPopoverOpen}>
+                        <Popover open={isDistPopoverOpen} onOpenChange={setDistPopoverOpen}>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
                                 variant="outline"
                                 role="combobox"
-                                disabled={!selectedDirectionId}
+                                disabled={!selectedDistDirectionId}
                                 className={cn("w-full justify-between h-12 text-left bg-background font-normal", !field.value && "text-muted-foreground")}
                               >
                                 {field.value
-                                  ? persons.find((p) => p.id.toString() === field.value)?.firstName + " " + persons.find((p) => p.id.toString() === field.value)?.lastName
+                                  ? distPersons.find((p) => p.id.toString() === field.value)?.firstName + " " + distPersons.find((p) => p.id.toString() === field.value)?.lastName || "Loading..."
                                   : t('select_beneficiary_placeholder')}
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                               </Button>
@@ -319,12 +342,12 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                           </PopoverTrigger>
                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
                             <Command shouldFilter={false}>
-                              <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setPersonSearch} />
+                              <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setDistSearch} />
                               <CommandList>
                                 <CommandEmpty>{t('no_person_found')}</CommandEmpty>
                                 <CommandGroup>
-                                  {persons.map((person) => (
-                                    <CommandItem key={person.id} value={person.id.toString()} onSelect={() => { distributeForm.setValue("personId", person.id.toString()); setPersonPopoverOpen(false); }} className="py-3">
+                                  {distPersons.map((person) => (
+                                    <CommandItem key={person.id} value={person.id.toString()} onSelect={() => { distributeForm.setValue("personId", person.id.toString()); setDistPopoverOpen(false); }} className="py-3">
                                       <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
                                       <div className="flex flex-col">
                                         <span className="font-semibold">{person.grade} {person.firstName} {person.lastName}</span>
@@ -357,7 +380,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                   />
 
                   <DialogFooter className="pt-4">
-                    <Button type="submit" disabled={loading || !selectedDirectionId} size="lg" className="w-full h-12 text-sm font-bold uppercase tracking-widest shadow-xl shadow-primary/20 rounded-xl">
+                    <Button type="submit" disabled={loading || !selectedDistDirectionId} size="lg" className="w-full h-12 text-sm font-bold uppercase tracking-widest shadow-xl shadow-primary/20 rounded-xl">
                       {loading ? t('saving') : t('confirm_distribution')}
                     </Button>
                   </DialogFooter>
@@ -383,7 +406,6 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
               <DialogDescription>{t('add_reversal_desc')}</DialogDescription>
             </DialogHeader>
             <ScrollArea className="max-h-[80vh] p-6 pt-2">
-              {/* Item Card */}
               <div className="mb-6 p-4 rounded-xl border bg-muted/30 flex items-center gap-4 border-amber-500/20">
                 <div className="p-2.5 rounded-lg bg-background shadow-sm border border-border/50">
                   <Package className="h-5 w-5 text-amber-600" />
@@ -442,20 +464,44 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                     control={refundForm.control}
                     name="personId"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="flex flex-col">
                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('returned_by')}</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!refundDirectionId || persons.length === 0}>
-                          <FormControl>
-                            <SelectTrigger className="h-11">
-                              <SelectValue placeholder={t('select_beneficiary_placeholder')} />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {persons.map((p) => (
-                              <SelectItem key={p.id} value={p.id.toString()}>{p.grade} {p.firstName} {p.lastName}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover open={isRefundPopoverOpen} onOpenChange={setRefundPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                disabled={!selectedRefundDirectionId}
+                                className={cn("w-full justify-between h-12 text-left bg-background font-normal", !field.value && "text-muted-foreground")}
+                              >
+                                {field.value
+                                  ? refundPersons.find((p) => p.id.toString() === field.value)?.firstName + " " + refundPersons.find((p) => p.id.toString() === field.value)?.lastName || "Loading..."
+                                  : t('select_beneficiary_placeholder')}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
+                            <Command shouldFilter={false}>
+                              <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setRefundSearch} />
+                              <CommandList>
+                                <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                <CommandGroup>
+                                  {refundPersons.map((person) => (
+                                    <CommandItem key={person.id} value={person.id.toString()} onSelect={() => { refundForm.setValue("personId", person.id.toString()); setRefundPopoverOpen(false); }} className="py-3">
+                                      <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                      <div className="flex flex-col">
+                                        <span className="font-semibold">{person.grade} {person.firstName} {person.lastName}</span>
+                                        {person.pseudo && <span className="text-[10px] text-primary/70 font-mono">@{person.pseudo}</span>}
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -476,7 +522,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                   />
 
                   <DialogFooter className="pt-4">
-                    <Button type="submit" disabled={loading || !refundDirectionId} size="lg" className="w-full h-12 text-sm font-bold uppercase tracking-widest shadow-xl rounded-xl">
+                    <Button type="submit" disabled={loading || !selectedRefundDirectionId} size="lg" className="w-full h-12 text-sm font-bold uppercase tracking-widest shadow-xl rounded-xl">
                       {loading ? t('saving') : t('save_reversal')}
                     </Button>
                   </DialogFooter>
