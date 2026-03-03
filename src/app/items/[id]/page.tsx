@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -11,6 +12,7 @@ import { fetchItemById, fetchOperationsForItem } from "@/lib/data";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { HardDrive, History as HistoryIcon, Calendar, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ItemActions } from "./item-actions";
 
 function ItemHistoryContent() {
   const { t } = useTranslation('common');
@@ -25,22 +27,23 @@ function ItemHistoryContent() {
   
   const columns = useOperationsHistoryColumns();
 
-  React.useEffect(() => {
-    const getItem = async () => {
-      if (!itemId) return;
-      try {
-        setIsLoadingItem(true);
-        const fetchedItem = await fetchItemById(itemId);
-        setItem(fetchedItem);
-      } catch (error) {
-        console.error("Failed to fetch item:", error);
-        setItem(null);
-      } finally {
-        setIsLoadingItem(false);
-      }
-    };
-    getItem();
+  const getItem = React.useCallback(async () => {
+    if (!itemId) return;
+    try {
+      setIsLoadingItem(true);
+      const fetchedItem = await fetchItemById(itemId);
+      setItem(fetchedItem);
+    } catch (error) {
+      console.error("Failed to fetch item:", error);
+      setItem(null);
+    } finally {
+      setIsLoadingItem(false);
+    }
   }, [itemId]);
+
+  React.useEffect(() => {
+    getItem();
+  }, [getItem]);
 
   const fetchData = React.useCallback(async ({ pageIndex, pageSize, query, sort }: { pageIndex: number; pageSize: number; query?: string; sort?: string; }) => {
     if (!itemId) return;
@@ -58,6 +61,11 @@ function ItemHistoryContent() {
     }
   }, [itemId]);
 
+  const handleActionSuccess = () => {
+    getItem(); // Refresh item status
+    fetchData({ pageIndex: 0, pageSize: 10 }); // Refresh history
+  };
+
   if (isLoadingItem) {
     return (
       <div className="flex flex-col gap-8 p-8 items-center justify-center min-h-[400px]">
@@ -74,7 +82,8 @@ function ItemHistoryContent() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader 
-        title={`${t('item_history', 'Item History')}: ${item.serialNumber}`} 
+        title={`${t('item_history', 'Item History')}: ${item.serialNumber || 'N/A'}`} 
+        actions={<ItemActions item={item} onSuccess={handleActionSuccess} />}
       />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
