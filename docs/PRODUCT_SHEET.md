@@ -1,53 +1,93 @@
-# ITSM Dashboard: Intelligent Asset Management for Modern Leaders
+# Fiche Produit : ITSM Dashboard (v1.2)
+## Gestion Intelligente du Capital Technologique
 
-**Application Name:** ITSM Dashboard (v1.2)  
-**Application Type:** Strategic Enterprise Management Tool  
-**Target Users:** IT Directors, Logistics Managers, Procurement Heads, and Corporate Executives.
+**Nom de l'application :** ITSM Dashboard  
+**Type d'application :** Web (SaaS Ready)  
+**Secteur :** Gestion de parc informatique et logistique d'entreprise
 
 ---
 
-## 1. Application Overview
-The **ITSM Dashboard** is a high-level solution designed to give management total control over the lifespan of corporate equipment. It moves beyond simple spreadsheets, providing a real-time, visual map of where every asset is, who is using it, and when it needs replacing. It ensures that your physical capital is never lost, underutilized, or forgotten.
+## 1. Présentation Générale
+L'**ITSM Dashboard** est une solution de pilotage stratégique conçue pour offrir aux organisations une maîtrise totale sur le cycle de vie de leurs équipements. Bien plus qu'un simple inventaire, l'application agit comme une tour de contrôle permettant de suivre chaque actif, de son acquisition à sa réforme, garantissant ainsi une transparence absolue et une optimisation des coûts opérationnels.
 
-## 2. The Business Problem & Our Solution
-**The Challenge:** Most organizations lose significant time and money due to "blind spots" in their inventory. Manual tracking leads to errors, equipment goes missing during employee transitions, and procurement is often reactive—buying items in a rush because someone realized too late that stock was empty.
+### Problème Résolu
+La plupart des entreprises souffrent de "zones d'ombre" dans leur inventaire : équipements perdus lors des départs d'employés, achats en urgence faute de stock, ou manque de traçabilité lors des réparations. L'ITSM Dashboard élimine ces frictions en centralisant les données et en automatisant les processus de distribution.
 
-**The Solution:** The ITSM Dashboard provides a "Single Source of Truth." It automates the paperwork, tracks every single item by its unique ID, and uses smart alerts to tell you what to buy *before* you run out. It turns logistics from a headache into a smooth, automated process.
+### Objectifs
+*   **Centraliser** la "source unique de vérité" pour tout le matériel.
+*   **Automatiser** la paperasse administrative (décharges, attestations).
+*   **Anticiper** les besoins de réapprovisionnement via des alertes stratégiques.
+*   **Garantir** une traçabilité complète pour les audits internes et externes.
 
-## 3. Key Benefits for Management
-*   **Total Accountability:** Know exactly who has what. Every laptop, printer, and cable has a digital "Identity Card" showing its full history from purchase to retirement.
-*   **Zero-Error Workflows:** Easy-to-use "Wizards" guide staff through arrivals and distributions, ensuring the data is 100% accurate without requiring technical expertise.
-*   **Smart Inventory Planning:** The system monitors your stock levels and highlights items that are running low, ensuring your team always has the tools they need to work.
-*   **Instant Search:** Find any item or person in seconds. Whether you have a partial serial number or just a name, the "Command Palette" gets you the answer instantly.
-*   **One-Click Documentation:** Generate professional PDF or Word hand-over forms and audit reports with a single click, saving hours of manual document preparation.
+---
 
-## 4. How the "Intelligent Assistants" Help You
-We have integrated specialized AI "Assistants" that act as extra members of your logistics team:
-*   **The Stock Auditor:** This assistant looks at your past usage and tells you when you are likely to run out of stock, helping you plan your budget more effectively.
-*   **The Quality Guardian:** It analyzes repair records. If a specific brand or model of equipment is breaking down too often, it warns you so you can choose a better brand next time.
-*   **The Smart Concierge:** This allows your team to find information using natural language. Instead of complex filters, they can search for assets as easily as using a search engine.
+## 2. Fonctionnalités Principales
 
-## 5. Real-World Value
-*   **During Employee Onboarding:** Distribute a complete workstation kit in minutes and automatically print the signed receipt for the digital file.
-*   **During Audits:** If an auditor asks for the history of a specific device from two years ago, you can pull up the complete "life story" of that asset in three clicks.
-*   **Budget Season:** Export a report showing exactly what was distributed this year and what needs to be purchased for the next, based on real data, not guesses.
+### A. Tableau de Bord Analytique
+*   **Fonctionnement :** Visualisation en temps réel des indicateurs clés (KPIs) : total d'articles, stock disponible, matériel en réparation, et répartition par structure.
+*   **Valeur :** Permet aux directeurs de prendre des décisions basées sur des données réelles plutôt que sur des estimations.
 
-## 6. Secure & Modern Foundation
-While the technology under the hood is state-of-the-art, the experience is designed to be as simple as using a modern smartphone.
-*   **User Friendly:** A clean, professional design that requires zero training for your staff.
-*   **Enterprise Secure:** Connects directly to your company’s existing login system (Single Sign-On) to ensure only authorized personnel see sensitive data.
-*   **Cloud Ready:** Accessible from any corporate computer, ensuring your team stays connected whether they are in the warehouse or the head office.
+### B. Alertes de Stock Stratégique
+*   **Fonctionnement :** Un algorithme surveille les niveaux de stock par rapport à un seuil critique défini. Les articles en sous-effectif sont immédiatement signalés en haut du tableau de bord.
+*   **Valeur :** Évite les ruptures de stock critiques et permet une planification budgétaire proactive.
 
-## 7. Strategic Advantage
-*   **Proactive vs. Reactive:** Most systems show you what you have. We show you what you *will need*.
-*   **Data Integrity:** By tracking individual serial numbers rather than just "counts," we eliminate the possibility of ghost assets or theft going unnoticed.
+### C. Wizards de Flux de Travail (Arrivages, Distributions, Retours)
+*   **Fonctionnement :** Des assistants étape par étape guident l'utilisateur pour enregistrer les entrées de matériel, les distributions aux employés ou les retours (reversements).
+*   **Valeur :** Réduit les erreurs de saisie et assure que chaque mouvement est documenté avec les informations nécessaires (bénéficiaire, budget, remarques).
 
-## 8. Looking Ahead: The Future Roadmap
-*   **Predictive Life-Cycles:** Moving from "it's broken" to "it will likely need service in 30 days."
-*   **Mobile Scanning:** Allowing your team to check items in and out using a tablet or phone camera.
-*   **Visual Structure Map:** An interactive "Family Tree" showing how assets are distributed across every branch of your organization.
+### D. Palette de Commande Globale (Ctrl+K)
+*   **Fonctionnement :** Un moteur de recherche instantané accessible de n'importe où pour trouver un numéro de série, une personne ou une structure.
+*   **Valeur :** Gain de temps massif pour la navigation quotidienne et l'accès rapide aux fiches d'historique.
 
-## 9. Conclusion
-The **ITSM Dashboard** is more than just a tracking tool—it is a strategic partner for your organization. It brings clarity to your logistics, accountability to your staff, and data-driven intelligence to your procurement process. 
+### E. Traçabilité et Historique Complet
+*   **Fonctionnement :** Chaque article, personne et structure possède un journal d'audit complet détaillant chaque mouvement passé et présent.
+*   **Valeur :** Indispensable lors des inventaires annuels ou pour retrouver la trace d'un matériel après plusieurs années.
 
-**Stop searching for your assets. Start managing your capital with the ITSM Dashboard.**
+---
+
+## 3. Architecture et Technologies
+
+L'application repose sur une pile technologique moderne, robuste et sécurisée :
+
+*   **Framework :** Next.js 15 avec React pour une interface fluide et performante.
+*   **Interface :** Tailwind CSS et ShadCN UI pour un design professionnel, responsive et compatible avec le mode sombre.
+*   **Sécurité :** Intégration native avec **Keycloak** pour une authentification d'entreprise (SSO) et une gestion fine des accès.
+*   **IA / Agents :** Propulsé par **Genkit**, permettant l'intégration d'assistants intelligents pour l'analyse prédictive des stocks et la recherche en langage naturel.
+*   **API :** Communication optimisée via Axios avec rafraîchissement proactif des jetons de session pour une stabilité maximale.
+
+---
+
+## 4. Parcours Utilisateur (User Flow)
+
+1.  **Réception :** Le logisticien enregistre un arrivage de 50 ordinateurs via le wizard, télécharge l'attestation et le matériel entre en "Stock Neuf".
+2.  **Affectation :** Un nouvel employé arrive. Le gestionnaire utilise la recherche rapide (Ctrl+K), sélectionne un ordinateur en stock et l'assigne. Une décharge PDF est générée instantanément.
+3.  **Maintenance :** Si l'ordinateur tombe en panne, il est marqué "En Réparation". L'historique de l'article conserve une trace de l'incident.
+4.  **Audit :** Le directeur consulte le dashboard en fin de mois, télécharge le rapport Word consolidé et planifie les achats pour le trimestre suivant via les alertes stratégiques.
+
+---
+
+## 5. Avantages et Points Différenciateurs
+
+*   **Zéro Papier :** Génération automatique de documents PDF et export Word pour tous les rapports officiels.
+*   **Visuel et Intuitif :** Visualisation de la structure organisationnelle sous forme d'arbre interactif.
+*   **Enterprise-Ready :** Conçu pour s'intégrer aux systèmes d'identité existants des grandes organisations.
+*   **Proactif :** Ne se contente pas de lister le matériel, mais avertit l'utilisateur des actions à entreprendre (achats, réparations).
+
+---
+
+## 6. Public Cible
+*   **Directeurs Informatiques (DSI) :** Pour la vision stratégique du parc.
+*   **Responsables Logistique :** Pour la gestion opérationnelle quotidienne.
+*   **Chefs de Service :** Pour le suivi du matériel affecté à leurs équipes.
+*   **Auditeurs et Comptables :** Pour la vérification de l'inventaire physique.
+
+---
+
+## 7. Perspectives d'Évolution
+*   **Scan Mobile :** Introduction d'une application mobile pour scanner les codes-barres/QR codes directement en entrepôt.
+*   **Maintenance Prédictive :** Utilisation de l'IA pour prédire les pannes en fonction de l'âge et du modèle du matériel.
+*   **Signature Électronique :** Intégration de la signature tactile directement sur tablette lors de la remise du matériel.
+
+---
+
+**ITSM Dashboard : Transformez votre logistique subie en un avantage stratégique.**
