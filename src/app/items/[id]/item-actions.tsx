@@ -227,11 +227,10 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
   async function onRepairSubmit(values: z.infer<typeof personSelectionSchema>) {
     setLoading(true);
     try {
-      const response = await registerReparations({
+      await registerReparations({
         attestationId: values.attestationId,
         reparations: [{ itemId: item.id, remarks: values.remarks || "N/A", userId: 1 }]
       });
-      // Handle the PDF response from registerReparations if needed (it usually downloads inside the utility)
       toast({ title: t('reparation_added_toast_title'), description: t('reparation_added_toast_desc') });
       setRepairOpen(false);
       onSuccess();
