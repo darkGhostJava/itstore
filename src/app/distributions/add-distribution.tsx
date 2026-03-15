@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, Check, ChevronsUpDown, Search, AlertTriangle, ChevronRight, ChevronLeft, User, Package, FileText } from "lucide-react";
+import { PlusCircle, Trash2, Check, ChevronsUpDown, Search, AlertTriangle, ChevronRight, ChevronLeft, User, Package, FileText, Loader2 } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -92,6 +93,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
   const [personSearch, setPersonSearch] = useState("");
   const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
+  const [isSearchingPersons, setIsSearchingPersons] = useState(false);
   const { t } = useTranslation('common');
 
   const form = useForm<DistributionFormValues>({
@@ -125,52 +127,48 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
 
   // Fetch Sub-Directions when main direction changes
   useEffect(() => {
-    form.setValue("subDirectionId", "");
-    form.setValue("beneficiaryId", "");
-    setSubDirections([]);
-    setPersons([]);
-
     if (selectedDirectionId) {
       (async () => {
         const res = await getSubDirectionsOfDirection(parseInt(selectedDirectionId, 10));
         setSubDirections(res.data || []);
       })();
-    }
-  }, [selectedDirectionId, form]);
-
-  // Fetch persons based on Direction or Sub-Direction
-  useEffect(() => {
-    const targetStructureId = selectedSubDirectionId || selectedDirectionId;
-    
-    if (targetStructureId) {
-      (async () => {
-        const personsRes = await getPersonsByIdStructure(parseInt(targetStructureId, 10));
-        setPersons(personsRes);
-      })();
     } else {
+      setSubDirections([]);
+    }
+  }, [selectedDirectionId]);
+
+  const refreshPersons = useCallback(async (searchQuery?: string) => {
+    const targetStructureId = selectedSubDirectionId || selectedDirectionId;
+    if (!targetStructureId) {
       setPersons([]);
+      return;
+    }
+
+    if (searchQuery) {
+      setIsSearchingPersons(true);
+      try {
+        const res = await searchPersons(searchQuery, targetStructureId);
+        setPersons(res.data || []);
+      } finally {
+        setIsSearchingPersons(false);
+      }
+    } else {
+      const personsRes = await getPersonsByIdStructure(parseInt(targetStructureId, 10));
+      setPersons(personsRes || []);
     }
   }, [selectedDirectionId, selectedSubDirectionId]);
 
-  // Person Search with respect to current structure scope
   useEffect(() => {
-    const fetchPersonsData = async () => {
-        const targetStructureId = selectedSubDirectionId || selectedDirectionId;
-        
-        if (personSearch && targetStructureId) {
-            const res = await searchPersons(personSearch, targetStructureId);
-            setPersons(res.data || []);
-        } else if (targetStructureId) {
-            const personsRes = await getPersonsByIdStructure(parseInt(targetStructureId, 10));
-            setPersons(personsRes);
-        }
-    };
-
-    if (isPersonPopoverOpen && (selectedSubDirectionId || selectedDirectionId)) {
-        const debounce = setTimeout(fetchPersonsData, 300);
-        return () => clearTimeout(debounce);
+    if (isPersonPopoverOpen) {
+      const debounce = setTimeout(() => refreshPersons(personSearch), 300);
+      return () => clearTimeout(debounce);
     }
-  }, [personSearch, selectedDirectionId, selectedSubDirectionId, isPersonPopoverOpen]);
+  }, [personSearch, isPersonPopoverOpen, refreshPersons]);
+
+  useEffect(() => {
+    form.setValue("beneficiaryId", "");
+    if (selectedDirectionId || selectedSubDirectionId) refreshPersons();
+  }, [selectedDirectionId, selectedSubDirectionId, refreshPersons, form]);
 
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
@@ -404,28 +402,34 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                               <Command shouldFilter={false}>
                                 <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setPersonSearch} />
                                 <CommandList>
-                                  <ScrollArea className="max-h-56">
-                                    <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                                    <CommandGroup>
-                                      {persons.map((person) => (
-                                        <CommandItem
-                                          key={`person-${person.id}`}
-                                          value={person.id.toString()}
-                                          onSelect={() => {
-                                            form.setValue("beneficiaryId", person.id.toString());
-                                            setPersonPopoverOpen(false);
-                                          }}
-                                          className="py-3"
-                                        >
-                                          <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
-                                          <div className="flex flex-col">
-                                            <span className="font-semibold">{person.grade} {person.firstName} {person.lastName}</span>
-                                            {person.pseudo && <span className="text-[10px] text-primary/70 font-mono tracking-tighter">@{person.pseudo}</span>}
-                                          </div>
-                                        </CommandItem>
-                                      ))}
-                                    </CommandGroup>
-                                  </ScrollArea>
+                                  {isSearchingPersons ? (
+                                    <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                                      <Loader2 className="h-3 w-3 animate-spin" /> {t('searching')}
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                      <CommandGroup>
+                                        {persons.map((person) => (
+                                          <CommandItem
+                                            key={`person-${person.id}`}
+                                            value={person.id.toString()}
+                                            onSelect={() => {
+                                              form.setValue("beneficiaryId", person.id.toString());
+                                              setPersonPopoverOpen(false);
+                                            }}
+                                            className="py-3"
+                                          >
+                                            <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                            <div className="flex flex-col">
+                                              <span className="font-semibold">{person.grade} {person.firstName} {person.lastName}</span>
+                                              {person.pseudo && <span className="text-[10px] text-primary/70 font-mono tracking-tighter">@{person.pseudo}</span>}
+                                            </div>
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </>
+                                  )}
                                 </CommandList>
                               </Command>
                             </PopoverContent>
