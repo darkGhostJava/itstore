@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -45,12 +44,10 @@ import {
   markItemAsReformed
 } from "@/lib/data";
 import { api } from "@/lib/api";
-import { ArrowRightLeft, Undo2, Check, ChevronsUpDown, User, Package, Hash, Wrench, ArchiveX } from "lucide-react";
+import { ArrowRightLeft, Undo2, Check, ChevronsUpDown, Wrench, ArchiveX, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -87,18 +84,24 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
   const [directions, setDirections] = useState<Structure[]>([]);
   const [subDirections, setSubDirections] = useState<Structure[]>([]);
   
-  // States for dynamic search
+  // Person Registry to resolve names even when search list changes
+  const [personRegistry, setPersonRegistry] = useState<Record<string, Person>>({});
+
+  // Search States
   const [distPersons, setDistPersons] = useState<Person[]>([]);
   const [distSearch, setDistSearch] = useState("");
   const [isDistPopoverOpen, setDistPopoverOpen] = useState(false);
+  const [isDistSearching, setIsDistSearching] = useState(false);
 
   const [refundPersons, setRefundPersons] = useState<Person[]>([]);
   const [refundSearch, setRefundSearch] = useState("");
   const [isRefundPopoverOpen, setRefundPopoverOpen] = useState(false);
+  const [isRefundSearching, setIsRefundSearching] = useState(false);
 
   const [repairPersons, setRepairPersons] = useState<Person[]>([]);
   const [repairSearch, setRepairSearch] = useState("");
   const [isRepairPopoverOpen, setRepairPopoverOpen] = useState(false);
+  const [isRepairSearching, setIsRepairSearching] = useState(false);
 
   const isInStock = item.status === 'IN_STOCK' || item.status === 'IN_STOCK_NEW' || item.status === 'REPAIRED';
   const isDistributed = item.status === 'DISTRIBUTED';
@@ -119,6 +122,17 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
     defaultValues: { structureId: "", personId: "", remarks: "", attestationId: "" },
   });
 
+  // Helper to update registry
+  const updateRegistry = useCallback((list: Person[]) => {
+    setPersonRegistry(prev => {
+      const next = { ...prev };
+      list.forEach(p => {
+        next[p.id.toString()] = p;
+      });
+      return next;
+    });
+  }, []);
+
   useEffect(() => {
     if (distributeOpen || refundOpen || repairOpen) {
       (async () => {
@@ -130,10 +144,11 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
     }
   }, [distributeOpen, refundOpen, repairOpen]);
 
-  // Logic for Distribute Search
+  // --- Distribute Logic ---
   const selectedDistDir = distributeForm.watch("directionId");
   useEffect(() => {
     if (selectedDistDir) {
+      distributeForm.setValue("personId", "");
       (async () => {
         const [subRes, personsRes] = await Promise.all([
           getSubDirectionsOfDirection(parseInt(selectedDistDir, 10)),
@@ -141,84 +156,104 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
         ]);
         setSubDirections(subRes.data || []);
         setDistPersons(personsRes || []);
+        updateRegistry(personsRes || []);
       })();
     }
-  }, [selectedDistDir]);
+  }, [selectedDistDir, distributeForm, updateRegistry]);
 
   useEffect(() => {
-    if (isDistPopoverOpen && selectedDistDir) {
-      const fetchData = async () => {
-        if (distSearch) {
+    if (isDistPopoverOpen && selectedDistDir && distSearch) {
+      const delayDebounce = setTimeout(async () => {
+        setIsDistSearching(true);
+        try {
           const res = await searchPersons(distSearch, selectedDistDir);
           setDistPersons(res.data || []);
-        } else {
-          const personsRes = await getPersonsByIdStructure(parseInt(selectedDistDir, 10));
-          setDistPersons(personsRes);
+          updateRegistry(res.data || []);
+        } finally {
+          setIsDistSearching(false);
         }
-      };
-      const debounce = setTimeout(fetchData, 300);
-      return () => clearTimeout(debounce);
+      }, 300);
+      return () => clearTimeout(delayDebounce);
+    } else if (isDistPopoverOpen && selectedDistDir && !distSearch) {
+        getPersonsByIdStructure(parseInt(selectedDistDir, 10)).then(res => {
+            setDistPersons(res || []);
+            updateRegistry(res || []);
+        });
     }
-  }, [distSearch, selectedDistDir, isDistPopoverOpen]);
+  }, [distSearch, selectedDistDir, isDistPopoverOpen, updateRegistry]);
 
-  // Logic for Refund Search
+  // --- Refund Logic ---
   const selectedRefundDir = refundForm.watch("structureId");
   useEffect(() => {
     if (selectedRefundDir) {
+      refundForm.setValue("personId", "");
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedRefundDir, 10));
         setRefundPersons(personsRes || []);
+        updateRegistry(personsRes || []);
       })();
     }
-  }, [selectedRefundDir]);
+  }, [selectedRefundDir, refundForm, updateRegistry]);
 
   useEffect(() => {
-    if (isRefundPopoverOpen && selectedRefundDir) {
-      const fetchData = async () => {
-        if (refundSearch) {
+    if (isRefundPopoverOpen && selectedRefundDir && refundSearch) {
+      const delayDebounce = setTimeout(async () => {
+        setIsRefundSearching(true);
+        try {
           const res = await searchPersons(refundSearch, selectedRefundDir);
           setRefundPersons(res.data || []);
-        } else {
-          const personsRes = await getPersonsByIdStructure(parseInt(selectedRefundDir, 10));
-          setRefundPersons(personsRes);
+          updateRegistry(res.data || []);
+        } finally {
+          setIsRefundSearching(false);
         }
-      };
-      const debounce = setTimeout(fetchData, 300);
-      return () => clearTimeout(debounce);
+      }, 300);
+      return () => clearTimeout(delayDebounce);
+    } else if (isRefundPopoverOpen && selectedRefundDir && !refundSearch) {
+        getPersonsByIdStructure(parseInt(selectedRefundDir, 10)).then(res => {
+            setRefundPersons(res || []);
+            updateRegistry(res || []);
+        });
     }
-  }, [refundSearch, selectedRefundDir, isRefundPopoverOpen]);
+  }, [refundSearch, selectedRefundDir, isRefundPopoverOpen, updateRegistry]);
 
-  // Logic for Repair Search
+  // --- Repair Logic ---
   const selectedRepairDir = repairForm.watch("structureId");
   useEffect(() => {
     if (selectedRepairDir) {
+      repairForm.setValue("personId", "");
       (async () => {
         const personsRes = await getPersonsByIdStructure(parseInt(selectedRepairDir, 10));
         setRepairPersons(personsRes || []);
+        updateRegistry(personsRes || []);
       })();
     }
-  }, [selectedRepairDir]);
+  }, [selectedRepairDir, repairForm, updateRegistry]);
 
   useEffect(() => {
-    if (isRepairPopoverOpen && selectedRepairDir) {
-      const fetchData = async () => {
-        if (repairSearch) {
+    if (isRepairPopoverOpen && selectedRepairDir && repairSearch) {
+      const delayDebounce = setTimeout(async () => {
+        setIsRepairSearching(true);
+        try {
           const res = await searchPersons(repairSearch, selectedRepairDir);
           setRepairPersons(res.data || []);
-        } else {
-          const personsRes = await getPersonsByIdStructure(parseInt(selectedRepairDir, 10));
-          setRepairPersons(personsRes);
+          updateRegistry(res.data || []);
+        } finally {
+          setIsRepairSearching(false);
         }
-      };
-      const debounce = setTimeout(fetchData, 300);
-      return () => clearTimeout(debounce);
+      }, 300);
+      return () => clearTimeout(delayDebounce);
+    } else if (isRepairPopoverOpen && selectedRepairDir && !repairSearch) {
+        getPersonsByIdStructure(parseInt(selectedRepairDir, 10)).then(res => {
+            setRepairPersons(res || []);
+            updateRegistry(res || []);
+        });
     }
-  }, [repairSearch, selectedRepairDir, isRepairPopoverOpen]);
+  }, [repairSearch, selectedRepairDir, isRepairPopoverOpen, updateRegistry]);
 
-  // Helper to find selected person name across results
-  const getSelectedPersonName = (id: string, list: Person[]) => {
-    const person = list.find((p) => p.id.toString() === id);
-    return person ? `${person.firstName} ${person.lastName}` : t('select_beneficiary_placeholder');
+  // Resolver for button text
+  const getSelectedPersonName = (id: string) => {
+    const person = personRegistry[id];
+    return person ? `${person.grade} ${person.firstName} ${person.lastName}` : t('select_beneficiary_placeholder');
   };
 
   async function onDistributeSubmit(values: z.infer<typeof distributeFormSchema>) {
@@ -307,7 +342,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {/* Distribute */}
+      {/* Distribute Modal */}
       {isInStock && (
         <Dialog open={distributeOpen} onOpenChange={setDistributeOpen}>
           <DialogTrigger asChild>
@@ -321,6 +356,15 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
               <DialogTitle>{t('add_new_distribution')}</DialogTitle>
               <DialogDescription>{t('add_new_distribution_desc')}</DialogDescription>
             </DialogHeader>
+            
+            <div className="bg-muted/30 p-4 rounded-xl border mb-2 flex items-center justify-between">
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('item_to_assign', 'Item to Assign')}</span>
+                    <span className="font-bold text-sm">{item.article.model}</span>
+                </div>
+                <code className="text-xs bg-background px-2 py-1 rounded border font-mono">{item.serialNumber}</code>
+            </div>
+
             <Form {...distributeForm}>
               <form onSubmit={distributeForm.handleSubmit(onDistributeSubmit)} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -328,7 +372,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                     <FormItem>
                       <FormLabel>{t('structure')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder={t('select_structure_placeholder')} /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger className="h-11"><SelectValue placeholder={t('select_structure_placeholder')} /></SelectTrigger></FormControl>
                         <SelectContent>{directions.map((d) => (<SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>))}</SelectContent>
                       </Select>
                     </FormItem>
@@ -337,12 +381,13 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                     <FormItem>
                       <FormLabel>{t('sub_direction')} ({t('optional')})</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} disabled={!selectedDistDir || subDirections.length === 0}>
-                        <FormControl><SelectTrigger><SelectValue placeholder={t('select_sub_direction_placeholder')} /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger className="h-11"><SelectValue placeholder={t('select_sub_direction_placeholder')} /></SelectTrigger></FormControl>
                         <SelectContent>{subDirections.map((sub) => (<SelectItem key={sub.id} value={sub.id.toString()}>{sub.name}</SelectItem>))}</SelectContent>
                       </Select>
                     </FormItem>
                   )} />
                 </div>
+                
                 <FormField control={distributeForm.control} name="personId" render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>{t('beneficiary')}</FormLabel>
@@ -350,39 +395,52 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button variant="outline" role="combobox" disabled={!selectedDistDir} className={cn("w-full justify-between h-11 text-left bg-background", !field.value && "text-muted-foreground")}>
-                            {field.value ? getSelectedPersonName(field.value, distPersons) : t('select_beneficiary_placeholder')}
+                            {field.value ? getSelectedPersonName(field.value) : t('select_beneficiary_placeholder')}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
                         <Command shouldFilter={false}>
-                          <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setDistSearch} />
+                          <CommandInput placeholder={t('search_person_placeholder')} value={distSearch} onValueChange={setDistSearch} />
                           <CommandList>
-                            <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                            <CommandGroup>{distPersons.map((p) => (
-                              <CommandItem key={p.id} value={p.id.toString()} onSelect={() => { distributeForm.setValue("personId", p.id.toString()); setDistPopoverOpen(false); }}>
-                                <Check className={cn("mr-2 h-4 w-4", p.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
-                                {p.grade} {p.firstName} {p.lastName}
-                              </CommandItem>
-                            ))}</CommandGroup>
+                            {isDistSearching ? (
+                                <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Searching...</div>
+                            ) : (
+                                <>
+                                    <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                    <CommandGroup>
+                                        {distPersons.map((p) => (
+                                            <CommandItem key={p.id} value={p.id.toString()} onSelect={() => { distributeForm.setValue("personId", p.id.toString()); setDistPopoverOpen(false); }}>
+                                                <Check className={cn("mr-2 h-4 w-4 text-primary", p.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                                <div className="flex flex-col">
+                                                    <span>{p.grade} {p.firstName} {p.lastName}</span>
+                                                    {p.pseudo && <span className="text-[10px] text-muted-foreground font-mono">@{p.pseudo}</span>}
+                                                </div>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </>
+                            )}
                           </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>
+                    <FormMessage />
                   </FormItem>
                 )} />
+
                 <FormField control={distributeForm.control} name="remarks" render={({ field }) => (
-                  <FormItem><FormLabel>{t('remarks')}</FormLabel><FormControl><Textarea placeholder={t('add_remarks_placeholder')} {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel>{t('remarks')}</FormLabel><FormControl><Textarea placeholder={t('add_remarks_placeholder')} {...field} className="bg-muted/20 min-h-[100px]" /></FormControl></FormItem>
                 )} />
-                <Button type="submit" disabled={loading} className="w-full h-12 font-bold uppercase">{loading ? t('saving') : t('confirm_distribution')}</Button>
+                <Button type="submit" disabled={loading} className="w-full h-12 font-bold uppercase shadow-xl">{loading ? t('saving') : t('confirm_distribution')}</Button>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* Refund */}
+      {/* Refund (Reversal) Modal */}
       {isDistributed && (
         <Dialog open={refundOpen} onOpenChange={setRefundOpen}>
           <DialogTrigger asChild>
@@ -396,6 +454,15 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
               <DialogTitle>{t('add_new_reversal')}</DialogTitle>
               <DialogDescription>{t('add_reversal_desc')}</DialogDescription>
             </DialogHeader>
+
+            <div className="bg-muted/30 p-4 rounded-xl border mb-2 flex items-center justify-between">
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('item_to_return', 'Item to Return')}</span>
+                    <span className="font-bold text-sm">{item.article.model}</span>
+                </div>
+                <code className="text-xs bg-background px-2 py-1 rounded border font-mono">{item.serialNumber}</code>
+            </div>
+
             <Form {...refundForm}>
               <form onSubmit={refundForm.handleSubmit(onRefundSubmit)} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -403,15 +470,16 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                     <FormItem>
                       <FormLabel>{t('structure')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder={t('select_structure_placeholder')} /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger className="h-11"><SelectValue placeholder={t('select_structure_placeholder')} /></SelectTrigger></FormControl>
                         <SelectContent>{directions.map((d) => (<SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>))}</SelectContent>
                       </Select>
                     </FormItem>
                   )} />
                   <FormField control={refundForm.control} name="attestationId" render={({ field }) => (
-                    <FormItem><FormLabel>{t('attestation_id')}</FormLabel><FormControl><Input placeholder="ATT-..." {...field} /></FormControl></FormItem>
+                    <FormItem><FormLabel>{t('attestation_id')}</FormLabel><FormControl><Input placeholder="ATT-..." {...field} className="h-11" /></FormControl></FormItem>
                   )} />
                 </div>
+
                 <FormField control={refundForm.control} name="personId" render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>{t('returned_by')}</FormLabel>
@@ -419,39 +487,52 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button variant="outline" role="combobox" disabled={!selectedRefundDir} className={cn("w-full justify-between h-11 text-left bg-background", !field.value && "text-muted-foreground")}>
-                            {field.value ? getSelectedPersonName(field.value, refundPersons) : t('select_beneficiary_placeholder')}
+                            {field.value ? getSelectedPersonName(field.value) : t('select_beneficiary_placeholder')}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
                         <Command shouldFilter={false}>
-                          <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setRefundSearch} />
+                          <CommandInput placeholder={t('search_person_placeholder')} value={refundSearch} onValueChange={setRefundSearch} />
                           <CommandList>
-                            <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                            <CommandGroup>{refundPersons.map((p) => (
-                              <CommandItem key={p.id} value={p.id.toString()} onSelect={() => { refundForm.setValue("personId", p.id.toString()); setRefundPopoverOpen(false); }}>
-                                <Check className={cn("mr-2 h-4 w-4", p.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
-                                {p.grade} {p.firstName} {p.lastName}
-                              </CommandItem>
-                            ))}</CommandGroup>
+                            {isRefundSearching ? (
+                                <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Searching...</div>
+                            ) : (
+                                <>
+                                    <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                    <CommandGroup>
+                                        {refundPersons.map((p) => (
+                                            <CommandItem key={p.id} value={p.id.toString()} onSelect={() => { refundForm.setValue("personId", p.id.toString()); setRefundPopoverOpen(false); }}>
+                                                <Check className={cn("mr-2 h-4 w-4 text-primary", p.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                                <div className="flex flex-col">
+                                                    <span>{p.grade} {p.firstName} {p.lastName}</span>
+                                                    {p.pseudo && <span className="text-[10px] text-muted-foreground font-mono">@{p.pseudo}</span>}
+                                                </div>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </>
+                            )}
                           </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>
+                    <FormMessage />
                   </FormItem>
                 )} />
+
                 <FormField control={refundForm.control} name="remarks" render={({ field }) => (
-                  <FormItem><FormLabel>{t('remarks')}</FormLabel><FormControl><Textarea placeholder={t('add_remarks_placeholder')} {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel>{t('remarks')}</FormLabel><FormControl><Textarea placeholder={t('add_remarks_placeholder')} {...field} className="bg-muted/20 min-h-[100px]" /></FormControl></FormItem>
                 )} />
-                <Button type="submit" disabled={loading} className="w-full h-12 font-bold uppercase">{loading ? t('saving') : t('save_reversal')}</Button>
+                <Button type="submit" disabled={loading} className="w-full h-12 font-bold uppercase shadow-xl">{loading ? t('saving') : t('save_reversal')}</Button>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* Send to Repair */}
+      {/* Send to Repair Modal */}
       {(isInStock || isDistributed) && (
         <Dialog open={repairOpen} onOpenChange={setRepairOpen}>
           <DialogTrigger asChild>
@@ -465,6 +546,15 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
               <DialogTitle>{t('register_for_repair')}</DialogTitle>
               <DialogDescription>{t('register_for_repair_desc')}</DialogDescription>
             </DialogHeader>
+
+            <div className="bg-muted/30 p-4 rounded-xl border mb-2 flex items-center justify-between">
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('item_to_repair', 'Item to Repair')}</span>
+                    <span className="font-bold text-sm">{item.article.model}</span>
+                </div>
+                <code className="text-xs bg-background px-2 py-1 rounded border font-mono">{item.serialNumber}</code>
+            </div>
+
             <Form {...repairForm}>
               <form onSubmit={repairForm.handleSubmit(onRepairSubmit)} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -472,15 +562,16 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                     <FormItem>
                       <FormLabel>{t('structure')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder={t('select_structure_placeholder')} /></SelectTrigger></FormControl>
+                        <FormControl><SelectTrigger className="h-11"><SelectValue placeholder={t('select_structure_placeholder')} /></SelectTrigger></FormControl>
                         <SelectContent>{directions.map((d) => (<SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>))}</SelectContent>
                       </Select>
                     </FormItem>
                   )} />
                   <FormField control={repairForm.control} name="attestationId" render={({ field }) => (
-                    <FormItem><FormLabel>{t('attestation_id')}</FormLabel><FormControl><Input placeholder="REP-..." {...field} /></FormControl></FormItem>
+                    <FormItem><FormLabel>{t('attestation_id')}</FormLabel><FormControl><Input placeholder="REP-..." {...field} className="h-11" /></FormControl></FormItem>
                   )} />
                 </div>
+
                 <FormField control={repairForm.control} name="personId" render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>{t('returned_by')}</FormLabel>
@@ -488,39 +579,52 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button variant="outline" role="combobox" disabled={!selectedRepairDir} className={cn("w-full justify-between h-11 text-left bg-background", !field.value && "text-muted-foreground")}>
-                            {field.value ? getSelectedPersonName(field.value, repairPersons) : t('select_beneficiary_placeholder')}
+                            {field.value ? getSelectedPersonName(field.value) : t('select_beneficiary_placeholder')}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
                         <Command shouldFilter={false}>
-                          <CommandInput placeholder={t('search_person_placeholder')} onValueChange={setRepairSearch} />
+                          <CommandInput placeholder={t('search_person_placeholder')} value={repairSearch} onValueChange={setRepairSearch} />
                           <CommandList>
-                            <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                            <CommandGroup>{repairPersons.map((p) => (
-                              <CommandItem key={p.id} value={p.id.toString()} onSelect={() => { repairForm.setValue("personId", p.id.toString()); setRepairPopoverOpen(false); }}>
-                                <Check className={cn("mr-2 h-4 w-4", p.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
-                                {p.grade} {p.firstName} {p.lastName}
-                              </CommandItem>
-                            ))}</CommandGroup>
+                            {isRepairSearching ? (
+                                <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Searching...</div>
+                            ) : (
+                                <>
+                                    <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                    <CommandGroup>
+                                        {repairPersons.map((p) => (
+                                            <CommandItem key={p.id} value={p.id.toString()} onSelect={() => { repairForm.setValue("personId", p.id.toString()); setRepairPopoverOpen(false); }}>
+                                                <Check className={cn("mr-2 h-4 w-4 text-primary", p.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                                <div className="flex flex-col">
+                                                    <span>{p.grade} {p.firstName} {p.lastName}</span>
+                                                    {p.pseudo && <span className="text-[10px] text-muted-foreground font-mono">@{p.pseudo}</span>}
+                                                </div>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </>
+                            )}
                           </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>
+                    <FormMessage />
                   </FormItem>
                 )} />
+
                 <FormField control={repairForm.control} name="remarks" render={({ field }) => (
-                  <FormItem><FormLabel>{t('repair_remarks')}</FormLabel><FormControl><Textarea placeholder={t('repair_remarks_placeholder')} {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel>{t('repair_remarks')}</FormLabel><FormControl><Textarea placeholder={t('repair_remarks_placeholder')} {...field} className="bg-muted/20 min-h-[100px]" /></FormControl></FormItem>
                 )} />
-                <Button type="submit" disabled={loading} className="w-full h-12 font-bold uppercase bg-red-600 hover:bg-red-700 text-white">{loading ? t('saving') : t('register_for_repair')}</Button>
+                <Button type="submit" disabled={loading} className="w-full h-12 font-bold uppercase shadow-xl bg-red-600 hover:bg-red-700 text-white">{loading ? t('saving') : t('register_for_repair')}</Button>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* Under Repair actions */}
+      {/* Status updates for items already in Repair */}
       {isUnderRepair && (
         <>
           <AlertDialog open={repairedAlertOpen} onOpenChange={setRepairedAlertOpen}>
