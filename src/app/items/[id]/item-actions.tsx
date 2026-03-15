@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -28,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useTranslation } from "react-i18next";
@@ -166,7 +165,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
           loading={loading}
           updateRegistry={updateRegistry}
           personRegistry={personRegistry}
-          onSubmit={async (values) => {
+          onSubmit={async (values: ActionFormValues) => {
             setLoading(true);
             try {
               const payload = {
@@ -203,7 +202,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
           loading={loading}
           updateRegistry={updateRegistry}
           personRegistry={personRegistry}
-          onSubmit={async (values) => {
+          onSubmit={async (values: ActionFormValues) => {
             setLoading(true);
             try {
               await registerReversals({
@@ -238,7 +237,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
           loading={loading}
           updateRegistry={updateRegistry}
           personRegistry={personRegistry}
-          onSubmit={async (values) => {
+          onSubmit={async (values: ActionFormValues) => {
             setLoading(true);
             try {
               await registerReparations({
@@ -270,7 +269,24 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
   );
 }
 
-function GenericActionModal({ title, description, triggerIcon, triggerText, variant = "default", className, submitColor, item, open, setOpen, form, directions, loading, updateRegistry, personRegistry, onSubmit }: any) {
+function GenericActionModal({ title, description, triggerIcon, triggerText, variant = "default", className, submitColor, item, open, setOpen, form, directions, loading, updateRegistry, personRegistry, onSubmit }: {
+  title: string;
+  description: string;
+  triggerIcon: React.ReactNode;
+  triggerText: string;
+  variant?: any;
+  className?: string;
+  submitColor?: string;
+  item: Item;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  form: UseFormReturn<ActionFormValues>;
+  directions: Structure[];
+  loading: boolean;
+  updateRegistry: (list: Person[]) => void;
+  personRegistry: Record<string, Person>;
+  onSubmit: (values: ActionFormValues) => Promise<void>;
+}) {
   const { t } = useTranslation('common');
   const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
@@ -282,7 +298,7 @@ function GenericActionModal({ title, description, triggerIcon, triggerText, vari
   const selectedSubDir = form.watch("subDirectionId");
 
   useEffect(() => {
-    if (selectedDir) {
+    if (selectedDir && selectedDir !== "") {
       (async () => {
         const subRes = await getSubDirectionsOfDirection(parseInt(selectedDir, 10));
         setSubDirections(subRes.data || []);
@@ -294,23 +310,25 @@ function GenericActionModal({ title, description, triggerIcon, triggerText, vari
 
   const refreshPersons = useCallback(async (searchQuery?: string) => {
     const targetId = selectedSubDir || selectedDir;
-    if (!targetId) {
+    if (!targetId || targetId === "") {
       setPersons([]);
       return;
     }
 
-    if (searchQuery) {
-      setIsSearching(true);
-      try {
+    setIsSearching(true);
+    try {
+      if (searchQuery && searchQuery.trim().length > 0) {
         const res = await searchPersons(searchQuery, targetId);
-        setPersons(res.data || []);
-        updateRegistry(res.data || []);
-      } finally { setIsSearching(false); }
-    } else {
-      const res = await getPersonsByIdStructure(parseInt(targetId, 10));
-      setPersons(res || []);
-      updateRegistry(res || []);
-    }
+        const data = res.data || [];
+        setPersons(data);
+        updateRegistry(data);
+      } else {
+        const res = await getPersonsByIdStructure(parseInt(targetId, 10));
+        const data = res || [];
+        setPersons(data);
+        updateRegistry(data);
+      }
+    } finally { setIsSearching(false); }
   }, [selectedDir, selectedSubDir, updateRegistry]);
 
   useEffect(() => {
@@ -322,7 +340,7 @@ function GenericActionModal({ title, description, triggerIcon, triggerText, vari
 
   useEffect(() => {
     form.setValue("personId", "");
-    if (selectedDir || selectedSubDir) refreshPersons();
+    refreshPersons();
   }, [selectedDir, selectedSubDir, refreshPersons, form]);
 
   const getPersonName = (id: string) => {
@@ -369,7 +387,7 @@ function GenericActionModal({ title, description, triggerIcon, triggerText, vari
                       <Command shouldFilter={false}>
                         <CommandInput placeholder={t('search_person_placeholder')} value={search} onValueChange={setSearch} />
                         <CommandList>
-                          {isSearching ? <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Searching...</div> : <><CommandEmpty>{t('no_person_found')}</CommandEmpty><CommandGroup>{persons.map((p: any) => <CommandItem key={p.id} value={p.id.toString()} onSelect={() => { form.setValue("personId", p.id.toString()); setPopoverOpen(false); }} className="py-2"><Check className={cn("mr-2 h-4 w-4 text-primary", p.id.toString() === field.value ? "opacity-100" : "opacity-0")} /><div className="flex flex-col"><span>{p.grade} {p.firstName} {p.lastName}</span>{p.pseudo && <span className="text-[10px] text-muted-foreground font-mono">@{p.pseudo}</span>}</div></CommandItem>)}</CommandGroup></>}
+                          {isSearching ? <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> {t('searching')}</div> : <><CommandEmpty>{t('no_person_found')}</CommandEmpty><CommandGroup>{persons.map((p: any) => <CommandItem key={p.id} value={p.id.toString()} onSelect={() => { form.setValue("personId", p.id.toString()); setPopoverOpen(false); }} className="py-2"><Check className={cn("mr-2 h-4 w-4 text-primary", p.id.toString() === field.value ? "opacity-100" : "opacity-0")} /><div className="flex flex-col"><span>{p.grade} {p.firstName} {p.lastName}</span>{p.pseudo && <span className="text-[10px] text-muted-foreground font-mono">@{p.pseudo}</span>}</div></CommandItem>)}</CommandGroup></>}
                         </CommandList>
                       </Command>
                     </PopoverContent>

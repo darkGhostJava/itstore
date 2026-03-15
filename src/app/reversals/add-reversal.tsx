@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Undo2, Check, ChevronsUpDown, Trash2, Search, Hash } from "lucide-react";
+import { Undo2, Check, ChevronsUpDown, Trash2, Search, Hash, Loader2 } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -36,6 +36,7 @@ import {
   searchPersons,
   registerReversals,
   getAllDirections,
+  getSubDirectionsOfDirection,
   getPersonsByIdStructure,
   fetchItemsForStructure,
 } from "@/lib/data";
@@ -56,6 +57,7 @@ const reversalItemSchema = z.object({
 
 const reversalFormSchema = z.object({
   structureId: z.string().min(1, "direction_is_required"),
+  subDirectionId: z.string().optional(),
   personId: z.string().min(1, "beneficiary_is_required"),
   remarks: z.string().min(1, "remarks_are_required"),
   attestationId: z.string().optional(),
@@ -75,19 +77,23 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   const [loading, setLoading] = useState(false);
   
   const [directions, setDirections] = useState<Structure[]>([]);
+  const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
+  const [personRegistry, setPersonRegistry] = useState<Record<string, Person>>({});
   const [structureItems, setStructureItems] = useState<Item[]>([]);
   
   const [personSearch, setPersonSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
   const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
   const [isItemPopoverOpen, setItemPopoverOpen] = useState(false);
+  const [isSearchingPersons, setIsSearchingPersons] = useState(false);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
 
   const form = useForm<ReversalFormValues>({
     resolver: zodResolver(reversalFormSchema),
     defaultValues: {
       structureId: "",
+      subDirectionId: "",
       personId: "",
       remarks: "",
       attestationId: "",
@@ -101,6 +107,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   });
   
   const selectedStructureId = form.watch("structureId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
 
   useEffect(() => {
     if (open) {
@@ -112,21 +119,66 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
   }, [open]);
 
   useEffect(() => {
+    if (selectedStructureId && selectedStructureId !== "") {
+      (async () => {
+        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId, 10));
+        setSubDirections(res.data || []);
+      })();
+    } else {
+      setSubDirections([]);
+    }
+  }, [selectedStructureId]);
+
+  const updateRegistry = useCallback((list: Person[]) => {
+    setPersonRegistry(prev => {
+      const next = { ...prev };
+      list.forEach(p => { next[p.id.toString()] = p; });
+      return next;
+    });
+  }, []);
+
+  const refreshPersons = useCallback(async (searchQuery?: string) => {
+    const targetId = selectedSubDirectionId || selectedStructureId;
+    if (!targetId || targetId === "") {
+      setPersons([]);
+      return;
+    }
+
+    setIsSearchingPersons(true);
+    try {
+      if (searchQuery && searchQuery.trim().length > 0) {
+        const res = await searchPersons(searchQuery, targetId);
+        const data = res.data || [];
+        setPersons(data);
+        updateRegistry(data);
+      } else {
+        const res = await getPersonsByIdStructure(parseInt(targetId, 10));
+        const data = res || [];
+        setPersons(data);
+        updateRegistry(data);
+      }
+    } finally { setIsSearchingPersons(false); }
+  }, [selectedStructureId, selectedSubDirectionId, updateRegistry]);
+
+  useEffect(() => {
+    if (isPersonPopoverOpen) {
+      const debounce = setTimeout(() => refreshPersons(personSearch), 300);
+      return () => clearTimeout(debounce);
+    }
+  }, [personSearch, isPersonPopoverOpen, refreshPersons]);
+
+  useEffect(() => {
     form.setValue("personId", "");
     form.setValue("reversals", []);
-    setPersons([]);
     setStructureItems([]);
+    refreshPersons();
 
-    if (selectedStructureId) {
-      (async () => {
-        const personsRes = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
-        setPersons(personsRes);
-      })();
-
+    const targetId = selectedSubDirectionId || selectedStructureId;
+    if (targetId && targetId !== "") {
       (async () => {
         setIsLoadingItems(true);
         try {
-          const res = await fetchItemsForStructure(parseInt(selectedStructureId, 10), { pageIndex: 0, pageSize: 1000 });
+          const res = await fetchItemsForStructure(parseInt(targetId, 10), { pageIndex: 0, pageSize: 1000 });
           setStructureItems(res.data || []);
         } catch (error) {
           console.error("Failed to fetch structure items", error);
@@ -136,24 +188,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
         }
       })();
     }
-  }, [selectedStructureId, form]);
-
-  useEffect(() => {
-    const fetchBeneficiaries = async () => {
-        if (personSearch && selectedStructureId) {
-            const res = await searchPersons(personSearch, selectedStructureId);
-            setPersons(res.data || []);
-        } else if (selectedStructureId) {
-            const res = await getPersonsByIdStructure(parseInt(selectedStructureId, 10));
-            setPersons(res);
-        }
-    };
-
-    if (isPersonPopoverOpen && selectedStructureId) {
-        const debounce = setTimeout(fetchBeneficiaries, 300);
-        return () => clearTimeout(debounce);
-    }
-}, [personSearch, selectedStructureId, isPersonPopoverOpen]);
+  }, [selectedStructureId, selectedSubDirectionId, refreshPersons, form]);
 
   async function onSubmit(values: ReversalFormValues) {
     setLoading(true);
@@ -230,7 +265,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('structure')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={(v) => { field.onChange(v); form.setValue("subDirectionId", ""); }} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-11">
                             <SelectValue placeholder={t('select_structure_placeholder')} />
@@ -251,16 +286,24 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
 
                 <FormField
                   control={form.control}
-                  name="attestationId"
+                  name="subDirectionId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <Hash className="h-3.5 w-3.5" />
-                        {t('attestation_id')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., ATT-2024-001" {...field} className="h-11" />
-                      </FormControl>
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('sub_direction')} ({t('optional')})</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedStructureId || subDirections.length === 0}>
+                        <FormControl>
+                          <SelectTrigger className="h-11">
+                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subDirections.map((sub) => (
+                            <SelectItem key={`sub-${sub.id}`} value={sub.id.toString()}>
+                              {sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -281,57 +324,50 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                             role="combobox"
                             disabled={!selectedStructureId}
                             className={cn(
-                              "w-full justify-between h-11 text-left",
+                              "w-full justify-between h-11 text-left bg-background",
                               !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value
-                              ? persons.find(
-                                  (p) => p.id.toString() === field.value
-                                )?.firstName + " " + persons.find(
-                                  (p) => p.id.toString() === field.value
-                                )?.lastName || t('select_beneficiary_placeholder')
+                              ? (personRegistry[field.value]?.firstName + " " + personRegistry[field.value]?.lastName)
                               : t('select_beneficiary_placeholder')}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
                         <Command shouldFilter={false}>
-                          <CommandInput
-                            placeholder={t('search_person_placeholder')}
-                            onValueChange={setPersonSearch}
-                            disabled={!selectedStructureId}
-                          />
-                           <ScrollArea className="max-h-56">
-                          <CommandEmpty>{t('no_person_found')}</CommandEmpty>
-                            <CommandGroup>
-                              <CommandList>
-                                {persons.map((person) => (
-                                  <CommandItem
-                                    value={person.id.toString()}
-                                    key={`person-rev-${person.id}`}
-                                    onSelect={() => {
-                                      form.setValue("personId", person.id.toString());
-                                      setPersonPopoverOpen(false);
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        person.id.toString() === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    <div className="flex flex-col">
-                                      <span>{person.grade} {person.firstName} {person.lastName} ({person.pseudo})</span>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandList>
-                            </CommandGroup>
-                          </ScrollArea>
+                          <CommandInput placeholder={t('search_person_placeholder')} value={personSearch} onValueChange={setPersonSearch} />
+                          <CommandList>
+                            {isSearchingPersons ? (
+                              <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                                <Loader2 className="h-3 w-3 animate-spin" /> {t('searching')}
+                              </div>
+                            ) : (
+                              <>
+                                <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                <CommandGroup>
+                                  {persons.map((person) => (
+                                    <CommandItem
+                                      key={`rev-person-${person.id}`}
+                                      value={person.id.toString()}
+                                      onSelect={() => {
+                                        form.setValue("personId", person.id.toString());
+                                        setPersonPopoverOpen(false);
+                                      }}
+                                      className="py-2"
+                                    >
+                                      <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                      <div className="flex flex-col">
+                                        <span>{person.grade} {person.firstName} {person.lastName}</span>
+                                        {person.pseudo && <span className="text-[10px] text-muted-foreground font-mono">@{person.pseudo}</span>}
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </>
+                            )}
+                          </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>
@@ -340,7 +376,7 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                 )}
               />
 
-              {selectedStructureId && (
+              {(selectedStructureId || selectedSubDirectionId) && (
                 <div className="space-y-4 pt-4 border-t">
                     <FormLabel className="text-sm font-bold uppercase tracking-widest text-primary">{t('articles_to_return')}</FormLabel>
                     
@@ -421,19 +457,38 @@ export function AddReversal({ onSuccess }: AddReversalProps) {
                 </div>
               )}
 
-              <FormField
-                control={form.control}
-                name="remarks"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('remarks')}</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder={t('add_remarks_placeholder')} {...field} className="bg-background resize-none min-h-[100px]" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="attestationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <Hash className="h-3.5 w-3.5" />
+                        {t('attestation_id')}
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., ATT-2024-001" {...field} className="h-11" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="remarks"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('remarks')}</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder={t('add_remarks_placeholder')} {...field} className="bg-background resize-none min-h-[100px]" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <DialogFooter className="pt-6 border-t">
                 <Button type="submit" disabled={loading || !selectedStructureId || fields.length === 0} size="lg" className="w-full shadow-lg shadow-primary/20 h-12 text-sm font-bold tracking-widest uppercase">

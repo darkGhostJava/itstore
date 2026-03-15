@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,13 +28,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, Hash, Search } from "lucide-react";
+import { PlusCircle, Trash2, Hash, Search, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   getAllDirections,
+  getSubDirectionsOfDirection,
   getPersonsByIdStructure,
+  searchPersons,
   searchItemsBySerialNumberAndPerson,
   registerReparations,
 } from "@/lib/data";
@@ -44,6 +46,9 @@ import { ItemSchema } from "@/lib/schemas";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useTranslation } from "react-i18next";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 const reparationItemSchema = z.object({
   item: ItemSchema,
@@ -51,10 +56,11 @@ const reparationItemSchema = z.object({
 });
 
 const reparationFormSchema = z.object({
-  structureId: z.string().min(1, "Please select a direction."),
-  personId: z.string().min(1, "Please select the person returning the item."),
+  structureId: z.string().min(1, "direction_is_required"),
+  subDirectionId: z.string().optional(),
+  personId: z.string().min(1, "beneficiary_is_required"),
   attestationId: z.string().optional(),
-  reparations: z.array(reparationItemSchema).min(1, "Please add at least one item for repair."),
+  reparations: z.array(reparationItemSchema).min(1, "at_least_one_article_is_required"),
 });
 
 type ReparationFormValues = z.infer<typeof reparationFormSchema>;
@@ -69,13 +75,20 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [directions, setDirections] = useState<Structure[]>([]);
+  const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
+  const [personRegistry, setPersonRegistry] = useState<Record<string, Person>>({});
   const [searchedItems, setSearchedItems] = useState<Item[]>([]);
+  
+  const [personSearch, setPersonSearch] = useState("");
+  const [isPersonPopoverOpen, setPersonPopoverOpen] = useState(false);
+  const [isSearchingPersons, setIsSearchingPersons] = useState(false);
 
   const form = useForm<ReparationFormValues>({
     resolver: zodResolver(reparationFormSchema),
     defaultValues: {
       structureId: "",
+      subDirectionId: "",
       personId: "",
       attestationId: "",
       reparations: [],
@@ -87,6 +100,8 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
     name: "reparations",
   });
   
+  const selectedStructureId = form.watch("structureId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
   const selectedPersonId = form.watch("personId");
 
   useEffect(() => {
@@ -98,20 +113,59 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
     }
   }, [open]);
 
-  const selectedStructureId = form.watch("structureId");
+  useEffect(() => {
+    if (selectedStructureId) {
+      (async () => {
+        const res = await getSubDirectionsOfDirection(parseInt(selectedStructureId, 10));
+        setSubDirections(res.data || []);
+      })();
+    } else {
+      setSubDirections([]);
+    }
+  }, [selectedStructureId]);
+
+  const updateRegistry = useCallback((list: Person[]) => {
+    setPersonRegistry(prev => {
+      const next = { ...prev };
+      list.forEach(p => { next[p.id.toString()] = p; });
+      return next;
+    });
+  }, []);
+
+  const refreshPersons = useCallback(async (searchQuery?: string) => {
+    const targetId = selectedSubDirectionId || selectedStructureId;
+    if (!targetId || targetId === "") {
+      setPersons([]);
+      return;
+    }
+
+    setIsSearchingPersons(true);
+    try {
+      if (searchQuery && searchQuery.trim().length > 0) {
+        const res = await searchPersons(searchQuery, targetId);
+        const data = res.data || [];
+        setPersons(data);
+        updateRegistry(data);
+      } else {
+        const res = await getPersonsByIdStructure(parseInt(targetId, 10));
+        const data = res || [];
+        setPersons(data);
+        updateRegistry(data);
+      }
+    } finally { setIsSearchingPersons(false); }
+  }, [selectedStructureId, selectedSubDirectionId, updateRegistry]);
 
   useEffect(() => {
-    const fetchPersons = async () => {
-      form.resetField("personId");
-      setPersons([]);
-      if (selectedStructureId) {
-        const res = await getPersonsByIdStructure(parseInt(selectedStructureId));
-        setPersons(res || []);
-      }
-    };
-    fetchPersons();
-  }, [selectedStructureId, form]);
+    if (isPersonPopoverOpen) {
+      const debounce = setTimeout(() => refreshPersons(personSearch), 300);
+      return () => clearTimeout(debounce);
+    }
+  }, [personSearch, isPersonPopoverOpen, refreshPersons]);
 
+  useEffect(() => {
+    form.setValue("personId", "");
+    refreshPersons();
+  }, [selectedStructureId, selectedSubDirectionId, refreshPersons, form]);
 
   async function onSubmit(values: ReparationFormValues) {
     setLoading(true);
@@ -119,7 +173,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
       const repairsPayload = values.reparations.map(rep => ({
         itemId: rep.item.id,
         remarks: rep.remarks,
-        userId: 1, // Current logged in user ID
+        userId: 1,
       }));
 
       await registerReparations({
@@ -184,7 +238,7 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('structure')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={(v) => { field.onChange(v); form.setValue("subDirectionId", ""); }} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-11">
                             <SelectValue placeholder={t('select_structure_placeholder')} />
@@ -205,16 +259,24 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
 
                 <FormField
                   control={form.control}
-                  name="attestationId"
+                  name="subDirectionId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <Hash className="h-3.5 w-3.5" />
-                        {t('attestation_id')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., REP-2024-001" {...field} className="h-11" />
-                      </FormControl>
+                      <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('sub_direction')} ({t('optional')})</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedStructureId || subDirections.length === 0}>
+                        <FormControl>
+                          <SelectTrigger className="h-11">
+                            <SelectValue placeholder={t('select_sub_direction_placeholder')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subDirections.map((sub) => (
+                            <SelectItem key={`rep-sub-${sub.id}`} value={sub.id.toString()}>
+                              {sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -225,26 +287,63 @@ export function AddReparation({ onSuccess }: AddReparationProps) {
                 control={form.control}
                 name="personId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('returned_by')}</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={!selectedStructureId || persons.length === 0}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder={t('select_beneficiary_placeholder')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {persons.map((person) => (
-                          <SelectItem key={`rep-per-${person.id}`} value={person.id.toString()}>
-                            {person.grade} {person.firstName} {person.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={isPersonPopoverOpen} onOpenChange={setPersonPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            disabled={!selectedStructureId}
+                            className={cn(
+                              "w-full justify-between h-11 text-left bg-background",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value
+                              ? (personRegistry[field.value]?.firstName + " " + personRegistry[field.value]?.lastName)
+                              : t('select_beneficiary_placeholder')}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 shadow-2xl" align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput placeholder={t('search_person_placeholder')} value={personSearch} onValueChange={setPersonSearch} />
+                          <CommandList>
+                            {isSearchingPersons ? (
+                              <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                                <Loader2 className="h-3 w-3 animate-spin" /> {t('searching')}
+                              </div>
+                            ) : (
+                              <>
+                                <CommandEmpty>{t('no_person_found')}</CommandEmpty>
+                                <CommandGroup>
+                                  {persons.map((person) => (
+                                    <CommandItem
+                                      key={`rep-person-${person.id}`}
+                                      value={person.id.toString()}
+                                      onSelect={() => {
+                                        form.setValue("personId", person.id.toString());
+                                        setPersonPopoverOpen(false);
+                                      }}
+                                      className="py-2"
+                                    >
+                                      <Check className={cn("mr-2 h-4 w-4 text-primary", person.id.toString() === field.value ? "opacity-100" : "opacity-0")} />
+                                      <div className="flex flex-col">
+                                        <span className="font-semibold">{person.grade} {person.firstName} {person.lastName}</span>
+                                        {person.pseudo && <span className="text-[10px] text-muted-foreground font-mono">@{person.pseudo}</span>}
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}

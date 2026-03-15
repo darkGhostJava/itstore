@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -112,6 +111,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     name: "articles",
   });
 
+  const selectedDirectionId = form.watch("directionId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
+
   useEffect(() => {
     if (open) {
       (async () => {
@@ -121,9 +123,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       setStep(0);
     }
   }, [open]);
-
-  const selectedDirectionId = form.watch("directionId");
-  const selectedSubDirectionId = form.watch("subDirectionId");
 
   useEffect(() => {
     if (selectedDirectionId) {
@@ -145,26 +144,31 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, []);
 
   const refreshPersons = useCallback(async (searchQuery?: string) => {
-    // Priority: Sub-Direction filtering, otherwise Direction filtering
     const targetStructureId = selectedSubDirectionId || selectedDirectionId;
-    if (!targetStructureId) {
+    if (!targetStructureId || targetStructureId === "") {
       setPersons([]);
       return;
     }
 
-    if (searchQuery) {
+    if (searchQuery && searchQuery.trim().length > 0) {
       setIsSearchingPersons(true);
       try {
         const res = await searchPersons(searchQuery, targetStructureId);
-        setPersons(res.data || []);
-        updateRegistry(res.data || []);
+        const data = res.data || [];
+        setPersons(data);
+        updateRegistry(data);
       } finally {
         setIsSearchingPersons(false);
       }
     } else {
-      const personsRes = await getPersonsByIdStructure(parseInt(targetStructureId, 10));
-      setPersons(personsRes || []);
-      updateRegistry(personsRes || []);
+      setIsSearchingPersons(true);
+      try {
+        const personsRes = await getPersonsByIdStructure(parseInt(targetStructureId, 10));
+        setPersons(personsRes || []);
+        updateRegistry(personsRes || []);
+      } finally {
+        setIsSearchingPersons(false);
+      }
     }
   }, [selectedDirectionId, selectedSubDirectionId, updateRegistry]);
 
@@ -177,7 +181,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
 
   useEffect(() => {
     form.setValue("beneficiaryId", "");
-    if (selectedDirectionId || selectedSubDirectionId) refreshPersons();
+    refreshPersons();
   }, [selectedDirectionId, selectedSubDirectionId, refreshPersons, form]);
 
   const nextStep = async () => {
