@@ -121,7 +121,9 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   }, [open]);
 
   const selectedDirectionId = form.watch("directionId");
+  const selectedSubDirectionId = form.watch("subDirectionId");
 
+  // Fetch Sub-Directions when main direction changes
   useEffect(() => {
     form.setValue("subDirectionId", "");
     form.setValue("beneficiaryId", "");
@@ -129,37 +131,46 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     setPersons([]);
 
     if (selectedDirectionId) {
-      // Fetch sub-directions (Optional)
       (async () => {
         const res = await getSubDirectionsOfDirection(parseInt(selectedDirectionId, 10));
         setSubDirections(res.data || []);
       })();
-      
-      // Fetch persons based ONLY on directionId as per business rule
-      (async () => {
-        const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
-        setPersons(personsRes);
-      })();
     }
   }, [selectedDirectionId, form]);
 
+  // Fetch persons based on Direction or Sub-Direction
+  useEffect(() => {
+    const targetStructureId = selectedSubDirectionId || selectedDirectionId;
+    
+    if (targetStructureId) {
+      (async () => {
+        const personsRes = await getPersonsByIdStructure(parseInt(targetStructureId, 10));
+        setPersons(personsRes);
+      })();
+    } else {
+      setPersons([]);
+    }
+  }, [selectedDirectionId, selectedSubDirectionId]);
+
+  // Person Search with respect to current structure scope
   useEffect(() => {
     const fetchPersonsData = async () => {
-        if (personSearch && selectedDirectionId) {
-            // Search persons within the selected direction
-            const res = await searchPersons(personSearch, selectedDirectionId);
+        const targetStructureId = selectedSubDirectionId || selectedDirectionId;
+        
+        if (personSearch && targetStructureId) {
+            const res = await searchPersons(personSearch, targetStructureId);
             setPersons(res.data || []);
-        } else if (selectedDirectionId) {
-            const personsRes = await getPersonsByIdStructure(parseInt(selectedDirectionId, 10));
+        } else if (targetStructureId) {
+            const personsRes = await getPersonsByIdStructure(parseInt(targetStructureId, 10));
             setPersons(personsRes);
         }
     };
 
-    if (isPersonPopoverOpen && selectedDirectionId) {
+    if (isPersonPopoverOpen && (selectedSubDirectionId || selectedDirectionId)) {
         const debounce = setTimeout(fetchPersonsData, 300);
         return () => clearTimeout(debounce);
     }
-  }, [personSearch, selectedDirectionId, isPersonPopoverOpen]);
+  }, [personSearch, selectedDirectionId, selectedSubDirectionId, isPersonPopoverOpen]);
 
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
@@ -192,7 +203,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
         userId: 1,
         hardwares,
         consumables,
-        // Fallback to directionId if subDirectionId is not selected
         subDirectionId: values.subDirectionId ? parseInt(values.subDirectionId) : parseInt(values.directionId),
       };
 
@@ -278,7 +288,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
           </DialogDescription>
         </DialogHeader>
 
-        {/* Wizard Progress */}
         <div className="px-6 py-4 flex items-center justify-between bg-muted/30 border-y">
           {steps.map((s, i) => (
             <div key={s.id} className="flex items-center gap-2 flex-1 last:flex-initial">
