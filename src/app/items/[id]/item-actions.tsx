@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -130,7 +130,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
     }
   }, [distributeOpen, refundOpen, repairOpen]);
 
-  // Handle direction changes to load persons
+  // Logic for Distribute Search
   const selectedDistDir = distributeForm.watch("directionId");
   useEffect(() => {
     if (selectedDistDir) {
@@ -145,6 +145,23 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
     }
   }, [selectedDistDir]);
 
+  useEffect(() => {
+    if (isDistPopoverOpen && selectedDistDir) {
+      const fetchData = async () => {
+        if (distSearch) {
+          const res = await searchPersons(distSearch, selectedDistDir);
+          setDistPersons(res.data || []);
+        } else {
+          const personsRes = await getPersonsByIdStructure(parseInt(selectedDistDir, 10));
+          setDistPersons(personsRes);
+        }
+      };
+      const debounce = setTimeout(fetchData, 300);
+      return () => clearTimeout(debounce);
+    }
+  }, [distSearch, selectedDistDir, isDistPopoverOpen]);
+
+  // Logic for Refund Search
   const selectedRefundDir = refundForm.watch("structureId");
   useEffect(() => {
     if (selectedRefundDir) {
@@ -155,6 +172,23 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
     }
   }, [selectedRefundDir]);
 
+  useEffect(() => {
+    if (isRefundPopoverOpen && selectedRefundDir) {
+      const fetchData = async () => {
+        if (refundSearch) {
+          const res = await searchPersons(refundSearch, selectedRefundDir);
+          setRefundPersons(res.data || []);
+        } else {
+          const personsRes = await getPersonsByIdStructure(parseInt(selectedRefundDir, 10));
+          setRefundPersons(personsRes);
+        }
+      };
+      const debounce = setTimeout(fetchData, 300);
+      return () => clearTimeout(debounce);
+    }
+  }, [refundSearch, selectedRefundDir, isRefundPopoverOpen]);
+
+  // Logic for Repair Search
   const selectedRepairDir = repairForm.watch("structureId");
   useEffect(() => {
     if (selectedRepairDir) {
@@ -165,28 +199,27 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
     }
   }, [selectedRepairDir]);
 
-  // Generic Person search logic
-  const handleSearchEffect = (search: string, dirId: string, open: boolean, setList: (l: Person[]) => void) => {
-    useEffect(() => {
+  useEffect(() => {
+    if (isRepairPopoverOpen && selectedRepairDir) {
       const fetchData = async () => {
-        if (search && dirId) {
-          const res = await searchPersons(search, dirId);
-          setList(res.data || []);
-        } else if (dirId) {
-          const personsRes = await getPersonsByIdStructure(parseInt(dirId, 10));
-          setList(personsRes);
+        if (repairSearch) {
+          const res = await searchPersons(repairSearch, selectedRepairDir);
+          setRepairPersons(res.data || []);
+        } else {
+          const personsRes = await getPersonsByIdStructure(parseInt(selectedRepairDir, 10));
+          setRepairPersons(personsRes);
         }
       };
-      if (open && dirId) {
-        const debounce = setTimeout(fetchData, 300);
-        return () => clearTimeout(debounce);
-      }
-    }, [search, dirId, open]);
-  };
+      const debounce = setTimeout(fetchData, 300);
+      return () => clearTimeout(debounce);
+    }
+  }, [repairSearch, selectedRepairDir, isRepairPopoverOpen]);
 
-  handleSearchEffect(distSearch, selectedDistDir, isDistPopoverOpen, setDistPersons);
-  handleSearchEffect(refundSearch, selectedRefundDir, isRefundPopoverOpen, setRefundPersons);
-  handleSearchEffect(repairSearch, selectedRepairDir, isRepairPopoverOpen, setRepairPersons);
+  // Helper to find selected person name across results
+  const getSelectedPersonName = (id: string, list: Person[]) => {
+    const person = list.find((p) => p.id.toString() === id);
+    return person ? `${person.firstName} ${person.lastName}` : t('select_beneficiary_placeholder');
+  };
 
   async function onDistributeSubmit(values: z.infer<typeof distributeFormSchema>) {
     setLoading(true);
@@ -317,7 +350,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button variant="outline" role="combobox" disabled={!selectedDistDir} className={cn("w-full justify-between h-11 text-left bg-background", !field.value && "text-muted-foreground")}>
-                            {field.value ? distPersons.find((p) => p.id.toString() === field.value)?.firstName + " " + distPersons.find((p) => p.id.toString() === field.value)?.lastName : t('select_beneficiary_placeholder')}
+                            {field.value ? getSelectedPersonName(field.value, distPersons) : t('select_beneficiary_placeholder')}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
@@ -386,7 +419,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button variant="outline" role="combobox" disabled={!selectedRefundDir} className={cn("w-full justify-between h-11 text-left bg-background", !field.value && "text-muted-foreground")}>
-                            {field.value ? refundPersons.find((p) => p.id.toString() === field.value)?.firstName + " " + refundPersons.find((p) => p.id.toString() === field.value)?.lastName : t('select_beneficiary_placeholder')}
+                            {field.value ? getSelectedPersonName(field.value, refundPersons) : t('select_beneficiary_placeholder')}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
@@ -455,7 +488,7 @@ export function ItemActions({ item, onSuccess }: ItemActionsProps) {
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button variant="outline" role="combobox" disabled={!selectedRepairDir} className={cn("w-full justify-between h-11 text-left bg-background", !field.value && "text-muted-foreground")}>
-                            {field.value ? repairPersons.find((p) => p.id.toString() === field.value)?.firstName + " " + repairPersons.find((p) => p.id.toString() === field.value)?.lastName : t('select_beneficiary_placeholder')}
+                            {field.value ? getSelectedPersonName(field.value, repairPersons) : t('select_beneficiary_placeholder')}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
