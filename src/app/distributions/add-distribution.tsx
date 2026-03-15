@@ -15,7 +15,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -88,6 +87,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const [directions, setDirections] = useState<Structure[]>([]);
   const [subDirections, setSubDirections] = useState<Structure[]>([]);
   const [persons, setPersons] = useState<Person[]>([]);
+  const [personRegistry, setPersonRegistry] = useState<Record<string, Person>>({});
   const [serials, setSerials] = useState<Record<number, Item[]>>({});
   const [loading, setLoading] = useState(false);
   const [searchArticleType, setSearchArticleType] = useState<"ALL" | "HARDWARE" | "CONSUMABLE">("ALL");
@@ -125,7 +125,6 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
   const selectedDirectionId = form.watch("directionId");
   const selectedSubDirectionId = form.watch("subDirectionId");
 
-  // Fetch Sub-Directions when main direction changes
   useEffect(() => {
     if (selectedDirectionId) {
       (async () => {
@@ -137,7 +136,16 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
     }
   }, [selectedDirectionId]);
 
+  const updateRegistry = useCallback((list: Person[]) => {
+    setPersonRegistry(prev => {
+      const next = { ...prev };
+      list.forEach(p => { next[p.id.toString()] = p; });
+      return next;
+    });
+  }, []);
+
   const refreshPersons = useCallback(async (searchQuery?: string) => {
+    // Priority: Sub-Direction filtering, otherwise Direction filtering
     const targetStructureId = selectedSubDirectionId || selectedDirectionId;
     if (!targetStructureId) {
       setPersons([]);
@@ -149,14 +157,16 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
       try {
         const res = await searchPersons(searchQuery, targetStructureId);
         setPersons(res.data || []);
+        updateRegistry(res.data || []);
       } finally {
         setIsSearchingPersons(false);
       }
     } else {
       const personsRes = await getPersonsByIdStructure(parseInt(targetStructureId, 10));
       setPersons(personsRes || []);
+      updateRegistry(personsRes || []);
     }
-  }, [selectedDirectionId, selectedSubDirectionId]);
+  }, [selectedDirectionId, selectedSubDirectionId, updateRegistry]);
 
   useEffect(() => {
     if (isPersonPopoverOpen) {
@@ -322,7 +332,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('structure')}</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select onValueChange={(v) => { field.onChange(v); form.setValue("subDirectionId", ""); }} value={field.value}>
                               <FormControl>
                                 <SelectTrigger className="h-11">
                                   <SelectValue placeholder={t('select_structure_placeholder')} />
@@ -392,7 +402,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                                   )}
                                 >
                                   {field.value
-                                    ? persons.find((p) => p.id.toString() === field.value)?.firstName + " " + persons.find((p) => p.id.toString() === field.value)?.lastName
+                                    ? (personRegistry[field.value]?.firstName + " " + personRegistry[field.value]?.lastName)
                                     : t('select_beneficiary_placeholder')}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -656,7 +666,7 @@ export function AddDistribution({ onSuccess }: AddDistributionProps) {
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase">{t('beneficiary')}</p>
                           <p className="font-semibold text-lg">
-                            {persons.find(p => p.id.toString() === form.getValues('beneficiaryId'))?.firstName} {persons.find(p => p.id.toString() === form.getValues('beneficiaryId'))?.lastName}
+                            {personRegistry[form.getValues('beneficiaryId')]?.firstName} {personRegistry[form.getValues('beneficiaryId')]?.lastName}
                           </p>
                         </div>
                         <div className="space-y-1">
