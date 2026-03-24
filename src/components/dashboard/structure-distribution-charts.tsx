@@ -31,7 +31,7 @@ const CHART_COLORS = {
   dark: ["#1E88E5", "#00897B", "#FFB300", "#D81B60", "#8E24AA", "#6D4C41", "#546E7A", "#F4511E"],
 };
 
-// Classification mapping for hardware vs consumables
+// Logic classification for Hardware vs Consumables
 const HARDWARE_CATEGORIES = [
   "LAPTOP", "PRINTER", "SCREEN", "PC", "WORK_STATION", 
   "INVERTER", "SCANNER", "SERVER", "DATA_SHOW", 
@@ -48,7 +48,9 @@ const CustomLegend = (props: LegendProps) => {
                 <div key={`item-${index}`} className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 truncate">
                         <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
-                        <span className="truncate text-muted-foreground">{entry.value}</span>
+                        <span className="truncate text-muted-foreground uppercase tracking-tighter">
+                          {entry.value}
+                        </span>
                     </div>
                     <span className="font-bold text-foreground">{(entry.payload as any)?.value}</span>
                 </div>
@@ -69,8 +71,8 @@ export function StructureDistributionWrapper() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-2">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">{t('structure_distribution_title', 'Distribution by Structure')}</h2>
-          <p className="text-sm text-muted-foreground">{t('structure_distribution_desc', 'Asset allocation overview per structure.')}</p>
+          <h2 className="text-2xl font-bold tracking-tight">{t('structure_distribution_title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('structure_distribution_desc')}</p>
         </div>
         <DateRangePicker date={dateRange} setDate={setDateRange} />
       </div>
@@ -147,9 +149,9 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
 
   if (Object.keys(rawData).length === 0) {
     return (
-       <Card className="border-dashed">
+       <Card className="border-dashed bg-muted/10">
         <CardContent>
-            <p className="text-muted-foreground text-center py-24">{t('no_distribution_data', 'No distribution data available for the selected period.')}</p>
+            <p className="text-muted-foreground text-center py-24">{t('no_distribution_data')}</p>
         </CardContent>
       </Card>
     );
@@ -166,75 +168,110 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
         <CarouselContent>
             {structureCharts.map(({ structureName, hardwareItems, consumableItems, totalHardware, totalConsumables }) => (
                 <CarouselItem key={structureName} className="md:basis-1/2 lg:basis-1/2 xl:basis-1/2">
-                    <Card className="flex flex-col h-full glass-card border-none bg-card/40">
+                    <Card className="flex flex-col h-full glass-card border-none bg-card/40 hover:bg-card/60 transition-all">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-xl font-black">{structureName}</CardTitle>
                           <CardDescription className="text-xs uppercase font-bold tracking-widest text-primary/60">
-                            {t('detailed_distribution', 'Detailed structural distribution')}
+                            {t('detailed_distribution')}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="flex-1 flex flex-col md:flex-row items-stretch justify-around gap-6 pb-6 pt-4">
-                          {/* Hardware Camembert */}
+                        <CardContent className="flex-1 flex flex-col md:flex-row items-start justify-around gap-8 pb-6 pt-4">
+                          
+                          {/* Hardware Circular Chart */}
                           <div className="flex flex-col items-center flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-tighter text-muted-foreground">
-                              <HardDrive className="h-3 w-3" />
+                            <div className="flex items-center gap-2 mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                              <HardDrive className="h-3 w-3 text-primary" />
                               {t('hardware')} ({totalHardware})
                             </div>
                             {totalHardware > 0 ? (
                               <div className="w-full flex flex-col items-center">
-                                <PieChart width={160} height={140}>
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
-                                            border: '1px solid hsl(var(--border))',
-                                            borderRadius: '8px',
-                                            fontSize: '10px'
-                                        }}
-                                    />
-                                    <Pie data={hardwareItems} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={35} outerRadius={50} labelLine={false} paddingAngle={2}>
-                                      {hardwareItems.map((entry, index) => (
-                                          <Cell key={`cell-hwd-${index}`} fill={colors[index % colors.length]} />
-                                      ))}
-                                    </Pie>
-                                </PieChart>
-                                <Legend content={<CustomLegend />} />
+                                <ResponsiveContainer width="100%" height={140}>
+                                  <PieChart>
+                                      <Tooltip
+                                          contentStyle={{
+                                              backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
+                                              border: '1px solid hsl(var(--border))',
+                                              borderRadius: '8px',
+                                              fontSize: '10px'
+                                          }}
+                                      />
+                                      <Pie 
+                                        data={hardwareItems} 
+                                        dataKey="value" 
+                                        nameKey="name" 
+                                        cx="50%" 
+                                        cy="50%" 
+                                        innerRadius={30} 
+                                        outerRadius={50} 
+                                        labelLine={false} 
+                                        paddingAngle={4}
+                                      >
+                                        {hardwareItems.map((entry, index) => (
+                                            <Cell key={`cell-hwd-${index}`} fill={colors[index % colors.length]} stroke="none" />
+                                        ))}
+                                      </Pie>
+                                  </PieChart>
+                                </ResponsiveContainer>
+                                <CustomLegend payload={hardwareItems.map((item, index) => ({
+                                  value: item.name,
+                                  color: colors[index % colors.length],
+                                  payload: item
+                                }))} />
                               </div>
                             ) : (
-                              <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground italic border border-dashed rounded-lg w-full h-[180px]">
+                              <div className="flex-1 flex flex-col items-center justify-center text-[10px] text-muted-foreground italic border border-dashed rounded-xl w-full h-[180px] bg-muted/5">
+                                <HardDrive className="h-6 w-6 mb-2 opacity-10" />
                                 {t('no_items')}
                               </div>
                             )}
                           </div>
 
-                          <div className="hidden md:block w-px bg-border/50" />
+                          <div className="hidden md:block w-px bg-border/20 self-stretch" />
 
-                          {/* Consumables Camembert */}
+                          {/* Consumables Circular Chart */}
                           <div className="flex flex-col items-center flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-tighter text-muted-foreground">
-                              <Printer className="h-3 w-3" />
+                            <div className="flex items-center gap-2 mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                              <Printer className="h-3 w-3 text-accent" />
                               {t('consumable')} ({totalConsumables})
                             </div>
                             {totalConsumables > 0 ? (
                               <div className="w-full flex flex-col items-center">
-                                <PieChart width={160} height={140}>
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
-                                            border: '1px solid hsl(var(--border))',
-                                            borderRadius: '8px',
-                                            fontSize: '10px'
-                                        }}
-                                    />
-                                    <Pie data={consumableItems} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={35} outerRadius={50} labelLine={false} paddingAngle={2}>
-                                      {consumableItems.map((entry, index) => (
-                                          <Cell key={`cell-cons-${index}`} fill={colors[(index + 4) % colors.length]} />
-                                      ))}
-                                    </Pie>
-                                </PieChart>
-                                <Legend content={<CustomLegend />} />
+                                <ResponsiveContainer width="100%" height={140}>
+                                  <PieChart>
+                                      <Tooltip
+                                          contentStyle={{
+                                              backgroundColor: theme === 'dark' ? '#020817' : '#ffffff',
+                                              border: '1px solid hsl(var(--border))',
+                                              borderRadius: '8px',
+                                              fontSize: '10px'
+                                          }}
+                                      />
+                                      <Pie 
+                                        data={consumableItems} 
+                                        dataKey="value" 
+                                        nameKey="name" 
+                                        cx="50%" 
+                                        cy="50%" 
+                                        innerRadius={30} 
+                                        outerRadius={50} 
+                                        labelLine={false} 
+                                        paddingAngle={4}
+                                      >
+                                        {consumableItems.map((entry, index) => (
+                                            <Cell key={`cell-cons-${index}`} fill={colors[(index + 4) % colors.length]} stroke="none" />
+                                        ))}
+                                      </Pie>
+                                  </PieChart>
+                                </ResponsiveContainer>
+                                <CustomLegend payload={consumableItems.map((item, index) => ({
+                                  value: item.name,
+                                  color: colors[(index + 4) % colors.length],
+                                  payload: item
+                                }))} />
                               </div>
                             ) : (
-                              <div className="flex-1 flex items-center justify-center text-[10px] text-muted-foreground italic border border-dashed rounded-lg w-full h-[180px]">
+                              <div className="flex-1 flex flex-col items-center justify-center text-[10px] text-muted-foreground italic border border-dashed rounded-xl w-full h-[180px] bg-muted/5">
+                                <Printer className="h-6 w-6 mb-2 opacity-10" />
                                 {t('no_items')}
                               </div>
                             )}

@@ -1,14 +1,14 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
+  PieChart,
+  Pie,
   Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchAllOperations } from "@/lib/data";
@@ -21,6 +21,7 @@ export function OperationsChart() {
   const { theme } = useTheme();
   const { t } = useTranslation('common');
   const [chartData, setChartData] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,11 +34,13 @@ export function OperationsChart() {
           return acc;
         }, {} as Record<string, number>);
 
-        const data = Object.entries(operationCounts).map(([name, total]) => ({
-          name,
-          total,
+        const data = Object.entries(operationCounts).map(([name, value]) => ({
+          name: t(name.toLowerCase() as any, name),
+          value,
         }));
+        
         setChartData(data);
+        setTotal(operations.length);
       } catch (error) {
         console.error("Failed to fetch operations for chart:", error);
         setChartData([]);
@@ -46,9 +49,9 @@ export function OperationsChart() {
       }
     };
     getData();
-  }, []);
+  }, [t]);
 
-  const currentColors = [
+  const COLORS = [
     "hsl(var(--chart-1))",
     "hsl(var(--chart-2))",
     "hsl(var(--chart-3))",
@@ -65,26 +68,14 @@ export function OperationsChart() {
       <CardHeader>
         <CardTitle className="text-lg font-semibold">{t('operations_overview')}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
-            <XAxis
-              dataKey="name"
-              stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-              fontWeight="medium"
-            />
-            <YAxis
-              stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
-              fontSize={10}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `${value}`}
-            />
+      <CardContent className="flex flex-col items-center justify-center relative min-h-[350px]">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-0 mt-[-20px]">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total</p>
+          <p className="text-3xl font-black">{total}</p>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
             <Tooltip
-              cursor={{ fill: 'rgba(var(--primary), 0.05)', radius: 4 }}
               contentStyle={{
                 backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
                 borderRadius: '8px',
@@ -93,17 +84,31 @@ export function OperationsChart() {
                 fontSize: '12px'
               }}
             />
-            <Bar dataKey="total" label={{ position: 'top', fontSize: 10, fill: 'currentColor', fontWeight: 'bold' }} radius={[6, 6, 0, 0]}>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              innerRadius={70}
+              outerRadius={90}
+              paddingAngle={5}
+              dataKey="value"
+              stroke="none"
+            >
               {chartData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={currentColors[index % currentColors.length]} 
-                  fillOpacity={0.8}
-                  className="hover:fill-opacity-100 transition-all duration-300"
+                  fill={COLORS[index % COLORS.length]} 
+                  className="hover:opacity-80 transition-opacity cursor-pointer"
                 />
               ))}
-            </Bar>
-          </BarChart>
+            </Pie>
+            <Legend 
+              verticalAlign="bottom" 
+              height={36} 
+              iconType="circle"
+              formatter={(value) => <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">{value}</span>}
+            />
+          </PieChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
@@ -118,7 +123,7 @@ export function OperationsChartSkeleton() {
         <CardTitle>{t('operations_overview')}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-[350px] w-full" />
+        <Skeleton className="h-[350px] w-full rounded-full mx-auto max-w-[250px]" />
       </CardContent>
     </Card>
   );
