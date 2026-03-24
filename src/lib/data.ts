@@ -483,8 +483,13 @@ export const fetchOperationsForItem = async (itemId: number, options: { pageInde
   };
 }
 
-export const getStructureDistributionStats = async (params: { from?: string; to?: string }): Promise<Record<string, Record<string, number>>> => {
-  const response = await api.get("stats/structures/distribution", { params });
+export const getStructureDistributionHardwareStats = async (params: { from?: string; to?: string }): Promise<Record<string, Record<string, number>>> => {
+  const response = await api.get("stats/structures/distribution/hardwares", { params });
+  return response.data;
+};
+
+export const getStructureDistributionConsumableStats = async (params: { from?: string; to?: string }): Promise<Record<string, Record<string, number>>> => {
+  const response = await api.get("stats/structures/distribution/consumabales", { params });
   return response.data;
 };
 

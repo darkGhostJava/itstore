@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -17,7 +16,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { getStructureDistributionStats } from "@/lib/data";
+import { getStructureDistributionHardwareStats, getStructureDistributionConsumableStats } from "@/lib/data";
 import { Skeleton } from "../ui/skeleton";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
@@ -30,13 +29,6 @@ const CHART_COLORS = {
   light: ["#90CAF9", "#80CBC4", "#FFE082", "#F48FB1", "#CE93D8", "#BCAAA4", "#B0BEC5", "#FFAB91"],
   dark: ["#1E88E5", "#00897B", "#FFB300", "#D81B60", "#8E24AA", "#6D4C41", "#546E7A", "#F4511E"],
 };
-
-// Logic classification for Hardware vs Consumables
-const HARDWARE_CATEGORIES = [
-  "LAPTOP", "PRINTER", "SCREEN", "PC", "WORK_STATION", 
-  "INVERTER", "SCANNER", "SERVER", "DATA_SHOW", 
-  "WEB_CAM", "MULTIMEDIA", "KEYBOARD", "MOUSE", "SWITCH"
-];
 
 const CustomLegend = (props: LegendProps) => {
     const { payload } = props;
@@ -84,7 +76,8 @@ export function StructureDistributionWrapper() {
 export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRange }) {
   const { t } = useTranslation("common");
   const { theme } = useTheme();
-  const [rawData, setRawData] = useState<Record<string, Record<string, number>>>({});
+  const [hardwareData, setHardwareData] = useState<Record<string, Record<string, number>>>({});
+  const [consumableData, setConsumableData] = useState<Record<string, Record<string, number>>>({});
   const [loading, setLoading] = useState(true);
   
   const colors = theme === 'dark' ? CHART_COLORS.dark : CHART_COLORS.light;
@@ -100,11 +93,16 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
         if (dateRange?.to) {
           params.to = format(add(dateRange.to, { days: 1 }), "yyyy-MM-dd'T'HH:mm:ss");
         }
-        const data = await getStructureDistributionStats(params);
-        setRawData(data);
+        
+        const [hwRes, consRes] = await Promise.all([
+          getStructureDistributionHardwareStats(params),
+          getStructureDistributionConsumableStats(params)
+        ]);
+        
+        setHardwareData(hwRes);
+        setConsumableData(consRes);
       } catch (error) {
         console.error("Failed to fetch structure distribution stats:", error);
-        setRawData({});
       } finally {
         setLoading(false);
       }
@@ -113,23 +111,22 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
   }, [dateRange]);
 
   const structureCharts = useMemo(() => {
-    return Object.entries(rawData).map(([structureName, distribution]) => {
-      const hardwareItems: any[] = [];
-      const consumableItems: any[] = [];
+    const allStructures = Array.from(new Set([...Object.keys(hardwareData), ...Object.keys(consumableData)]));
+    
+    return allStructures.map(structureName => {
+      const hwDist = hardwareData[structureName] || {};
+      const consDist = consumableData[structureName] || {};
 
-      Object.entries(distribution).forEach(([name, value]) => {
-        const item = {
-          name: t(`category_${name.toLowerCase().replace(/ /g, "_")}` as any, name),
-          value: value,
-        };
+      const hardwareItems = Object.entries(hwDist).map(([name, value]) => ({
+        name: t(`category_${name.toLowerCase().replace(/ /g, "_")}` as any, name),
+        value,
+      }));
 
-        if (HARDWARE_CATEGORIES.includes(name.toUpperCase())) {
-          hardwareItems.push(item);
-        } else {
-          consumableItems.push(item);
-        }
-      });
-      
+      const consumableItems = Object.entries(consDist).map(([name, value]) => ({
+        name: t(`category_${name.toLowerCase().replace(/ /g, "_")}` as any, name),
+        value,
+      }));
+
       const totalHardware = hardwareItems.reduce((sum, item) => sum + item.value, 0);
       const totalConsumables = consumableItems.reduce((sum, item) => sum + item.value, 0);
 
@@ -141,13 +138,13 @@ export function StructureDistributionCharts({ dateRange }: { dateRange?: DateRan
         totalConsumables,
       };
     });
-  }, [rawData, t]);
+  }, [hardwareData, consumableData, t]);
 
   if (loading) {
     return <StructureDistributionChartsSkeleton />;
   }
 
-  if (Object.keys(rawData).length === 0) {
+  if (structureCharts.length === 0) {
     return (
        <Card className="border-dashed bg-muted/10">
         <CardContent>
